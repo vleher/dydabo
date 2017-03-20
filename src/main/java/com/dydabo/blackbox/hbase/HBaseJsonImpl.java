@@ -241,7 +241,7 @@ public class HBaseJsonImpl<T extends BlackBoxable> implements BlackBox<T> {
     }
 
     @Override
-    public List<T> select(List<T> rows) throws BlackBoxException {
+    public List<T> fetch(List<T> rows) throws BlackBoxException {
         List<T> combinedResults = new ArrayList<>();
         // TODO: do this faster (??)
         for (T t : rows) {

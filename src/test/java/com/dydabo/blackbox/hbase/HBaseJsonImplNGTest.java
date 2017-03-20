@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.hadoop.hbase.DoNotRetryIOException;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Connection;
@@ -131,7 +132,7 @@ public class HBaseJsonImplNGTest {
     }
 
     /**
-     * Test of select method, of class HBaseJsonImpl.
+     * Test of fetch method, of class HBaseJsonImpl.
      */
     @Test(dataProvider = "selectgenericdata")
     public void testSelect_GenericType(BlackBoxable row) throws Exception {
@@ -168,8 +169,8 @@ public class HBaseJsonImplNGTest {
     @DataProvider(name = "createtabledata")
     public Object[][] createTableData() {
         return new Object[][]{
-            {new User()},
-            {new Employee()}
+            {new User(null, null)},
+            {new Employee(null, null)}
         };
     }
 
@@ -221,17 +222,21 @@ public class HBaseJsonImplNGTest {
         System.out.println("checkIfRowExists");
         HBaseJsonImpl instance = new HBaseJsonImpl();
         Admin admin = instance.getConnection().getAdmin();
-        Table hTable = admin.getConnection().getTable(instance.getTableName(row));
-        if (hTable != null) {
+        try {
+            Table hTable = admin.getConnection().getTable(instance.getTableName(row));
+            if (hTable != null) {
 
-            if (expResult) {
-                instance.update(row);
+                if (expResult) {
+                    instance.update(row);
+                }
+
+                boolean result = instance.checkIfRowExists(row, hTable);
+                assertEquals(result, expResult);
+
+                instance.delete(row);
             }
-
-            boolean result = instance.checkIfRowExists(row, hTable);
-            assertEquals(result, expResult);
-
-            instance.delete(row);
+        } catch (DoNotRetryIOException ex) {
+            //ignore
         }
     }
 

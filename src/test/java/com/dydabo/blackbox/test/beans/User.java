@@ -27,9 +27,7 @@ public class User implements BlackBoxable {
 
     private String userName;
     private Integer userId;
-
-    public User() {
-    }
+    private Double taxRate;
 
     public User(Integer userId, String userName) {
         this.userId = userId;
@@ -50,6 +48,14 @@ public class User implements BlackBoxable {
 
     public void setUserId(Integer userId) {
         this.userId = userId;
+    }
+
+    public Double getTaxRate() {
+        return taxRate;
+    }
+
+    public void setTaxRate(Double taxRate) {
+        this.taxRate = taxRate;
     }
 
     @Override

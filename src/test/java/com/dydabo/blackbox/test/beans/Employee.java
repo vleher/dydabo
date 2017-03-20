@@ -28,10 +28,6 @@ public class Employee implements BlackBoxable {
     private Integer employeeId;
     private String employeeName;
 
-    public Employee() {
-
-    }
-
     public Employee(Integer id, String name) {
         this.employeeId = id;
         this.employeeName = name;

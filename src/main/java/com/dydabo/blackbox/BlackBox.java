@@ -46,7 +46,7 @@ public interface BlackBox<T extends BlackBoxable> {
      * @return
      * @throws com.dydabo.blackbox.BlackBoxException
      */
-    List<T> select(List<T> row) throws BlackBoxException;
+    List<T> fetch(List<T> row) throws BlackBoxException;
 
     /**
      *

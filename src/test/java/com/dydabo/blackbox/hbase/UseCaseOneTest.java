@@ -24,6 +24,7 @@ import com.dydabo.blackbox.test.beans.Employee;
 import com.dydabo.blackbox.test.beans.User;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import org.testng.Assert;
@@ -64,7 +65,7 @@ public class UseCaseOneTest {
     @Test
     public void testUseCaseOne() throws BlackBoxException {
         // Update 100 new Users
-        List<User> userList = generateUsers(1);
+        List<User> userList = generateUsers(2);
         boolean success = instance.update(userList);
         Assert.assertTrue(success);
 
@@ -77,7 +78,7 @@ public class UseCaseOneTest {
     @Test
     public void testUseCaseTwo() throws BlackBoxException {
         // Update 100 new Users
-        List<Employee> userList = generateEmployees(1);
+        List<Employee> userList = generateEmployees(2);
         boolean success = instance.update(userList);
         Assert.assertTrue(success);
 
@@ -86,7 +87,7 @@ public class UseCaseOneTest {
         eList.add(new Employee(null, ".*"));
         eList.add(new User(null, ".*"));
 
-        List searchResult = instance.select(eList);
+        List searchResult = instance.fetch(eList);
         System.out.println("Results: " + searchResult);
 
         // Delete Users
@@ -100,7 +101,9 @@ public class UseCaseOneTest {
         Random random = new Random();
         for (int i = 0; i < maxNumber; i++) {
             int id = random.nextInt();
-            userList.add(new User(id, "USER :" + id));
+            final User user = new User(id, FirstNames.get(Math.abs(id % 10)) + " " + LastNames.get(Math.abs(id % 10)));
+            user.setTaxRate(random.nextDouble() * 100);
+            userList.add(user);
         }
         return userList;
     }
@@ -110,8 +113,13 @@ public class UseCaseOneTest {
         Random random = new Random();
         for (int i = 0; i < maxNumber; i++) {
             int id = random.nextInt();
-            userList.add(new Employee(id, "USER :" + id));
+            final Employee employee = new Employee(id, FirstNames.get(Math.abs(id % 10)) + " " + LastNames.get(Math.abs(id % 10)));
+            userList.add(employee);
         }
         return userList;
     }
+
+    private List<String> FirstNames = Arrays.asList("David", "Peter", "Tom", "Dick", "Harry", "John", "Bill", "Adele", "Britney", "Mariah");
+    private List<String> LastNames = Arrays.asList("Johnson", "Becker", "Smith", "Gates", "King", "Spears", "Perry", "Carey", "Gomez", "Lopez");
+
 }
