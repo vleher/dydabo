@@ -14,11 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.dydabo.blackbox.hbase;
+package com.dydabo.blackbox.hbase.tasks;
 
+import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.hbase.HBaseJsonImpl;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.hadoop.hbase.client.Connection;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -27,15 +27,16 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.fail;
-
 /**
  *
  * @author viswadas leher <vleher@gmail.com>
  */
-public class HBaseJsonImplNGTest {
+public class HBaseInsertTaskNGTest {
 
-    public HBaseJsonImplNGTest() {
+    private final Connection connection;
+
+    public HBaseInsertTaskNGTest() throws IOException {
+        this.connection = new HBaseJsonImpl<BlackBoxable>().getConnection();
     }
 
     @BeforeClass
@@ -55,18 +56,36 @@ public class HBaseJsonImplNGTest {
     }
 
     /**
-     * Test of getConfig method, of class HBaseJsonImpl.
+     * Test of insert method, of class HBaseInsertTask.
      */
     @Test
-    public void testGetConnnection() {
-        try {
-            HBaseJsonImpl instance = new HBaseJsonImpl();
-            Connection result = instance.getConnection();
-            Assert.assertNotNull(result);
-        } catch (IOException ex) {
-            Logger.getLogger(HBaseJsonImplNGTest.class.getName()).log(Level.SEVERE, null, ex);
-            fail(ex.getMessage(), ex);
-        }
+    public void testInsert(BlackBoxable row, Boolean expResult) throws Exception {
+        boolean checkExisting = true;
+        HBaseInsertTask instance = new HBaseInsertTask(connection, row, checkExisting);
+        Boolean result = instance.insert(row, checkExisting);
+        Assert.assertEquals(result, expResult);
+
+    }
+
+    /**
+     * Test of compute method, of class HBaseInsertTask.
+     */
+    @Test
+    public void testCompute(BlackBoxable row, Boolean expResult) {
+        boolean checkExisting = true;
+        HBaseInsertTask instance = new HBaseInsertTask(connection, row, checkExisting);
+        Boolean result = instance.compute();
+        Assert.assertEquals(result, expResult);
+    }
+
+    /**
+     * Test of getConnection method, of class HBaseInsertTask.
+     */
+    @Test
+    public void testGetConnection() {
+        HBaseInsertTask instance = new HBaseInsertTask(connection, null, true);;
+        Connection result = instance.getConnection();
+        Assert.assertNotNull(result);
     }
 
 }

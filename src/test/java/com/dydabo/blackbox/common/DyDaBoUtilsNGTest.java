@@ -17,6 +17,7 @@
 package com.dydabo.blackbox.common;
 
 import org.junit.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 /**
@@ -48,5 +49,25 @@ public class DyDaBoUtilsNGTest {
     public void testConstructor() {
         DyDaBoUtils result = new DyDaBoUtils();
         Assert.assertNotNull(result);
+    }
+
+    /**
+     * Test of isBlankOrNull method, of class DyDaBoUtils.
+     */
+    @Test(dataProvider = "stringtestdata")
+    public void testIsBlankOrNull(boolean expResult, String[] str) {
+        boolean result = DyDaBoUtils.isBlankOrNull(str);
+        Assert.assertEquals(result, expResult);
+    }
+
+    @DataProvider(name = "stringtestdata")
+    public Object[][] stringTestData() {
+        return new Object[][]{
+            {true, new String[]{"", " ", "test"}},
+            {true, new String[]{"", null, "test"}},
+            {true, new String[]{"abcd", " ", "test"}},
+            {false, new String[]{"axd", " test ", "test"}},
+            {true, new String[]{"erwer", "werwer ", null}}
+        };
     }
 }

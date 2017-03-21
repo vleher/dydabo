@@ -16,10 +16,15 @@
  */
 package com.dydabo.blackbox.hbase;
 
+import com.dydabo.blackbox.BlackBox;
+import com.dydabo.blackbox.BlackBoxException;
+import com.dydabo.blackbox.BlackBoxFactory;
+import com.dydabo.blackbox.beans.User;
+import com.dydabo.blackbox.hbase.utils.DyDaBoTestUtils;
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.hadoop.hbase.client.Connection;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
@@ -27,19 +32,36 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.fail;
-
 /**
  *
  * @author viswadas leher <vleher@gmail.com>
  */
-public class HBaseJsonImplNGTest {
+public class PerformaceTest {
 
-    public HBaseJsonImplNGTest() {
+    private static DyDaBoTestUtils utils;
+    private static BlackBox instance;
+
+    public PerformaceTest() throws IOException {
+        this.utils = new DyDaBoTestUtils();
+        this.instance = BlackBoxFactory.getDatabase(BlackBoxFactory.HBASE);
+    }
+
+    @Test
+    public void testPerformanceOne() {
+        try {
+            List<User> users = utils.generateUsers(2000);
+            instance.update(users);
+            instance.fetch(users);
+            instance.delete(users);
+        } catch (BlackBoxException ex) {
+            Logger.getLogger(PerformaceTest.class.getName()).log(Level.SEVERE, null, ex);
+            Assert.fail("Performace Test Failed to execute");
+        }
     }
 
     @BeforeClass
     public static void setUpClass() throws Exception {
+
     }
 
     @AfterClass
@@ -52,21 +74,6 @@ public class HBaseJsonImplNGTest {
 
     @AfterMethod
     public void tearDownMethod() throws Exception {
-    }
-
-    /**
-     * Test of getConfig method, of class HBaseJsonImpl.
-     */
-    @Test
-    public void testGetConnnection() {
-        try {
-            HBaseJsonImpl instance = new HBaseJsonImpl();
-            Connection result = instance.getConnection();
-            Assert.assertNotNull(result);
-        } catch (IOException ex) {
-            Logger.getLogger(HBaseJsonImplNGTest.class.getName()).log(Level.SEVERE, null, ex);
-            fail(ex.getMessage(), ex);
-        }
     }
 
 }

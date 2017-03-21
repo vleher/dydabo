@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.dydabo.blackbox.test.beans;
+package com.dydabo.blackbox.beans;
 
 import com.dydabo.blackbox.BlackBoxable;
 import com.google.gson.Gson;

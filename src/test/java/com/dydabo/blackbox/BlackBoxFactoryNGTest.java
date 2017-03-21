@@ -77,7 +77,6 @@ public class BlackBoxFactoryNGTest {
      */
     @Test
     public void testGetHBaseDatabase() throws Exception {
-        System.out.println("getHBaseDatabase");
         Configuration config = HBaseConfiguration.create();
         BlackBox result = BlackBoxFactory.getHBaseDatabase(config);
         Assert.assertTrue(result instanceof HBaseJsonImpl);

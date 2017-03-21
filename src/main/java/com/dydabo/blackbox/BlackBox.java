@@ -27,7 +27,9 @@ public interface BlackBox<T extends BlackBoxable> {
     /**
      *
      * @param row
+     *
      * @return
+     *
      * @throws com.dydabo.blackbox.BlackBoxException
      */
     boolean delete(List<T> row) throws BlackBoxException;
@@ -35,7 +37,9 @@ public interface BlackBox<T extends BlackBoxable> {
     /**
      *
      * @param row
+     *
      * @return
+     *
      * @throws com.dydabo.blackbox.BlackBoxException
      */
     boolean insert(List<T> row) throws BlackBoxException;
@@ -43,7 +47,9 @@ public interface BlackBox<T extends BlackBoxable> {
     /**
      *
      * @param row
+     *
      * @return
+     *
      * @throws com.dydabo.blackbox.BlackBoxException
      */
     List<T> fetch(List<T> row) throws BlackBoxException;
@@ -52,6 +58,7 @@ public interface BlackBox<T extends BlackBoxable> {
      *
      * @param oldRow
      * @param newRow
+     *
      * @throws com.dydabo.blackbox.BlackBoxException
      */
     boolean update(List<T> newRow) throws BlackBoxException;

@@ -14,11 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.dydabo.blackbox.hbase;
+package com.dydabo.blackbox.hbase.tasks;
 
+import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.hbase.HBaseJsonImpl;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.hadoop.hbase.client.Connection;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -27,15 +27,16 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.fail;
-
 /**
  *
  * @author viswadas leher <vleher@gmail.com>
  */
-public class HBaseJsonImplNGTest {
+public class HBaseDeleteTaskNGTest {
 
-    public HBaseJsonImplNGTest() {
+    private final Connection connection;
+
+    public HBaseDeleteTaskNGTest() throws IOException {
+        this.connection = new HBaseJsonImpl<BlackBoxable>().getConnection();
     }
 
     @BeforeClass
@@ -55,18 +56,23 @@ public class HBaseJsonImplNGTest {
     }
 
     /**
-     * Test of getConfig method, of class HBaseJsonImpl.
+     * Test of compute method, of class HBaseDeleteTask.
      */
     @Test
-    public void testGetConnnection() {
-        try {
-            HBaseJsonImpl instance = new HBaseJsonImpl();
-            Connection result = instance.getConnection();
-            Assert.assertNotNull(result);
-        } catch (IOException ex) {
-            Logger.getLogger(HBaseJsonImplNGTest.class.getName()).log(Level.SEVERE, null, ex);
-            fail(ex.getMessage(), ex);
-        }
+    public void testCompute(BlackBoxable row, Boolean expResult) {
+        HBaseDeleteTask instance = new HBaseDeleteTask(connection, row);
+        Boolean result = instance.compute();
+        Assert.assertEquals(result, expResult);
+    }
+
+    /**
+     * Test of delete method, of class HBaseDeleteTask.
+     */
+    @Test
+    public void testDelete(BlackBoxable row, boolean expResult) throws Exception {
+        HBaseDeleteTask instance = new HBaseDeleteTask(connection, row);
+        boolean result = instance.delete(row);
+        Assert.assertEquals(result, expResult);
     }
 
 }

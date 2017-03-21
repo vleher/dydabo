@@ -59,7 +59,6 @@ public class HBaseConnectionManagerNGTest {
      */
     @Test
     public void testGetConnection() throws Exception {
-        System.out.println("getConnection");
 
         Connection result = HBaseConnectionManager.getConnection();
         Assert.assertNotNull(result);
@@ -76,7 +75,6 @@ public class HBaseConnectionManagerNGTest {
      */
     @Test
     public void testGetConnection_Configuration() throws Exception {
-        System.out.println("getConnection");
         Configuration config = HBaseConfiguration.create();
         Connection result = HBaseConnectionManager.getConnection(config);
         Assert.assertNotNull(result);
@@ -88,6 +86,14 @@ public class HBaseConnectionManagerNGTest {
         Assert.assertTrue(Modifier.isPrivate(constructor.getModifiers()));
         constructor.setAccessible(true);
         constructor.newInstance();
+    }
+
+    /**
+     * Test of closeAllConnections method, of class HBaseConnectionManager.
+     */
+    @Test
+    public void testCloseAllConnections() {
+        HBaseConnectionManager.closeAllConnections();
     }
 
 }
