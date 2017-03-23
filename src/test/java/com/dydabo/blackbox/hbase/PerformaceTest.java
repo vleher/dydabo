@@ -53,14 +53,14 @@ public class PerformaceTest {
             final int testSize = 10;
             // Delete all rows in table
             Customer c = new Customer(null, null);
-            List<Customer> allUsers = instance.fetch(Arrays.asList(c));
+            List<Customer> allUsers = instance.search(Arrays.asList(c));
             if (allUsers.size() > 0) {
                 instance.delete(allUsers);
             }
             // Insert new customers
             List<Customer> users = utils.generateCustomers(testSize);
             instance.update(users);
-            List results = instance.fetch(users);
+            List results = instance.search(users);
             System.out.println("Results : (" + testSize + ") :" + results.size());
             Assert.assertEquals(results.size(), testSize);
         } catch (BlackBoxException ex) {

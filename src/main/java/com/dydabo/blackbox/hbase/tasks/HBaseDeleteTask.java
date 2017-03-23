@@ -35,6 +35,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 /**
  *
  * @author viswadas leher <vleher@gmail.com>
+ * @param <T>
  */
 public class HBaseDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boolean> {
 
@@ -42,12 +43,22 @@ public class HBaseDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
     private final HBaseUtils utils;
     private List<T> rows;
 
+    /**
+     *
+     * @param connection
+     * @param row
+     */
     public HBaseDeleteTask(Connection connection, T row) {
         this.connection = connection;
         this.rows = Arrays.asList(row);
         this.utils = new HBaseUtils<T>();
     }
 
+    /**
+     *
+     * @param connection
+     * @param rows
+     */
     public HBaseDeleteTask(Connection connection, List<T> rows) {
         this.connection = connection;
         this.rows = rows;
@@ -64,6 +75,14 @@ public class HBaseDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
         return false;
     }
 
+    /**
+     *
+     * @param rows
+     *
+     * @return
+     *
+     * @throws BlackBoxException
+     */
     protected Boolean delete(List<T> rows) throws BlackBoxException {
         if (rows.size() < 2) {
             Boolean successFlag = true;
@@ -84,6 +103,14 @@ public class HBaseDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
         }
     }
 
+    /**
+     *
+     * @param row
+     *
+     * @return
+     *
+     * @throws BlackBoxException
+     */
     protected Boolean delete(T row) throws BlackBoxException {
         try (Admin admin = getConnection().getAdmin()) {
             // consider create to be is nothing but alter...so

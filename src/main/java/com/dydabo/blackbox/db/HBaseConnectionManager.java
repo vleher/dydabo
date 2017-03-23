@@ -38,10 +38,21 @@ public class HBaseConnectionManager {
     private HBaseConnectionManager() {
     }
 
+    /**
+     *
+     * @return
+     * @throws IOException
+     */
     public static Connection getConnection() throws IOException {
         return getConnection(defaultConfig);
     }
 
+    /**
+     *
+     * @param config
+     * @return
+     * @throws IOException
+     */
     public static Connection getConnection(Configuration config) throws IOException {
         Connection thisConnection = connectionPool.get(config.hashCode());
         if (thisConnection == null) {

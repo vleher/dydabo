@@ -62,16 +62,6 @@ public class HBaseDeleteTaskNGTest {
     }
 
     /**
-     * Test of compute method, of class HBaseDeleteTask.
-     */
-    @Test
-    public void testCompute(BlackBoxable row, Boolean expResult) {
-        HBaseDeleteTask instance = new HBaseDeleteTask(connection, row);
-        Boolean result = instance.compute();
-        Assert.assertEquals(result, expResult);
-    }
-
-    /**
      * Test of delete method, of class HBaseDeleteTask.
      */
     @Test(dataProvider = "testDeleteData")

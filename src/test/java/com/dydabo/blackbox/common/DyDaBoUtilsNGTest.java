@@ -86,18 +86,11 @@ public class DyDaBoUtilsNGTest {
     /**
      * Test of parseJsonString method, of class DyDaBoUtils.
      */
-    @Test(dataProvider = "testJsonString")
-    public void testParseJsonString(String jsonString, boolean expResult) {
-        Assert.assertEquals(DyDaBoUtils.parseJsonString(jsonString), expResult);
-    }
-
-    public Object[][] testJsonString() {
-        return new Object[][]{
-            {"{}", true},
-            {null, false},
-            {"", false}
-
-        };
+    @Test
+    public void testParseJsonString() {
+        Assert.assertNull(DyDaBoUtils.parseJsonString(null));
+        Assert.assertNull(DyDaBoUtils.parseJsonString("{"));
+        Assert.assertNull(DyDaBoUtils.parseJsonString("{]sss"));
     }
 
 }

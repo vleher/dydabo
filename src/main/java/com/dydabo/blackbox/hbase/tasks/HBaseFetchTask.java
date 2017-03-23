@@ -19,8 +19,6 @@ package com.dydabo.blackbox.hbase.tasks;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.common.DyDaBoUtils;
-import com.dydabo.blackbox.hbase.HBaseJsonImpl;
-import com.dydabo.blackbox.hbase.obj.HBaseTable;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -30,7 +28,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -38,96 +35,75 @@ import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Result;
-import org.apache.hadoop.hbase.client.ResultScanner;
-import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
-import org.apache.hadoop.hbase.filter.CompareFilter;
-import org.apache.hadoop.hbase.filter.FilterList;
-import org.apache.hadoop.hbase.filter.RegexStringComparator;
-import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.hadoop.hbase.util.Bytes;
 
 /**
  *
  * @author viswadas leher <vleher@gmail.com>
+ * @param <T>
  */
 public class HBaseFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
 
     private final Connection connection;
     private final HBaseUtils<T> utils;
-    private List<T> rows;
+    private List<String> rowKeys;
+    private T bean = null;
 
-    public HBaseFetchTask(Connection connection, T row) {
+    /**
+     *
+     * @param connection
+     * @param rowKey
+     * @param row
+     */
+    public HBaseFetchTask(Connection connection, String rowKey, T row) {
         this.connection = connection;
-        this.rows = Arrays.asList(row);
+        this.rowKeys = Arrays.asList(rowKey);
         this.utils = new HBaseUtils<T>();
+        this.bean = row;
     }
 
-    public HBaseFetchTask(Connection connection, List<T> rows) {
+    /**
+     *
+     * @param connection
+     * @param rowKeys
+     * @param row
+     */
+    public HBaseFetchTask(Connection connection, List<String> rowKeys, T row) {
         this.connection = connection;
-        this.rows = rows;
+        this.rowKeys = rowKeys;
         this.utils = new HBaseUtils<T>();
+        this.bean = row;
     }
 
-    protected List<T> fetch(List<T> rows) throws BlackBoxException {
-        if (rows.size() < 2) {
-            List<T> fullResult = new ArrayList<>();
-            for (T row : rows) {
-                fullResult.addAll(fetch(row));
-            }
-            return fullResult;
-        } else {
-            List<T> fullResult = new ArrayList<>();
-            int mid = rows.size() / 2;
-            HBaseFetchTask<T> fDeleteJob = new HBaseFetchTask<>(getConnection(), rows.subList(0, mid));
-            HBaseFetchTask<T> sDeleteJob = new HBaseFetchTask<>(getConnection(), rows.subList(mid, rows.size()));
-            fDeleteJob.fork();
-            List<T> secondResults = sDeleteJob.compute();
-            List<T> firstResults = fDeleteJob.join();
-            fullResult.addAll(firstResults);
-            fullResult.addAll(secondResults);
-            return fullResult;
-        }
-    }
-
-    protected List<T> fetch(T row) throws BlackBoxException {
-        List<T> results = new ArrayList<>();
+    /**
+     *
+     * @param rowKeys
+     *
+     * @return
+     *
+     * @throws BlackBoxException
+     */
+    protected List<T> fetch(List<String> rowKeys) throws BlackBoxException {
+        List<T> allResults = new ArrayList<>();
 
         try (Admin admin = getConnection().getAdmin()) {
             // consider create to be is nothing but alter...so
-            try (Table hTable = admin.getConnection().getTable(utils.getTableName(row))) {
-                Scan scan = new Scan();
-                // Get the filters : just simple filters for now
-                HBaseTable thisTable = utils.convertRowToHTable(row, false);
+            try (Table hTable = admin.getConnection().getTable(utils.getTableName(bean))) {
+                List<Get> getList = new ArrayList<>();
 
-                FilterList filterList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
-                boolean hasFilters = false;
-                for (Map.Entry<String, HBaseTable.ColumnFamily> colFamEntry : thisTable.getColumnFamilies().entrySet()) {
-                    String familyName = colFamEntry.getKey();
-                    HBaseTable.ColumnFamily colFamily = colFamEntry.getValue();
-                    for (Map.Entry<String, HBaseTable.Column> columnEntry : colFamily.getColumns().entrySet()) {
-                        String colName = columnEntry.getKey();
-                        HBaseTable.Column colValue = columnEntry.getValue();
-                        String regexValue = colValue.getColumnValue();
-                        if (regexValue instanceof String && DyDaBoUtils.isValidRegex((String) regexValue)) {
-                            RegexStringComparator regexComp = new RegexStringComparator((String) regexValue);
-                            SingleColumnValueFilter scvf = new SingleColumnValueFilter(Bytes.toBytes(familyName),
-                                    Bytes.toBytes(colName), CompareFilter.CompareOp.EQUAL, regexComp);
-                            filterList.addFilter(scvf);
-                            hasFilters = true;
-                        }
-
-                    }
-                }
-                if (hasFilters) {
-                    scan.setFilter(filterList);
+                for (String rowKey : rowKeys) {
+                    Get g = new Get(Bytes.toBytes(rowKey));
+                    getList.add(g);
                 }
 
-                try (ResultScanner resultScanner = hTable.getScanner(scan)) {
-                    for (Result result = resultScanner.next(); result != null; result = resultScanner.next()) {
-                        JsonObject jsonObject = new JsonObject();
-
+                Result[] results = hTable.get(getList);
+                for (Result result : results) {
+                    JsonObject jsonObject = new JsonObject();
+                    System.out.println("Result :" + result);
+                    if (result.listCells() != null) {
                         for (Cell listCell : result.listCells()) {
                             String value = Bytes.toString(CellUtil.cloneValue(listCell));
                             String keyName = Bytes.toString(CellUtil.cloneQualifier(listCell));
@@ -138,32 +114,35 @@ public class HBaseFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
                                 jsonObject.add(keyName, new JsonPrimitive(value));
                             }
                         }
-
-                        T resultObject = new Gson().fromJson(jsonObject, (Class<T>) row.getClass());
-                        if (resultObject != null) {
-                            results.add(resultObject);
-                        }
+                    }
+                    T resultObject = new Gson().fromJson(jsonObject, (Class<T>) bean.getClass());
+                    if (resultObject != null) {
+                        allResults.add(resultObject);
                     }
                 }
             }
         } catch (IOException ex) {
-            Logger.getLogger(HBaseJsonImpl.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(HBaseFetchTask.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return results;
+
+        return allResults;
     }
 
     @Override
     protected List<T> compute() {
         try {
-            return fetch(rows);
+            return HBaseFetchTask.this.fetch(rowKeys);
         } catch (BlackBoxException ex) {
-            Logger.getLogger(HBaseFetchTask.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(HBaseSearchTask.class.getName()).log(Level.SEVERE, null, ex);
         }
         return new ArrayList<>();
     }
 
+    /**
+     *
+     * @return
+     */
     public Connection getConnection() {
         return connection;
     }
-
 }

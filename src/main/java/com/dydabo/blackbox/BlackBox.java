@@ -19,55 +19,69 @@ package com.dydabo.blackbox;
 import java.util.List;
 
 /**
+ * The BlackBox interface allows you to insert, update, delete, search and fetch Objects from the Underlying database.
  *
  * @author viswadas leher
+ * @param <T>
  */
 public interface BlackBox<T extends BlackBoxable> {
 
     /**
+     * Delete a list of POJO beans that are rows in the table. Each of these objects should have a valid row key.
      *
-     * @param row
+     * @param rows a list of POJO
      *
-     * @return
+     * @return true if all deletes have been successful, false otherwise
      *
      * @throws com.dydabo.blackbox.BlackBoxException
      */
     boolean delete(List<T> rows) throws BlackBoxException;
 
     /**
+     * Inserts a list of rows into the table. The rows should not already exist in the table.
      *
-     * @param row
+     * @param rows a list of POJO
      *
-     * @return
+     * @return true if inserts are successful, false otherwise
      *
      * @throws com.dydabo.blackbox.BlackBoxException
      */
     boolean insert(List<T> rows) throws BlackBoxException;
 
     /**
+     * Search for all matching rows in the table, given a list of POJO. You can add known values to the POJO fields or regular
+     * expressions in the field.
      *
-     * @param row
+     * Example: to search for all names starting with David, you can do obj.setName("David.*") and pass in the obj to the
+     * search method.
      *
-     * @return
+     * @param rows a list of POJO
+     *
+     * @return list of POJO that match the criteria
      *
      * @throws com.dydabo.blackbox.BlackBoxException
      */
-    List<T> fetch(List<T> rows) throws BlackBoxException;
+    List<T> search(List<T> rows) throws BlackBoxException;
 
     /**
+     * Get all matching rows given a list of row keys.
      *
-     * @param rows
-     * @param useRowKeys
+     * @param rowKeys list of row keys
+     * @param bean    the POJO to return
      *
-     * @return
+     * @returna list of POJO that match the keys
      *
      * @throws BlackBoxException
      */
-    //List<T> fetch(List<T> rows, boolean useRowKeys) throws BlackBoxException;
+    List<T> fetch(List<String> rowKeys, T bean) throws BlackBoxException;
+
     /**
+     * Update or insert the rows that match the POJO. If a row does not exist, then it will added otherwise the existing row
+     * is updated with the new values.
      *
-     * @param oldRow
-     * @param newRow
+     * @param newRows a list of POJO
+     *
+     * @return true if update is successful, false otherwise
      *
      * @throws com.dydabo.blackbox.BlackBoxException
      */

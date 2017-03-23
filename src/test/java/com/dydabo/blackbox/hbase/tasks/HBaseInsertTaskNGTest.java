@@ -90,17 +90,6 @@ public class HBaseInsertTaskNGTest {
     }
 
     /**
-     * Test of compute method, of class HBaseInsertTask.
-     */
-    @Test
-    public void testCompute(BlackBoxable row, Boolean expResult) {
-        boolean checkExisting = true;
-        HBaseInsertTask instance = new HBaseInsertTask(connection, row, checkExisting);
-        Boolean result = instance.compute();
-        Assert.assertEquals(result, expResult);
-    }
-
-    /**
      * Test of getConnection method, of class HBaseInsertTask.
      */
     @Test

@@ -23,6 +23,7 @@ import com.dydabo.blackbox.db.HBaseConnectionManager;
 import com.dydabo.blackbox.hbase.tasks.HBaseDeleteTask;
 import com.dydabo.blackbox.hbase.tasks.HBaseFetchTask;
 import com.dydabo.blackbox.hbase.tasks.HBaseInsertTask;
+import com.dydabo.blackbox.hbase.tasks.HBaseSearchTask;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -37,6 +38,7 @@ import org.apache.hadoop.hbase.client.Connection;
 /**
  *
  * @author viswadas leher <vleher@gmail.com>
+ * @param <T>
  */
 public class HBaseJsonImpl<T extends BlackBoxable> implements BlackBox<T> {
 
@@ -44,6 +46,7 @@ public class HBaseJsonImpl<T extends BlackBoxable> implements BlackBox<T> {
 
     /**
      *
+     * @throws IOException
      */
     public HBaseJsonImpl() throws IOException {
         this.config = HBaseConfiguration.create();
@@ -52,6 +55,8 @@ public class HBaseJsonImpl<T extends BlackBoxable> implements BlackBox<T> {
     /**
      *
      * @param config
+     *
+     * @throws java.io.IOException
      */
     public HBaseJsonImpl(Configuration config) throws IOException {
         this.config = config;
@@ -60,6 +65,7 @@ public class HBaseJsonImpl<T extends BlackBoxable> implements BlackBox<T> {
     /**
      *
      * @return
+     * @throws java.io.IOException
      */
     public Connection getConnection() throws IOException {
         return HBaseConnectionManager.getConnection(config);
@@ -97,12 +103,25 @@ public class HBaseJsonImpl<T extends BlackBoxable> implements BlackBox<T> {
     }
 
     @Override
-    public List<T> fetch(List<T> rows) throws BlackBoxException {
+    public List<T> search(List<T> rows) throws BlackBoxException {
         List<T> combinedResults = new ArrayList<>();
         createTable(rows);
         ForkJoinPool fjPool = ForkJoinPool.commonPool();
         try {
-            HBaseFetchTask<T> fetchTask = new HBaseFetchTask<>(getConnection(), rows);
+            HBaseSearchTask<T> fetchTask = new HBaseSearchTask<>(getConnection(), rows);
+            return fjPool.invoke(fetchTask);
+        } catch (IOException ex) {
+            Logger.getLogger(HBaseJsonImpl.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return combinedResults;
+    }
+
+    @Override
+    public List<T> fetch(List<String> rowKeys, T row) throws BlackBoxException {
+        List<T> combinedResults = new ArrayList<>();
+        ForkJoinPool fjPool = ForkJoinPool.commonPool();
+        try {
+            HBaseFetchTask<T> fetchTask = new HBaseFetchTask<>(getConnection(), rowKeys, row);
             return fjPool.invoke(fetchTask);
         } catch (IOException ex) {
             Logger.getLogger(HBaseJsonImpl.class.getName()).log(Level.SEVERE, null, ex);
@@ -126,6 +145,12 @@ public class HBaseJsonImpl<T extends BlackBoxable> implements BlackBox<T> {
         return successFlag;
     }
 
+    /**
+     *
+     * @param rows
+     *
+     * @throws BlackBoxException
+     */
     protected void createTable(List<T> rows) throws BlackBoxException {
         if (rows.size() > 0) {
             try {

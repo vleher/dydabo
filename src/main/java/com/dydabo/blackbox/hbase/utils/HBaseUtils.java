@@ -38,11 +38,18 @@ import org.apache.hadoop.hbase.util.Bytes;
 /**
  *
  * @author viswadas leher <vleher@gmail.com>
+ * @param <T>
  */
 public class HBaseUtils<T extends BlackBoxable> {
 
     private static SortedSet tableCache = new TreeSet();
 
+    /**
+     *
+     * @param row
+     *
+     * @return
+     */
     public TableName getTableName(T row) {
         final String fullClassName = row.getClass().toString().substring(6).replaceAll("\\.", "");
         return TableName.valueOf(fullClassName);
@@ -50,8 +57,8 @@ public class HBaseUtils<T extends BlackBoxable> {
 
     /**
      *
-     * @param row   the value of row
-     * @param admin the value of admin
+     * @param row        the value of row
+     * @param connection
      *
      * @return the boolean
      *
@@ -87,6 +94,15 @@ public class HBaseUtils<T extends BlackBoxable> {
         }
     }
 
+    /**
+     *
+     * @param row
+     * @param includeObject
+     *
+     * @return
+     *
+     * @throws JsonSyntaxException
+     */
     public HBaseTable convertRowToHTable(T row, boolean includeObject) throws JsonSyntaxException {
         Map<String, Object> thisValueMap = new Gson().fromJson(row.getBBJson(), Map.class);
         HBaseTable hbaseTable = new HBaseTable(row.getBBRowKey());
@@ -116,6 +132,8 @@ public class HBaseUtils<T extends BlackBoxable> {
      * @param hTable the value of hTable
      *
      * @return the boolean
+     *
+     * @throws java.io.IOException
      */
     public boolean checkIfRowExists(T row, Table hTable) throws IOException {
         Get get = new Get(Bytes.toBytes(row.getBBRowKey()));

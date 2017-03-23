@@ -21,13 +21,14 @@ import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 
 /**
+ * Get an instance to to generic interface that allows you to interact with the backend database
  *
  * @author viswadas leher <vleher@gmail.com>
  */
 public class BlackBoxFactory {
 
     /**
-     *
+     * Constant specifying the HBase database
      */
     public final static String HBASE = "hbase";
 
@@ -36,11 +37,13 @@ public class BlackBoxFactory {
     }
 
     /**
+     * Get an instance by specifying the type of the database
      *
      * @param databaseType
-     * @param conn
      *
-     * @return
+     * @return a Blackbox instance
+     *
+     * @throws java.io.IOException
      */
     public static BlackBox getDatabase(String databaseType) throws IOException {
         switch (databaseType) {
@@ -51,6 +54,15 @@ public class BlackBoxFactory {
         }
     }
 
+    /**
+     * Get a BlackBox instance for the HBase database given the configuration
+     *
+     * @param config the HBase Configuration object
+     *
+     * @return a BlackBox instance
+     *
+     * @throws IOException
+     */
     public static BlackBox getHBaseDatabase(Configuration config) throws IOException {
         return new HBaseJsonImpl(config);
     }

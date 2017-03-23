@@ -29,20 +29,37 @@ import java.util.Map;
 public class HBaseTable {
 
     // The ColumnFamily names should be as small as possible for performance
+    /**
+     *
+     */
     public static final String DEFAULT_FAMILY = "D";
 
     private String rowKey;
     private Map<String, ColumnFamily> columnFamilies = null;
 
+    /**
+     *
+     * @param rowKey
+     */
     public HBaseTable(String rowKey) {
         this.rowKey = rowKey;
         this.columnFamilies = new HashMap<>();
     }
 
+    /**
+     *
+     * @return
+     */
     public ColumnFamily getDefaultFamily() {
         return createFamily(DEFAULT_FAMILY);
     }
 
+    /**
+     *
+     * @param familyName
+     *
+     * @return
+     */
     public ColumnFamily createFamily(String familyName) {
         ColumnFamily thisFamily = getColumnFamilies().get(familyName);
         if (thisFamily == null) {
@@ -51,14 +68,26 @@ public class HBaseTable {
         return getColumnFamilies().get(familyName);
     }
 
+    /**
+     *
+     * @return
+     */
     public String getRowKey() {
         return rowKey;
     }
 
+    /**
+     *
+     * @param rowKey
+     */
     public void setRowKey(String rowKey) {
         this.rowKey = rowKey;
     }
 
+    /**
+     *
+     * @return
+     */
     public Map<String, ColumnFamily> getColumnFamilies() {
         return columnFamilies;
     }
@@ -68,16 +97,28 @@ public class HBaseTable {
         return "HBaseTable{" + "rowKey=" + rowKey + ", columnFamilies=" + columnFamilies + '}';
     }
 
+    /**
+     *
+     */
     public class ColumnFamily {
 
         private String familyName = null;
         private Map<String, Column> columns = null;
 
+        /**
+         *
+         * @param familyName
+         */
         public ColumnFamily(String familyName) {
             this.familyName = familyName;
             this.columns = new HashMap<>();
         }
 
+        /**
+         *
+         * @param columnName
+         * @param columnValue
+         */
         public void addColumn(String columnName, Object columnValue) {
             if (columnValue instanceof Map) {
                 Map<Object, Object> thisMap = (Map) columnValue;
@@ -93,18 +134,34 @@ public class HBaseTable {
             }
         }
 
+        /**
+         *
+         * @return
+         */
         public String getFamilyName() {
             return familyName;
         }
 
+        /**
+         *
+         * @param familyName
+         */
         public void setFamilyName(String familyName) {
             this.familyName = familyName;
         }
 
+        /**
+         *
+         * @return
+         */
         public Map<String, Column> getColumns() {
             return columns;
         }
 
+        /**
+         *
+         * @param columns
+         */
         public void setColumns(Map<String, Column> columns) {
             this.columns = columns;
         }
@@ -116,24 +173,44 @@ public class HBaseTable {
 
     }
 
+    /**
+     *
+     */
     public class Column {
 
         private String columnName = null;
         private Object columnValue = null;
 
+        /**
+         *
+         * @param columnName
+         * @param columnValue
+         */
         public Column(String columnName, Object columnValue) {
             this.columnName = columnName;
             this.columnValue = columnValue;
         }
 
+        /**
+         *
+         * @return
+         */
         public String getColumnName() {
             return columnName;
         }
 
+        /**
+         *
+         * @param columnName
+         */
         public void setColumnName(String columnName) {
             this.columnName = columnName;
         }
 
+        /**
+         *
+         * @return
+         */
         public String getColumnValue() {
             if (DyDaBoUtils.isPrimitiveOrPrimitiveWrapperOrString(columnValue)) {
                 if (columnValue instanceof Number) {
@@ -149,6 +226,10 @@ public class HBaseTable {
             }
         }
 
+        /**
+         *
+         * @param columnValue
+         */
         public void setColumnValue(Object columnValue) {
             this.columnValue = columnValue;
         }

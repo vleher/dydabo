@@ -18,16 +18,24 @@ package com.dydabo.blackbox;
 
 /**
  *
+ * The interface that needs to be implemented by the POJO that needs to be saved into the Database.
+ *
  * @author viswadas leher
  */
 public interface BlackBoxable {
 
     /**
+     * Create a row key that will be used to store the object to the database
      *
-     * @return
+     * @return the row key or an unique identifier
      */
     String getBBRowKey();
 
+    /**
+     * A Json representation of the POJO
+     *
+     * @return a valid Json string
+     */
     String getBBJson();
 
 }

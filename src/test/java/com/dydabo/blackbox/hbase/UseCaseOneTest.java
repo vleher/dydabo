@@ -92,7 +92,7 @@ public class UseCaseOneTest {
         eList.add(new Employee(null, "Dav.*"));
         eList.add(new Customer(null, "Dav.*"));
 
-        List<BlackBoxable> searchResult = instance.fetch(eList);
+        List<BlackBoxable> searchResult = instance.search(eList);
 
         for (BlackBoxable res : searchResult) {
             if (res instanceof User) {
@@ -113,13 +113,21 @@ public class UseCaseOneTest {
     @Test
     public void testUseCaseThree() throws BlackBoxException {
         // Insert an unique record
-        Customer cust = new Customer(new Random().nextInt(1000), "AQWERDSFSTOIOPIoioioiIIII");
+        Customer cust = new Customer(new Random().nextInt(1000), "AQWERDSFSTOIOPIoioioiIIII1111");
         instance.insert(Arrays.asList(cust));
+        Customer cust1 = new Customer(new Random().nextInt(1000), "AQWERDSFSTOIOPIoioioiIIII222");
+        instance.insert(Arrays.asList(cust1));
+        Customer cust2 = new Customer(new Random().nextInt(1000), "AQWERDSFSTOIOPIoioioiIIII333");
+        instance.insert(Arrays.asList(cust2));
 
-        List<BlackBoxable> searchResult = instance.fetch(Arrays.asList(cust));
+        List<BlackBoxable> searchResult = instance.search(Arrays.asList(cust));
         Assert.assertEquals(searchResult.size(), 1);
+
+        searchResult = instance.fetch(Arrays.asList(cust.getBBRowKey(), cust1.getBBRowKey(), cust2.getBBRowKey()), cust);
+        Assert.assertEquals(searchResult.size(), 3);
+
         // Try to clean up
-        instance.delete(searchResult);
+        instance.delete(Arrays.asList(cust, cust1, cust2));
     }
 
 }

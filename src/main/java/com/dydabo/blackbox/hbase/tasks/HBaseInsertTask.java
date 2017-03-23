@@ -37,6 +37,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 /**
  *
  * @author viswadas leher <vleher@gmail.com>
+ * @param <T>
  */
 public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boolean> {
 
@@ -45,6 +46,12 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
     private final boolean checkExisting;
     private List<T> rows;
 
+    /**
+     *
+     * @param connection
+     * @param row
+     * @param checkExisting
+     */
     public HBaseInsertTask(Connection connection, T row, boolean checkExisting) {
         this.connection = connection;
         this.rows = Arrays.asList(row);
@@ -52,6 +59,12 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
         this.utils = new HBaseUtils<T>();
     }
 
+    /**
+     *
+     * @param connection
+     * @param rows
+     * @param checkExisting
+     */
     public HBaseInsertTask(Connection connection, List<T> rows, boolean checkExisting) {
         this.connection = connection;
         this.rows = rows;
@@ -59,6 +72,15 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
         this.utils = new HBaseUtils<T>();
     }
 
+    /**
+     *
+     * @param rows
+     * @param checkExisting
+     *
+     * @return
+     *
+     * @throws BlackBoxException
+     */
     protected Boolean insert(List<T> rows, boolean checkExisting) throws BlackBoxException {
         if (rows.size() < 2) {
             Boolean successFlag = Boolean.TRUE;
@@ -79,6 +101,15 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
         }
     }
 
+    /**
+     *
+     * @param row
+     * @param checkExisting
+     *
+     * @return
+     *
+     * @throws BlackBoxException
+     */
     protected Boolean insert(T row, boolean checkExisting) throws BlackBoxException {
         boolean successFlag = true;
         try (final Admin admin = getConnection().getAdmin()) {
@@ -127,6 +158,10 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
         return false;
     }
 
+    /**
+     *
+     * @return
+     */
     public Connection getConnection() {
         return connection;
     }

@@ -26,9 +26,22 @@ import com.google.gson.JsonSyntaxException;
  */
 public class DyDaBoUtils {
 
+    /**
+     *
+     */
     public static final String EMPTY_ARRAY = "[]";
+
+    /**
+     *
+     */
     public static final String EMPTY_MAP = "{}";
 
+    /**
+     *
+     * @param str
+     *
+     * @return
+     */
     public static boolean isBlankOrNull(String... str) {
         for (String s : str) {
             if (s == null || s.trim().isEmpty()) {
@@ -38,6 +51,12 @@ public class DyDaBoUtils {
         return false;
     }
 
+    /**
+     *
+     * @param regexValue
+     *
+     * @return
+     */
     public static boolean isValidRegex(String regexValue) {
 
         if (isBlankOrNull(regexValue)) {
@@ -55,11 +74,19 @@ public class DyDaBoUtils {
         return true;
     }
 
+    /**
+     *
+     * @param jsonString
+     *
+     * @return
+     */
     public static JsonElement parseJsonString(String jsonString) {
         try {
             JsonElement elem = new JsonParser().parse(jsonString);
             return elem;
         } catch (JsonSyntaxException ex) {
+            // ignore for now
+        } catch (NullPointerException ex) {
             // ignore for now
         }
 
@@ -68,7 +95,8 @@ public class DyDaBoUtils {
 
     /**
      *
-     * @param type the value of type
+     *
+     * @param obj
      *
      * @return the boolean
      */

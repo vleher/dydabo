@@ -22,7 +22,6 @@ import com.dydabo.blackbox.beans.Employee;
 import com.dydabo.blackbox.hbase.HBaseJsonImpl;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.apache.hadoop.hbase.client.Connection;
@@ -31,17 +30,18 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 /**
  *
  * @author viswadas leher <vleher@gmail.com>
  */
-public class HBaseFetchTaskNGTest {
+public class HBaseSearchTaskNGTest {
 
-    private Connection connection;
+    private final Connection connection;
 
-    public HBaseFetchTaskNGTest() throws IOException {
+    public HBaseSearchTaskNGTest() throws IOException {
         this.connection = new HBaseJsonImpl<BlackBoxable>().getConnection();
         new HBaseUtils<BlackBoxable>().createTable(new Customer(111, "sss"), connection);
         new HBaseUtils<BlackBoxable>().createTable(new Employee(111, "sss"), connection);
@@ -64,35 +64,28 @@ public class HBaseFetchTaskNGTest {
     }
 
     /**
-     * Test of fetch method, of class HBaseFetchTask.
+     * Test of search method, of class HBaseSearchTask.
      */
-    @Test
-    public void testFetch() throws Exception {
-        List<String> rowKeys = new ArrayList<>();
-        rowKeys.add("1");
-        rowKeys.add("2");
-        final Customer cust = new Customer(null, null);
-
-        HBaseFetchTask instance = new HBaseFetchTask(connection, rowKeys, cust);
-        List result = instance.fetch(rowKeys);
+    @Test(dataProvider = "searchData")
+    public void testSearch(BlackBoxable row) throws Exception {
+        HBaseSearchTask instance = new HBaseSearchTask(connection, row);
+        List result = instance.search(row);
         Assert.assertNotNull(result);
+    }
 
+    @DataProvider(name = "searchData")
+    public Object[][] searchData() {
+        return new Object[][]{
+            {new Customer(2, null)}
+        };
     }
 
     /**
-     * Test of compute method, of class HBaseFetchTask.
-     */
-    @Test
-    public void testCompute() {
-
-    }
-
-    /**
-     * Test of getConnection method, of class HBaseFetchTask.
+     * Test of getConnection method, of class HBaseSearchTask.
      */
     @Test
     public void testGetConnection() {
-        HBaseFetchTask instance = new HBaseFetchTask(connection, Collections.emptyList(), null);
+        HBaseSearchTask instance = new HBaseSearchTask(connection, Collections.emptyList());
         Connection result = instance.getConnection();
         Assert.assertNotNull(result);
     }

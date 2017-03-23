@@ -23,7 +23,6 @@ import com.dydabo.blackbox.hbase.HBaseJsonImpl;
 import com.dydabo.blackbox.hbase.obj.HBaseTable;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Map;
 import org.apache.hadoop.hbase.DoNotRetryIOException;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
@@ -103,9 +102,9 @@ public class HBaseUtilsNGTest {
      * Test of convertRowToHTable method, of class HBaseUtils.
      */
     @Test
-    public void testConvertJsonToMap(BlackBoxable row, Map<String, String> valueMap) {
+    public void testConvertJsonToMap() {
         HBaseUtils instance = new HBaseUtils();
-        HBaseTable result = instance.convertRowToHTable(row, true);
+        HBaseTable result = instance.convertRowToHTable(new Customer(12, "1234"), true);
         Assert.assertNotNull(result);
     }
 
