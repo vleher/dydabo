@@ -59,7 +59,7 @@ public class HBaseConnectionManager {
         return thisConnection;
     }
 
-    public static void closeAllConnections() {
+    public static synchronized void closeAllConnections() {
         for (Map.Entry<Integer, Connection> entry : connectionPool.entrySet()) {
             try {
                 Connection value = entry.getValue();
@@ -68,5 +68,6 @@ public class HBaseConnectionManager {
                 Logger.getLogger(HBaseConnectionManager.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        connectionPool.clear();
     }
 }

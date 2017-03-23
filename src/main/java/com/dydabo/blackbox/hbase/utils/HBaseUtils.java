@@ -16,21 +16,34 @@
  */
 package com.dydabo.blackbox.hbase.utils;
 
+import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.hbase.HBaseJsonImpl;
+import com.dydabo.blackbox.hbase.obj.HBaseTable;
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Table;
@@ -42,11 +55,108 @@ import org.apache.hadoop.hbase.util.Bytes;
  */
 public class HBaseUtils<T extends BlackBoxable> {
 
-    private SortedSet tableCache = new TreeSet();
+    private static SortedSet tableCache = new TreeSet();
 
-    public String generateJson(HashMap<String, String> valueTable) {
-        String jsonString = new Gson().toJson(valueTable);
-        return jsonString;
+    public T generateObjectFromMap(HashMap<String, Object> valueTable, T row) throws BlackBoxException {
+
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        //gsonBuilder.registerTypeAdapter(row.getClass(), new GenericClassDeserializer<T>());
+
+        Gson gson = gsonBuilder.create();
+
+        try {
+            System.out.println("Generate Object from:" + valueTable);
+
+            Constructor<?>[] publicConstructors = row.getClass().getConstructors();
+            if (publicConstructors.length == 0) {
+                throw new BlackBoxException("No public constructors found in class " + row);
+            }
+
+            T resultObject = null;
+
+            for (Constructor<?> publicConstructor : publicConstructors) {
+                if (publicConstructor.getParameterCount() == 0) {
+                    try {
+                        resultObject = (T) publicConstructor.newInstance();
+                        break;
+                    } catch (InstantiationException ex) {
+                        Logger.getLogger(HBaseUtils.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (IllegalAccessException ex) {
+                        Logger.getLogger(HBaseUtils.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (IllegalArgumentException ex) {
+                        Logger.getLogger(HBaseUtils.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (InvocationTargetException ex) {
+                        Logger.getLogger(HBaseUtils.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+
+                if (resultObject == null) {
+                    try {
+                        List<Object> args = new ArrayList<>();
+                        for (int i = 0; i < publicConstructor.getParameterCount(); i++) {
+                            args.add(null);
+                        }
+                        resultObject = (T) publicConstructor.newInstance(args.toArray());
+                        break;
+                    } catch (InstantiationException ex) {
+                        Logger.getLogger(HBaseUtils.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (IllegalAccessException ex) {
+                        Logger.getLogger(HBaseUtils.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (IllegalArgumentException ex) {
+                        Logger.getLogger(HBaseUtils.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (InvocationTargetException ex) {
+                        Logger.getLogger(HBaseUtils.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+
+            if (publicConstructors.length == 0) {
+                throw new BlackBoxException("No suitable constructors found in class " + row);
+            }
+
+            JsonObject json = new JsonObject();
+
+            BeanInfo beanInfo = Introspector.getBeanInfo(row.getClass(), Object.class);
+            for (PropertyDescriptor propertyDescriptor : beanInfo.getPropertyDescriptors()) {
+                Method writeMethod = propertyDescriptor.getWriteMethod();
+                if (writeMethod != null) {
+                    System.out.println("Write Method:" + writeMethod);
+                    Class<?>[] paramTypes = writeMethod.getParameterTypes();
+                    // We recognize only setter methods with exactly one parameter
+                    if (paramTypes.length == 1) {
+                        Class thisType = paramTypes[0];
+
+                        final Object propValue = valueTable.get(writeMethod.getName().substring(3));
+                        System.out.println(writeMethod.getName() + " :" + thisType + " :" + propValue);
+                        if (thisType.isAssignableFrom(String.class)) {
+                            System.out.println("Assigning :" + writeMethod);
+                            writeMethod.invoke(resultObject, propValue);
+                        }
+                    }
+                }
+            }
+
+            for (Map.Entry<String, Object> entry : valueTable.entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+                System.out.println("Key:" + key + " => " + value + " :" + value.getClass());
+
+            }
+            System.out.println("Result Object :" + resultObject);
+            return resultObject;
+        } catch (IntrospectionException ex) {
+            Logger.getLogger(HBaseUtils.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            Logger.getLogger(HBaseUtils.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IllegalArgumentException ex) {
+            Logger.getLogger(HBaseUtils.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InvocationTargetException ex) {
+            Logger.getLogger(HBaseUtils.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SecurityException ex) {
+            Logger.getLogger(HBaseUtils.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return null;
     }
 
     public TableName getTableName(T row) {
@@ -63,28 +173,55 @@ public class HBaseUtils<T extends BlackBoxable> {
      *
      * @throws java.io.IOException
      */
-    public boolean createTable(T row, Admin admin) throws IOException {
-        TableName tableName = getTableName(row);
-        if (!tableCache.contains(tableName) && !admin.tableExists(tableName)) {
-            HTableDescriptor tableDescriptor = new HTableDescriptor(tableName);
-            HColumnDescriptor dFamily = new HColumnDescriptor(HBaseJsonImpl.DEFAULT_FAMILY);
-            tableDescriptor.addFamily(dFamily);
-            admin.createTable(tableDescriptor);
-            tableCache.add(tableName);
+    public boolean createTable(T row, Connection connection) throws IOException {
+        try (Admin admin = connection.getAdmin()) {
+            Object lockObject = new Object();
+            TableName tableName = getTableName(row);
+
+            if (tableCache.contains(tableName)) {
+                return true;
+            }
+
+            if (admin.tableExists(tableName)) {
+                tableCache.add(tableName);
+                return true;
+            }
+
+            synchronized (lockObject) {
+                HTableDescriptor tableDescriptor = new HTableDescriptor(tableName);
+
+                HBaseTable hTable = convertJsonToMap(row, true);
+                for (HBaseTable.ColumnFamily value : hTable.getColumnFamilies().values()) {
+                    HColumnDescriptor dFamily = new HColumnDescriptor(value.getFamilyName());
+                    tableDescriptor.addFamily(dFamily);
+                }
+                admin.createTable(tableDescriptor);
+                tableCache.add(tableName);
+            }
+            return true;
         }
-        return true;
     }
 
-    public Map<String, String> convertJsonToMap(T row, Map<String, String> valueMap) throws JsonSyntaxException {
-        JsonParser jsonParser = new JsonParser();
-        JsonElement jsonTree = jsonParser.parse(row.getBBJson());
-        for (Map.Entry<String, JsonElement> entry : jsonTree.getAsJsonObject().entrySet()) {
-            JsonElement val = entry.getValue();
-            System.out.println(entry.getKey() + ":" + val.toString() + " :" + val.getClass());
-            System.out.println(val.getAsString());
-            valueMap.put(entry.getKey(), val.getAsString());
+    public HBaseTable convertJsonToMap(T row, boolean includeObject) throws JsonSyntaxException {
+        Map<String, Object> thisValueMap = new Gson().fromJson(row.getBBJson(), Map.class);
+        System.out.println("New Map:" + thisValueMap);
+        HBaseTable hbaseTable = new HBaseTable(row.getBBRowKey());
+
+        for (Map.Entry<String, Object> entry : thisValueMap.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+
+            if (isPrimitiveOrPrimitiveWrapperOrString(value)) {
+                System.out.println("Primitive :" + value);
+                hbaseTable.getDefaultFamily().addColumn(key, value);
+            } else if (includeObject) {
+                System.out.println("key:" + key + " :" + value + " :" + value.getClass());
+                hbaseTable.createFamily(key).addColumn(key, value);
+            }
         }
-        return valueMap;
+
+        System.out.println("HbaseTable:" + hbaseTable);
+        return hbaseTable;
     }
 
     /**
@@ -102,6 +239,20 @@ public class HBaseUtils<T extends BlackBoxable> {
         } else {
             return true;
         }
+    }
+
+    /**
+     *
+     * @param type the value of type
+     *
+     * @return the boolean
+     */
+    public static boolean isPrimitiveOrPrimitiveWrapperOrString(Object obj) {
+        Class<?> type = obj.getClass();
+        return (type.isPrimitive() && type != void.class) ||
+                type == Double.class || type == Float.class || type == Long.class ||
+                type == Integer.class || type == Short.class || type == Character.class ||
+                type == Byte.class || type == Boolean.class || type == String.class;
     }
 
 }

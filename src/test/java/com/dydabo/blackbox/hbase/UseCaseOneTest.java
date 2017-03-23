@@ -20,6 +20,7 @@ import com.dydabo.blackbox.BlackBox;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxFactory;
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.beans.Customer;
 import com.dydabo.blackbox.beans.Employee;
 import com.dydabo.blackbox.beans.User;
 import com.dydabo.blackbox.hbase.utils.DyDaBoTestUtils;
@@ -65,12 +66,12 @@ public class UseCaseOneTest {
     @Test
     public void testUseCaseOne() throws BlackBoxException {
         // Update 100 new Users
-        List<User> userList = utils.generateUsers(2);
+        List<Customer> userList = utils.generateCustomers(2);
         boolean success = instance.update(userList);
         Assert.assertTrue(success);
 
         // Delete Users
-        userList = utils.generateUsers(10);
+        userList = utils.generateCustomers(10);
         success = instance.delete(userList);
         Assert.assertTrue(success);
     }
@@ -85,7 +86,7 @@ public class UseCaseOneTest {
         // Search
         List<BlackBoxable> eList = new ArrayList();
         eList.add(new Employee(null, "Dav.*"));
-        eList.add(new User(null, "Dav.*"));
+        eList.add(new Customer(null, "Dav.*"));
 
         List<BlackBoxable> searchResult = instance.fetch(eList);
 
@@ -95,12 +96,6 @@ public class UseCaseOneTest {
             if (res instanceof User) {
                 final String uName = ((User) res).getUserName();
                 if (!uName.startsWith("Dav")) {
-                    Assert.fail(" Does not start with Dav " + res);
-                }
-            } else if (res instanceof Employee) {
-                final String eName = ((Employee) res).getEmployeeName();
-                System.out.println("" + eName + " :" + eName.startsWith("Dav"));
-                if (!eName.startsWith("Dav")) {
                     Assert.fail(" Does not start with Dav " + res);
                 }
             }

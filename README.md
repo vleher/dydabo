@@ -14,7 +14,7 @@ Basically, you can add and remove fields as you like, which is beneficial during
 
 Supported Databases
 -----------------------------------
-Currently, HBase is the database of choice and the only one that is supported. Other NoSql databases are being worked on.
+Currently, HBase/Hadoop is the database of choice and the only one that is supported. Other NoSql databases are being worked on.
 
 
 Status of the Project
@@ -28,7 +28,7 @@ I have used it in a couple of simple projects and it has so far worked quite wel
 Usage
 -----------------------------------
 
-Get the BlackBox instance, using the following code
+Get the BlackBox instance, using either of the following statements (for HBase):
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 BlackBox instanceOne = BlackBoxFactory.getDatabase(BlackBoxFactory.HBASE);
@@ -60,21 +60,21 @@ Insert, Update, Delete and Search the POJO to the backend
 BlackBox instanceOne = BlackBoxFactory.getDatabase(BlackBoxFactory.HBASE);
 User user = new User(21, "name");
 List<User> userList = new ArrayList<>();
-    userList.add(new User(123, "David Jones");
-    userList.add(new User(234, "Lady Gaga");
-    // insert to database
-    boolean success = instanceOne.insert(user);
-    // update the existing row
-    success = instanceOne.update(user);
-    // delete the row
-    success = instanceOne.delete(user);
-    // search/get for the row
-    User u = new User(null, "David.*");
-    // this will fetch all users with the name David
-    List<User> searchResults = instanceOne.fetch(u);
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+userList.add(new User(123, "David Jones");
+userList.add(new User(234, "Lady Gaga");
+// insert to database
+boolean success = instanceOne.insert(user);
+// update the existing row
+success = instanceOne.update(user);
+// delete the row
+success = instanceOne.delete(user);
+// search/get for the row
+User u = new User(null, "David.*");
+// this will fetch all users with the name David
+List<User> searchResults = instanceOne.fetch(u);
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-        This is just a generalized simple example to demonstrate the functionality of the library.
+This is just a generalized simple example to demonstrate the functionality of the library.
 
 
 

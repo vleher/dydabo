@@ -16,8 +16,8 @@
  */
 package com.dydabo.blackbox.hbase.utils;
 
+import com.dydabo.blackbox.beans.Customer;
 import com.dydabo.blackbox.beans.Employee;
-import com.dydabo.blackbox.beans.User;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -32,26 +32,27 @@ public class DyDaBoTestUtils {
     public List<String> FirstNames = Arrays.asList("David", "Peter", "Tom", "Dick", "Harry", "John", "Bill", "Adele", "Britney", "Mariah");
     public List<String> LastNames = Arrays.asList("Johnson", "Becker", "Smith", "Gates", "King", "Spears", "Perry", "Carey", "Gomez", "Lopez");
 
-    public List<User> generateUsers(int maxNumber) {
-        List<User> userList = new ArrayList<>();
+    public List<Customer> generateCustomers(int maxNumber) {
+        List<Customer> custList = new ArrayList<>();
         Random random = new Random();
         for (int i = 0; i < maxNumber; i++) {
-            int id = random.nextInt();
-            final User user = new User(id, FirstNames.get(Math.abs(id % FirstNames.size())) + " " +
-                     LastNames.get(Math.abs(id % LastNames.size())));
-            user.setTaxRate(random.nextDouble() * 100);
-            userList.add(user);
+            int id = random.nextInt(maxNumber * 2);
+            final Customer customer = new Customer(id, FirstNames.get(Math.abs(id % FirstNames.size())) + " " +
+                    LastNames.get(Math.abs(id % LastNames.size())));
+            customer.setTaxRate(random.nextDouble() * 100);
+            customer.initData();
+            custList.add(customer);
         }
-        return userList;
+        return custList;
     }
 
     public List<Employee> generateEmployees(int maxNumber) {
         List<Employee> userList = new ArrayList<>();
         Random random = new Random();
         for (int i = 0; i < maxNumber; i++) {
-            int id = random.nextInt();
+            int id = random.nextInt(maxNumber * 2);
             final Employee employee = new Employee(id, FirstNames.get(Math.abs(id % FirstNames.size())) +
-                     " " + LastNames.get(Math.abs(id % LastNames.size())));
+                    " " + LastNames.get(Math.abs(id % LastNames.size())));
             userList.add(employee);
         }
         return userList;

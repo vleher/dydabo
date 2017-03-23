@@ -17,9 +17,10 @@
 package com.dydabo.blackbox.hbase.utils;
 
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.beans.Customer;
 import com.dydabo.blackbox.beans.Employee;
-import com.dydabo.blackbox.beans.User;
 import com.dydabo.blackbox.hbase.HBaseJsonImpl;
+import com.dydabo.blackbox.hbase.obj.HBaseTable;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -70,8 +71,8 @@ public class HBaseUtilsNGTest {
     public void testGenerateJson() {
         HashMap<String, String> valueTable = new HashMap<>();
         HBaseUtils instance = new HBaseUtils();
-        String result = instance.generateJson(valueTable);
-        Assert.assertNotNull(result);
+//        String result = instance.generateJson(valueTable);
+//        Assert.assertNotNull(result);
     }
 
     /**
@@ -99,14 +100,14 @@ public class HBaseUtilsNGTest {
         HBaseJsonImpl instance = new HBaseJsonImpl();
         Admin admin = instance.getConnection().getAdmin();
         boolean expResult = true;
-        boolean result = new HBaseUtils().createTable(row, admin);
+        boolean result = new HBaseUtils().createTable(row, instance.getConnection());
         assertEquals(result, expResult);
     }
 
     @DataProvider(name = "createtabledata")
     public Object[][] createTableData() {
         return new Object[][]{
-            {new User(null, null)},
+            {new Customer(null, null)},
             {new Employee(null, null)}
         };
     }
@@ -118,8 +119,8 @@ public class HBaseUtilsNGTest {
     public void testConvertJsonToMap(BlackBoxable row, Map<String, String> valueMap) {
         HBaseUtils instance = new HBaseUtils();
         Map expResult = null;
-        Map result = instance.convertJsonToMap(row, valueMap);
-        assertEquals(result, expResult);
+        HBaseTable result = instance.convertJsonToMap(row, true);
+        Assert.assertNotNull(result);
     }
 
     /**
@@ -131,9 +132,8 @@ public class HBaseUtilsNGTest {
         final HBaseJsonImpl<BlackBoxable> hBaseJsonImpl = new HBaseJsonImpl<>();
         Admin admin = hBaseJsonImpl.getConnection().getAdmin();
         try {
-            Table hTable = admin.getConnection().getTable(new HBaseUtils().getTableName(row));
+            Table hTable = admin.getConnection().getTable(instance.getTableName(row));
             if (hTable != null) {
-
                 if (expResult) {
                     hBaseJsonImpl.update(Arrays.asList(row));
                 }
@@ -151,8 +151,8 @@ public class HBaseUtilsNGTest {
     @DataProvider(name = "rowexistsdata")
     public Object[][] rowExistsData() {
         return new Object[][]{
-            {new Employee(1010101345, null), false},
-            {new Employee(12312312, null), true}
+            {new Employee(1010101345, "Dummy Name"), false},
+            {new Employee(12312312, "Adele"), true}
         };
     }
 

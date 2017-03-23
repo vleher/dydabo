@@ -17,14 +17,20 @@
 package com.dydabo.blackbox.hbase.tasks;
 
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.beans.Customer;
+import com.dydabo.blackbox.beans.Employee;
 import com.dydabo.blackbox.hbase.HBaseJsonImpl;
+import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Random;
 import org.apache.hadoop.hbase.client.Connection;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 /**
@@ -34,13 +40,17 @@ import org.testng.annotations.Test;
 public class HBaseInsertTaskNGTest {
 
     private final Connection connection;
+    private Random random = new Random();
 
     public HBaseInsertTaskNGTest() throws IOException {
         this.connection = new HBaseJsonImpl<BlackBoxable>().getConnection();
+        new HBaseUtils<BlackBoxable>().createTable(new Customer(111, "sss"), connection);
+        new HBaseUtils<BlackBoxable>().createTable(new Employee(111, "sss"), connection);
     }
 
     @BeforeClass
     public static void setUpClass() throws Exception {
+
     }
 
     @AfterClass
@@ -58,13 +68,22 @@ public class HBaseInsertTaskNGTest {
     /**
      * Test of insert method, of class HBaseInsertTask.
      */
-    @Test
+    @Test(dataProvider = "insertData")
     public void testInsert(BlackBoxable row, Boolean expResult) throws Exception {
         boolean checkExisting = true;
         HBaseInsertTask instance = new HBaseInsertTask(connection, row, checkExisting);
+        System.out.println("Closed? :" + connection.isClosed());
         Boolean result = instance.insert(row, checkExisting);
         Assert.assertEquals(result, expResult);
+    }
 
+    @DataProvider(name = "insertData")
+    public Object[][] insertData() {
+        Customer custOne = new Customer(random.nextInt(10000), "Harry David");
+        custOne.initData();
+        return new Object[][]{
+            {custOne, true}
+        };
     }
 
     /**
@@ -83,7 +102,7 @@ public class HBaseInsertTaskNGTest {
      */
     @Test
     public void testGetConnection() {
-        HBaseInsertTask instance = new HBaseInsertTask(connection, null, true);;
+        HBaseInsertTask instance = new HBaseInsertTask(connection, Collections.emptyList(), true);;
         Connection result = instance.getConnection();
         Assert.assertNotNull(result);
     }

@@ -16,45 +16,54 @@
  */
 package com.dydabo.blackbox.beans;
 
-import com.dydabo.blackbox.BlackBoxable;
-
 /**
  *
  * @author viswadas leher <vleher@gmail.com>
  */
-public abstract class User implements BlackBoxable {
+class Address {
 
-    private String userName;
-    private Integer userId;
-    private Double taxRate;
+    private String street;
+    private String city;
+    private String state;
+    private String country;
 
-    public User(Integer userId, String userName) {
-        this.userId = userId;
-        this.userName = userName;
+    public Address(String street, String city, String state, String country) {
+        this.street = street;
+        this.city = city;
+        this.state = state;
+        this.country = country;
     }
 
-    public String getUserName() {
-        return userName;
+    public String getStreet() {
+        return street;
     }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
+    public void setStreet(String street) {
+        this.street = street;
     }
 
-    public Integer getUserId() {
-        return userId;
+    public String getCity() {
+        return city;
     }
 
-    public void setUserId(Integer userId) {
-        this.userId = userId;
+    public void setCity(String city) {
+        this.city = city;
     }
 
-    public Double getTaxRate() {
-        return taxRate;
+    public String getState() {
+        return state;
     }
 
-    public void setTaxRate(Double taxRate) {
-        this.taxRate = taxRate;
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
     }
 
 }

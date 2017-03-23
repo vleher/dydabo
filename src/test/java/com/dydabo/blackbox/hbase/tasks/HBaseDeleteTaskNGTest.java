@@ -17,7 +17,10 @@
 package com.dydabo.blackbox.hbase.tasks;
 
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.beans.Customer;
+import com.dydabo.blackbox.beans.Employee;
 import com.dydabo.blackbox.hbase.HBaseJsonImpl;
+import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import java.io.IOException;
 import org.apache.hadoop.hbase.client.Connection;
 import org.testng.Assert;
@@ -37,6 +40,8 @@ public class HBaseDeleteTaskNGTest {
 
     public HBaseDeleteTaskNGTest() throws IOException {
         this.connection = new HBaseJsonImpl<BlackBoxable>().getConnection();
+        new HBaseUtils<BlackBoxable>().createTable(new Customer(111, "sss"), connection);
+        new HBaseUtils<BlackBoxable>().createTable(new Employee(111, "sss"), connection);
     }
 
     @BeforeClass

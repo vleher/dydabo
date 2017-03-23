@@ -19,7 +19,7 @@ package com.dydabo.blackbox.hbase;
 import com.dydabo.blackbox.BlackBox;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxFactory;
-import com.dydabo.blackbox.beans.User;
+import com.dydabo.blackbox.beans.Customer;
 import com.dydabo.blackbox.hbase.utils.DyDaBoTestUtils;
 import java.io.IOException;
 import java.util.List;
@@ -49,9 +49,12 @@ public class PerformaceTest {
     @Test
     public void testPerformanceOne() {
         try {
-            List<User> users = utils.generateUsers(2000);
+            final int testSize = 2;
+            List<Customer> users = utils.generateCustomers(testSize);
             instance.update(users);
-            instance.fetch(users);
+            List results = instance.fetch(users);
+            System.out.println("Results : (" + testSize + ") :" + results.size());
+            Assert.assertEquals(results.size(), testSize);
             instance.delete(users);
         } catch (BlackBoxException ex) {
             Logger.getLogger(PerformaceTest.class.getName()).log(Level.SEVERE, null, ex);

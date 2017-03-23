@@ -17,8 +17,12 @@
 package com.dydabo.blackbox.hbase.tasks;
 
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.beans.Customer;
+import com.dydabo.blackbox.beans.Employee;
 import com.dydabo.blackbox.hbase.HBaseJsonImpl;
+import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import org.apache.hadoop.hbase.client.Connection;
 import org.testng.Assert;
@@ -26,6 +30,7 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 /**
@@ -38,6 +43,8 @@ public class HBaseFetchTaskNGTest {
 
     public HBaseFetchTaskNGTest() throws IOException {
         this.connection = new HBaseJsonImpl<BlackBoxable>().getConnection();
+        new HBaseUtils<BlackBoxable>().createTable(new Customer(111, "sss"), connection);
+        new HBaseUtils<BlackBoxable>().createTable(new Employee(111, "sss"), connection);
     }
 
     @BeforeClass
@@ -59,12 +66,20 @@ public class HBaseFetchTaskNGTest {
     /**
      * Test of fetch method, of class HBaseFetchTask.
      */
-    @Test
+    @Test(dataProvider = "fetchData")
     public void testFetch(BlackBoxable row) throws Exception {
         HBaseFetchTask instance = new HBaseFetchTask(connection, row);
         int expResult = 0;
+        System.out.println("Closed? :" + connection.isClosed());
         List result = instance.fetch(row);
         Assert.assertEquals(result.size(), expResult);
+    }
+
+    @DataProvider(name = "fetchData")
+    public Object[][] fetchData() {
+        return new Object[][]{
+            {new Customer(null, "Harry.*")}
+        };
     }
 
     /**
@@ -83,7 +98,7 @@ public class HBaseFetchTaskNGTest {
      */
     @Test
     public void testGetConnection() {
-        HBaseFetchTask instance = new HBaseFetchTask(connection, null);
+        HBaseFetchTask instance = new HBaseFetchTask(connection, Collections.emptyList());
         Connection result = instance.getConnection();
         Assert.assertNotNull(result);
     }

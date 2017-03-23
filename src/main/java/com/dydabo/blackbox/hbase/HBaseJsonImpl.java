@@ -21,8 +21,9 @@ import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.db.HBaseConnectionManager;
 import com.dydabo.blackbox.hbase.tasks.HBaseDeleteTask;
-import com.dydabo.blackbox.hbase.tasks.HBaseInsertTask;
 import com.dydabo.blackbox.hbase.tasks.HBaseFetchTask;
+import com.dydabo.blackbox.hbase.tasks.HBaseInsertTask;
+import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,8 +40,6 @@ import org.apache.hadoop.hbase.client.Connection;
  */
 public class HBaseJsonImpl<T extends BlackBoxable> implements BlackBox<T> {
 
-    // The ColumnFamily names should be as small as possible for performance
-    public static final String DEFAULT_FAMILY = "D";
     private final Configuration config;
 
     /**
@@ -69,34 +68,29 @@ public class HBaseJsonImpl<T extends BlackBoxable> implements BlackBox<T> {
     @Override
     public boolean delete(List<T> rows) throws BlackBoxException {
         boolean successFlag = true;
-
-        ForkJoinPool fjPool = new ForkJoinPool();
-        for (T t : rows) {
-            try {
-                HBaseDeleteTask<T> deleteJob = new HBaseDeleteTask<>(getConnection(), t);
-                Boolean flag = fjPool.invoke(deleteJob);
-                successFlag = successFlag && flag;
-            } catch (IOException ex) {
-                Logger.getLogger(HBaseJsonImpl.class.getName()).log(Level.SEVERE, null, ex);
-            }
+        createTable(rows);
+        try {
+            ForkJoinPool fjPool = ForkJoinPool.commonPool();
+            HBaseDeleteTask<T> deleteJob = new HBaseDeleteTask<>(getConnection(), rows);
+            Boolean flag = fjPool.invoke(deleteJob);
+            successFlag = successFlag && flag;
+        } catch (IOException ex) {
+            Logger.getLogger(HBaseJsonImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
-
         return successFlag;
     }
 
     @Override
     public boolean insert(List<T> rows) throws BlackBoxException {
         boolean successFlag = true;
-
-        ForkJoinPool fjPool = new ForkJoinPool();
-        for (T t : rows) {
-            try {
-                HBaseInsertTask<T> insertJob = new HBaseInsertTask<>(getConnection(), t, true);
-                boolean flag = fjPool.invoke(insertJob);
-                successFlag = successFlag && flag;
-            } catch (IOException ex) {
-                Logger.getLogger(HBaseJsonImpl.class.getName()).log(Level.SEVERE, null, ex);
-            }
+        createTable(rows);
+        ForkJoinPool fjPool = ForkJoinPool.commonPool();
+        try {
+            HBaseInsertTask<T> insertJob = new HBaseInsertTask<>(getConnection(), rows, true);
+            boolean flag = fjPool.invoke(insertJob);
+            successFlag = successFlag && flag;
+        } catch (IOException ex) {
+            Logger.getLogger(HBaseJsonImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         return successFlag;
@@ -105,16 +99,13 @@ public class HBaseJsonImpl<T extends BlackBoxable> implements BlackBox<T> {
     @Override
     public List<T> fetch(List<T> rows) throws BlackBoxException {
         List<T> combinedResults = new ArrayList<>();
-
-        ForkJoinPool fjPool = new ForkJoinPool();
-        for (T t : rows) {
-            try {
-                HBaseFetchTask<T> fetchTask = new HBaseFetchTask<>(getConnection(), t);
-                List<T> results = fjPool.invoke(fetchTask);
-                combinedResults.addAll(results);
-            } catch (IOException ex) {
-                Logger.getLogger(HBaseJsonImpl.class.getName()).log(Level.SEVERE, null, ex);
-            }
+        createTable(rows);
+        ForkJoinPool fjPool = ForkJoinPool.commonPool();
+        try {
+            HBaseFetchTask<T> fetchTask = new HBaseFetchTask<>(getConnection(), rows);
+            return fjPool.invoke(fetchTask);
+        } catch (IOException ex) {
+            Logger.getLogger(HBaseJsonImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
         return combinedResults;
     }
@@ -122,24 +113,28 @@ public class HBaseJsonImpl<T extends BlackBoxable> implements BlackBox<T> {
     @Override
     public boolean update(List<T> rows) throws BlackBoxException {
         boolean successFlag = true;
-
-        ForkJoinPool fjPool = new ForkJoinPool();
-
-        for (T t : rows) {
-            try {
-                HBaseInsertTask<T> insertJob = new HBaseInsertTask<>(getConnection(), t, false);
-                boolean flag = fjPool.invoke(insertJob);
-                successFlag = successFlag && flag;
-            } catch (IOException ex) {
-                Logger.getLogger(HBaseJsonImpl.class.getName()).log(Level.SEVERE, null, ex);
-            }
+        createTable(rows);
+        ForkJoinPool fjPool = ForkJoinPool.commonPool();
+        try {
+            HBaseInsertTask<T> insertJob = new HBaseInsertTask<>(getConnection(), rows, false);
+            System.out.println("Inserting rows:" + rows);
+            boolean flag = fjPool.invoke(insertJob);
+            successFlag = successFlag && flag;
+        } catch (IOException ex) {
+            Logger.getLogger(HBaseJsonImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         return successFlag;
     }
 
-    private void info(String msg) {
-        Logger.getLogger(BlackBox.class.getName()).log(Level.INFO, msg);
+    protected void createTable(List<T> rows) throws BlackBoxException {
+        if (rows.size() > 0) {
+            try {
+                new HBaseUtils<T>().createTable(rows.get(0), getConnection());
+            } catch (IOException ex) {
+                Logger.getLogger(HBaseJsonImpl.class.getName()).log(Level.SEVERE, null, ex);
+                throw new BlackBoxException(ex.getMessage());
+            }
+        }
     }
-
 }

@@ -22,6 +22,9 @@ package com.dydabo.blackbox.common;
  */
 public class DyDaBoUtils {
 
+    public static final String EMPTY_ARRAY = "[]";
+    public static final String EMPTY_MAP = "{}";
+
     public static boolean isBlankOrNull(String... str) {
         for (String s : str) {
             if (s == null || s.trim().isEmpty()) {
@@ -29,6 +32,23 @@ public class DyDaBoUtils {
             }
         }
         return false;
+    }
+
+    public static boolean isValidRegex(String regexValue) {
+
+        if (isBlankOrNull(regexValue)) {
+            return false;
+        }
+
+        if (EMPTY_ARRAY.equals(regexValue)) {
+            return false;
+        }
+
+        if (EMPTY_MAP.equals(regexValue)) {
+            return false;
+        }
+
+        return true;
     }
 
 }

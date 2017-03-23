@@ -18,6 +18,8 @@ package com.dydabo.blackbox.beans;
 
 import com.dydabo.blackbox.BlackBoxable;
 import com.google.gson.Gson;
+import java.util.UUID;
+import org.apache.hadoop.hbase.util.Bytes;
 
 /**
  *
@@ -25,47 +27,47 @@ import com.google.gson.Gson;
  */
 public class Employee extends User implements BlackBoxable {
 
-    private Integer employeeId;
-    private String employeeName;
+    private String employeeTitle;
+    private Integer salary;
 
     public Employee(Integer id, String name) {
         super(id, name);
-        this.employeeId = id;
-        this.employeeName = name;
     }
 
-    public Integer getEmployeeId() {
-        return employeeId;
+    public String getEmployeeTitle() {
+        return employeeTitle;
     }
 
-    public void setEmployeeId(Integer employeeId) {
-        this.employeeId = employeeId;
+    public void setEmployeeTitle(String employeeTitle) {
+        this.employeeTitle = employeeTitle;
     }
 
-    public String getEmployeeName() {
-        return employeeName;
+    public Integer getSalary() {
+        return salary;
     }
 
-    public void setEmployeeName(String employeeName) {
-        this.employeeName = employeeName;
-    }
-
-    @Override
-    public String toString() {
-        return "Employee { id=" + employeeId + ", name=" + employeeName + " }";
+    public void setSalary(Integer salary) {
+        this.salary = salary;
     }
 
     @Override
     public String getBBRowKey() {
-        if (getEmployeeId() == null) {
-            return null;
+        // user name is required, and so is user id
+        if (getUserName() != null) {
+            UUID uniqueId = UUID.nameUUIDFromBytes(Bytes.toBytes(getUserName() + getUserId()));
+            return uniqueId.toString();
         }
-        return getEmployeeId().toString();
+        return "";
     }
 
     @Override
     public String getBBJson() {
         return new Gson().toJson(this);
+    }
+
+    @Override
+    public String toString() {
+        return "Employee{ userID=" + getUserId() + ", UserName=" + getUserName() + ", employeeTitle=" + employeeTitle + ", salary=" + salary + '}';
     }
 
 }

@@ -19,8 +19,11 @@ package com.dydabo.blackbox.hbase.tasks;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.hbase.HBaseJsonImpl;
+import com.dydabo.blackbox.hbase.obj.HBaseTable;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,41 +33,64 @@ import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.util.Bytes;
 
-import static com.dydabo.blackbox.hbase.HBaseJsonImpl.DEFAULT_FAMILY;
-
 /**
  *
  * @author viswadas leher <vleher@gmail.com>
  */
 public class HBaseDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boolean> {
 
-    private final T row;
     private final Connection connection;
     private final HBaseUtils utils;
+    private List<T> rows;
 
     public HBaseDeleteTask(Connection connection, T row) {
         this.connection = connection;
-        this.row = row;
+        this.rows = Arrays.asList(row);
+        this.utils = new HBaseUtils<T>();
+    }
+
+    public HBaseDeleteTask(Connection connection, List<T> rows) {
+        this.connection = connection;
+        this.rows = rows;
         this.utils = new HBaseUtils<T>();
     }
 
     @Override
     protected Boolean compute() {
         try {
-            return delete(row);
+            return delete(rows);
         } catch (BlackBoxException ex) {
             Logger.getLogger(HBaseDeleteTask.class.getName()).log(Level.SEVERE, null, ex);
         }
         return false;
     }
 
+    protected Boolean delete(List<T> rows) throws BlackBoxException {
+        if (rows.size() < 2) {
+            Boolean successFlag = true;
+            for (T t : rows) {
+                successFlag = successFlag && delete(t);
+            }
+            return successFlag;
+        } else {
+            Boolean successFlag = Boolean.TRUE;
+            int mid = rows.size() / 2;
+            HBaseDeleteTask<T> fDeleteJob = new HBaseDeleteTask<>(getConnection(), rows.subList(0, mid));
+            HBaseDeleteTask<T> sDeleteJob = new HBaseDeleteTask<>(getConnection(), rows.subList(mid, rows.size()));
+            fDeleteJob.fork();
+            Boolean secondFlag = sDeleteJob.compute();
+            Boolean firstFlag = fDeleteJob.join();
+            successFlag = successFlag && secondFlag && firstFlag;
+            return successFlag;
+        }
+    }
+
     protected Boolean delete(T row) throws BlackBoxException {
         try (Admin admin = getConnection().getAdmin()) {
             // consider create to be is nothing but alter...so
-            utils.createTable(row, admin);
             try (Table hTable = admin.getConnection().getTable(utils.getTableName(row))) {
                 Delete delete = new Delete(Bytes.toBytes(row.getBBRowKey()));
-                delete.addFamily(Bytes.toBytes(DEFAULT_FAMILY));
+                delete.addFamily(Bytes.toBytes(HBaseTable.DEFAULT_FAMILY));
                 hTable.delete(delete);
             }
             return true;

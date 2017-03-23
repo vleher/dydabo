@@ -14,47 +14,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.dydabo.blackbox.beans;
+package com.dydabo.blackbox.hbase.utils;
 
 import com.dydabo.blackbox.BlackBoxable;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
+import java.lang.reflect.Type;
 
 /**
  *
  * @author viswadas leher <vleher@gmail.com>
  */
-public abstract class User implements BlackBoxable {
+public class GenericClassDeserializer<T extends BlackBoxable> implements JsonDeserializer<T> {
 
-    private String userName;
-    private Integer userId;
-    private Double taxRate;
+    @Override
+    public T deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        System.out.println("" + json + " :" + typeOfT);
 
-    public User(Integer userId, String userName) {
-        this.userId = userId;
-        this.userName = userName;
-    }
-
-    public String getUserName() {
-        return userName;
-    }
-
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-
-    public Integer getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Integer userId) {
-        this.userId = userId;
-    }
-
-    public Double getTaxRate() {
-        return taxRate;
-    }
-
-    public void setTaxRate(Double taxRate) {
-        this.taxRate = taxRate;
+        return null;
     }
 
 }
