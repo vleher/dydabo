@@ -26,7 +26,9 @@ import com.dydabo.blackbox.beans.User;
 import com.dydabo.blackbox.hbase.utils.DyDaBoTestUtils;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
@@ -65,21 +67,23 @@ public class UseCaseOneTest {
 
     @Test
     public void testUseCaseOne() throws BlackBoxException {
-        // Update 100 new Users
-        List<Customer> userList = utils.generateCustomers(2);
+        int testSize = 10;
+        // Update 10 new Users
+        List<Customer> userList = utils.generateCustomers(testSize);
         boolean success = instance.update(userList);
         Assert.assertTrue(success);
 
         // Delete Users
-        userList = utils.generateCustomers(10);
+        userList = utils.generateCustomers(testSize);
         success = instance.delete(userList);
         Assert.assertTrue(success);
     }
 
     @Test
     public void testUseCaseTwo() throws BlackBoxException {
+        int testSize = 10;
         // Update 100 new Users
-        List<Employee> userList = utils.generateEmployees(2);
+        List<Employee> userList = utils.generateEmployees(testSize);
         boolean success = instance.update(userList);
         Assert.assertTrue(success);
 
@@ -90,12 +94,10 @@ public class UseCaseOneTest {
 
         List<BlackBoxable> searchResult = instance.fetch(eList);
 
-        System.out.println("Results:" + searchResult);
-
         for (BlackBoxable res : searchResult) {
             if (res instanceof User) {
                 final String uName = ((User) res).getUserName();
-                if (!uName.startsWith("Dav")) {
+                if (uName == null || !uName.startsWith("Dav")) {
                     Assert.fail(" Does not start with Dav " + res);
                 }
             }
@@ -103,9 +105,21 @@ public class UseCaseOneTest {
 
         // TODO: Search tax rates
         // Delete Users
-        userList = utils.generateEmployees(10);
+        userList = utils.generateEmployees(testSize);
         success = instance.delete(userList);
         Assert.assertTrue(success);
+    }
+
+    @Test
+    public void testUseCaseThree() throws BlackBoxException {
+        // Insert an unique record
+        Customer cust = new Customer(new Random().nextInt(1000), "AQWERDSFSTOIOPIoioioiIIII");
+        instance.insert(Arrays.asList(cust));
+
+        List<BlackBoxable> searchResult = instance.fetch(Arrays.asList(cust));
+        Assert.assertEquals(searchResult.size(), 1);
+        // Try to clean up
+        instance.delete(searchResult);
     }
 
 }

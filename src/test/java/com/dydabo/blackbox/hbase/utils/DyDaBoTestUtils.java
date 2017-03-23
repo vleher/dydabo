@@ -36,7 +36,7 @@ public class DyDaBoTestUtils {
         List<Customer> custList = new ArrayList<>();
         Random random = new Random();
         for (int i = 0; i < maxNumber; i++) {
-            int id = random.nextInt(maxNumber * 2);
+            int id = random.nextInt();
             final Customer customer = new Customer(id, FirstNames.get(Math.abs(id % FirstNames.size())) + " " +
                     LastNames.get(Math.abs(id % LastNames.size())));
             customer.setTaxRate(random.nextDouble() * 100);
@@ -50,7 +50,7 @@ public class DyDaBoTestUtils {
         List<Employee> userList = new ArrayList<>();
         Random random = new Random();
         for (int i = 0; i < maxNumber; i++) {
-            int id = random.nextInt(maxNumber * 2);
+            int id = random.nextInt();
             final Employee employee = new Employee(id, FirstNames.get(Math.abs(id % FirstNames.size())) +
                     " " + LastNames.get(Math.abs(id % LastNames.size())));
             userList.add(employee);

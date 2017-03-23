@@ -69,16 +69,14 @@ public class HBaseFetchTaskNGTest {
     @Test(dataProvider = "fetchData")
     public void testFetch(BlackBoxable row) throws Exception {
         HBaseFetchTask instance = new HBaseFetchTask(connection, row);
-        int expResult = 0;
-        System.out.println("Closed? :" + connection.isClosed());
         List result = instance.fetch(row);
-        Assert.assertEquals(result.size(), expResult);
+        Assert.assertNotNull(result);
     }
 
     @DataProvider(name = "fetchData")
     public Object[][] fetchData() {
         return new Object[][]{
-            {new Customer(null, "Harry.*")}
+            {new Customer(2, null)}
         };
     }
 

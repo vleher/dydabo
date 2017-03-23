@@ -16,6 +16,10 @@
  */
 package com.dydabo.blackbox.common;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
+
 /**
  *
  * @author viswadas leher <vleher@gmail.com>
@@ -49,6 +53,28 @@ public class DyDaBoUtils {
         }
 
         return true;
+    }
+
+    public static JsonElement parseJsonString(String jsonString) {
+        try {
+            JsonElement elem = new JsonParser().parse(jsonString);
+            return elem;
+        } catch (JsonSyntaxException ex) {
+            // ignore for now
+        }
+
+        return null;
+    }
+
+    /**
+     *
+     * @param type the value of type
+     *
+     * @return the boolean
+     */
+    public static boolean isPrimitiveOrPrimitiveWrapperOrString(Object obj) {
+        Class<?> type = obj.getClass();
+        return (type.isPrimitive() && type != void.class) || type == Double.class || type == Float.class || type == Long.class || type == Integer.class || type == Short.class || type == Character.class || type == Byte.class || type == Boolean.class || type == String.class;
     }
 
 }

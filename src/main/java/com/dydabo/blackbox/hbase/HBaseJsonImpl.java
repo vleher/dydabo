@@ -117,7 +117,6 @@ public class HBaseJsonImpl<T extends BlackBoxable> implements BlackBox<T> {
         ForkJoinPool fjPool = ForkJoinPool.commonPool();
         try {
             HBaseInsertTask<T> insertJob = new HBaseInsertTask<>(getConnection(), rows, false);
-            System.out.println("Inserting rows:" + rows);
             boolean flag = fjPool.invoke(insertJob);
             successFlag = successFlag && flag;
         } catch (IOException ex) {

@@ -94,22 +94,20 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
                     }
                 }
                 // Find all the fields in the object
+
+                HBaseTable thisTable = utils.convertRowToHTable(row, true);
                 Put put = new Put(Bytes.toBytes(row.getBBRowKey()));
-
-                HBaseTable thisTable = utils.convertJsonToMap(row, true);
-                System.out.println("Inserting Table Row:" + thisTable);
-
                 for (Map.Entry<String, HBaseTable.ColumnFamily> entry : thisTable.getColumnFamilies().entrySet()) {
+
                     String familyName = entry.getKey();
                     HBaseTable.ColumnFamily colFamily = entry.getValue();
-                    for (Map.Entry<String, HBaseTable.Column> entry1 : colFamily.getColumn().entrySet()) {
+                    for (Map.Entry<String, HBaseTable.Column> entry1 : colFamily.getColumns().entrySet()) {
                         String colName = entry1.getKey();
                         HBaseTable.Column colValue = entry1.getValue();
                         put.addColumn(Bytes.toBytes(familyName), Bytes.toBytes(colName), Bytes.toBytes(colValue.getColumnValue()));
                     }
 
                 }
-
                 hTable.put(put);
             }
         } catch (IOException ex) {

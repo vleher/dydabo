@@ -16,7 +16,7 @@
  */
 package com.dydabo.blackbox.common;
 
-import org.junit.Assert;
+import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -70,4 +70,34 @@ public class DyDaBoUtilsNGTest {
             {true, new String[]{"erwer", "werwer ", null}}
         };
     }
+
+    /**
+     * Test of isValidRegex method, of class DyDaBoUtils.
+     */
+    @Test
+    public void testIsValidRegex() {
+        Assert.assertEquals(DyDaBoUtils.isValidRegex(""), false);
+        Assert.assertEquals(DyDaBoUtils.isValidRegex(".*"), true);
+        Assert.assertEquals(DyDaBoUtils.isValidRegex(null), false);
+        Assert.assertEquals(DyDaBoUtils.isValidRegex("[]"), false);
+        Assert.assertEquals(DyDaBoUtils.isValidRegex("{}"), false);
+    }
+
+    /**
+     * Test of parseJsonString method, of class DyDaBoUtils.
+     */
+    @Test(dataProvider = "testJsonString")
+    public void testParseJsonString(String jsonString, boolean expResult) {
+        Assert.assertEquals(DyDaBoUtils.parseJsonString(jsonString), expResult);
+    }
+
+    public Object[][] testJsonString() {
+        return new Object[][]{
+            {"{}", true},
+            {null, false},
+            {"", false}
+
+        };
+    }
+
 }

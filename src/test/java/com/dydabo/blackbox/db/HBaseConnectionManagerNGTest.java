@@ -88,12 +88,4 @@ public class HBaseConnectionManagerNGTest {
         constructor.newInstance();
     }
 
-    /**
-     * Test of closeAllConnections method, of class HBaseConnectionManager.
-     */
-    @Test
-    public void testCloseAllConnections() {
-        //HBaseConnectionManager.closeAllConnections();
-    }
-
 }

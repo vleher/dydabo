@@ -19,7 +19,6 @@ package com.dydabo.blackbox.hbase.tasks;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.hbase.HBaseJsonImpl;
-import com.dydabo.blackbox.hbase.obj.HBaseTable;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import java.io.IOException;
 import java.util.Arrays;
@@ -90,7 +89,7 @@ public class HBaseDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
             // consider create to be is nothing but alter...so
             try (Table hTable = admin.getConnection().getTable(utils.getTableName(row))) {
                 Delete delete = new Delete(Bytes.toBytes(row.getBBRowKey()));
-                delete.addFamily(Bytes.toBytes(HBaseTable.DEFAULT_FAMILY));
+                //delete.addFamily(Bytes.toBytes(HBaseTable.DEFAULT_FAMILY));
                 hTable.delete(delete);
             }
             return true;

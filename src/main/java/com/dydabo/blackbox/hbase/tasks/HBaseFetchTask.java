@@ -25,7 +25,6 @@ import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -100,14 +99,14 @@ public class HBaseFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
             try (Table hTable = admin.getConnection().getTable(utils.getTableName(row))) {
                 Scan scan = new Scan();
                 // Get the filters : just simple filters for now
-                HBaseTable thisTable = utils.convertJsonToMap(row, false);
+                HBaseTable thisTable = utils.convertRowToHTable(row, false);
 
                 FilterList filterList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
-
+                boolean hasFilters = false;
                 for (Map.Entry<String, HBaseTable.ColumnFamily> colFamEntry : thisTable.getColumnFamilies().entrySet()) {
                     String familyName = colFamEntry.getKey();
                     HBaseTable.ColumnFamily colFamily = colFamEntry.getValue();
-                    for (Map.Entry<String, HBaseTable.Column> columnEntry : colFamily.getColumn().entrySet()) {
+                    for (Map.Entry<String, HBaseTable.Column> columnEntry : colFamily.getColumns().entrySet()) {
                         String colName = columnEntry.getKey();
                         HBaseTable.Column colValue = columnEntry.getValue();
                         String regexValue = colValue.getColumnValue();
@@ -116,33 +115,29 @@ public class HBaseFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
                             SingleColumnValueFilter scvf = new SingleColumnValueFilter(Bytes.toBytes(familyName),
                                     Bytes.toBytes(colName), CompareFilter.CompareOp.EQUAL, regexComp);
                             filterList.addFilter(scvf);
+                            hasFilters = true;
                         }
 
                     }
                 }
-
-                scan.setFilter(filterList);
+                if (hasFilters) {
+                    scan.setFilter(filterList);
+                }
 
                 try (ResultScanner resultScanner = hTable.getScanner(scan)) {
                     for (Result result = resultScanner.next(); result != null; result = resultScanner.next()) {
-
-                        //HashMap<String, Object> valueTable = new HashMap<>();
                         JsonObject jsonObject = new JsonObject();
 
                         for (Cell listCell : result.listCells()) {
                             String value = Bytes.toString(CellUtil.cloneValue(listCell));
                             String keyName = Bytes.toString(CellUtil.cloneQualifier(listCell));
-                            //valueTable.put(keyName, value);
-                            System.out.println(keyName + ":" + value);
-                            if (value.startsWith("{") || value.startsWith("[")) {
-                                JsonElement elem = new JsonParser().parse(value);
+                            JsonElement elem = DyDaBoUtils.parseJsonString(value);
+                            if (elem != null) {
                                 jsonObject.add(keyName, elem);
                             } else {
                                 jsonObject.add(keyName, new JsonPrimitive(value));
                             }
                         }
-
-                        System.out.println("NEW Json :" + jsonObject.toString());
 
                         T resultObject = new Gson().fromJson(jsonObject, (Class<T>) row.getClass());
                         if (resultObject != null) {

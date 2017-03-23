@@ -28,6 +28,7 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 /**
@@ -73,11 +74,18 @@ public class HBaseDeleteTaskNGTest {
     /**
      * Test of delete method, of class HBaseDeleteTask.
      */
-    @Test
+    @Test(dataProvider = "testDeleteData")
     public void testDelete(BlackBoxable row, boolean expResult) throws Exception {
         HBaseDeleteTask instance = new HBaseDeleteTask(connection, row);
         boolean result = instance.delete(row);
         Assert.assertEquals(result, expResult);
+    }
+
+    @DataProvider(name = "testDeleteData")
+    public Object[][] testDeleteData() {
+        return new Object[][]{
+            {new Customer(1234, "abcd"), true}
+        };
     }
 
 }

@@ -22,6 +22,7 @@ import com.dydabo.blackbox.BlackBoxFactory;
 import com.dydabo.blackbox.beans.Customer;
 import com.dydabo.blackbox.hbase.utils.DyDaBoTestUtils;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -49,13 +50,19 @@ public class PerformaceTest {
     @Test
     public void testPerformanceOne() {
         try {
-            final int testSize = 2;
+            final int testSize = 10;
+            // Delete all rows in table
+            Customer c = new Customer(null, null);
+            List<Customer> allUsers = instance.fetch(Arrays.asList(c));
+            if (allUsers.size() > 0) {
+                instance.delete(allUsers);
+            }
+            // Insert new customers
             List<Customer> users = utils.generateCustomers(testSize);
             instance.update(users);
             List results = instance.fetch(users);
             System.out.println("Results : (" + testSize + ") :" + results.size());
             Assert.assertEquals(results.size(), testSize);
-            instance.delete(users);
         } catch (BlackBoxException ex) {
             Logger.getLogger(PerformaceTest.class.getName()).log(Level.SEVERE, null, ex);
             Assert.fail("Performace Test Failed to execute");

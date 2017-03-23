@@ -19,8 +19,6 @@ package com.dydabo.blackbox.db;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.Connection;
@@ -59,15 +57,4 @@ public class HBaseConnectionManager {
         return thisConnection;
     }
 
-    public static synchronized void closeAllConnections() {
-        for (Map.Entry<Integer, Connection> entry : connectionPool.entrySet()) {
-            try {
-                Connection value = entry.getValue();
-                value.close();
-            } catch (IOException ex) {
-                Logger.getLogger(HBaseConnectionManager.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-        connectionPool.clear();
-    }
 }

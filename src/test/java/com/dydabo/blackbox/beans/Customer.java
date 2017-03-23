@@ -16,11 +16,13 @@
  */
 package com.dydabo.blackbox.beans;
 
+import com.dydabo.blackbox.BlackBoxable;
 import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 import org.apache.hadoop.hbase.util.Bytes;
 
@@ -28,10 +30,11 @@ import org.apache.hadoop.hbase.util.Bytes;
  *
  * @author viswadas leher <vleher@gmail.com>
  */
-public class Customer extends User {
+public class Customer extends User implements BlackBoxable {
 
     private Map<String, Address> address = new HashMap<>();
     private List<String> emailAddresses = new ArrayList<>();
+    private String[] cars = new String[]{};
 
     public Customer(Integer userId, String userName) {
         super(userId, userName);
@@ -43,9 +46,11 @@ public class Customer extends User {
         emailAddresses.add(getUserId() + "@gmail.com");
         emailAddresses.add(getUserName() + "@msn.com");
 
-        address.put("Home", new Address("1234 home", "egan", "mn", "us"));
-        address.put("Work", new Address("2377 work st", "minneapolis", "mn", "us"));
-        address.put("Other", new Address("999 other", "other", "ca", "us"));
+        address.put("Home", new Address(new Random().nextInt(10000) + " home ave", "egan", "mn", "us"));
+        address.put("Work", new Address(new Random().nextInt(10000) + " work st", "minneapolis", "mn", "us"));
+        address.put("Other", new Address(new Random().nextInt(10000) + " other blvd", "other", "ca", "us"));
+
+        cars = new String[]{"Ford", "Toyota", "BMW"};
     }
 
     public Map<String, Address> getAddress() {
@@ -64,6 +69,14 @@ public class Customer extends User {
         this.emailAddresses = emailAddresses;
     }
 
+    public String[] getCars() {
+        return cars;
+    }
+
+    public void setCars(String[] cars) {
+        this.cars = cars;
+    }
+
     @Override
     public String getBBRowKey() {
         // user name is required, and so is user id
@@ -76,13 +89,12 @@ public class Customer extends User {
 
     @Override
     public String getBBJson() {
-        System.out.println("Customer JSON:" + new Gson().toJson(this));
         return new Gson().toJson(this);
     }
 
     @Override
     public String toString() {
-        return "Customer{" + "address=" + address + ", emailAddresses=" + emailAddresses + '}';
+        return "Customer{ userID=" + getUserId() + ", UserName=" + getUserName() + ", address=" + address + ", emailAddresses=" + emailAddresses + '}';
     }
 
 }

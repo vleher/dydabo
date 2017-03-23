@@ -72,15 +72,18 @@ public class HBaseInsertTaskNGTest {
     public void testInsert(BlackBoxable row, Boolean expResult) throws Exception {
         boolean checkExisting = true;
         HBaseInsertTask instance = new HBaseInsertTask(connection, row, checkExisting);
-        System.out.println("Closed? :" + connection.isClosed());
         Boolean result = instance.insert(row, checkExisting);
         Assert.assertEquals(result, expResult);
     }
 
     @DataProvider(name = "insertData")
     public Object[][] insertData() {
-        Customer custOne = new Customer(random.nextInt(10000), "Harry David");
+        Customer custOne = new Customer(random.nextInt(10000), "Larry David");
         custOne.initData();
+        Customer custTwo = new Customer(random.nextInt(10000), "ABCD");
+        custTwo.initData();
+        Customer custThree = new Customer(random.nextInt(10000), "Test One");
+        custThree.initData();
         return new Object[][]{
             {custOne, true}
         };

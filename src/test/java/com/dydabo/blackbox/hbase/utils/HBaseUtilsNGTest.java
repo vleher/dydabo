@@ -23,7 +23,6 @@ import com.dydabo.blackbox.hbase.HBaseJsonImpl;
 import com.dydabo.blackbox.hbase.obj.HBaseTable;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 import org.apache.hadoop.hbase.DoNotRetryIOException;
 import org.apache.hadoop.hbase.TableName;
@@ -65,17 +64,6 @@ public class HBaseUtilsNGTest {
     }
 
     /**
-     * Test of generateJson method, of class HBaseUtils.
-     */
-    @Test
-    public void testGenerateJson() {
-        HashMap<String, String> valueTable = new HashMap<>();
-        HBaseUtils instance = new HBaseUtils();
-//        String result = instance.generateJson(valueTable);
-//        Assert.assertNotNull(result);
-    }
-
-    /**
      * Test of getTableName method, of class HBaseJsonImpl.
      */
     @Test(dataProvider = "gettablenamedata")
@@ -98,7 +86,6 @@ public class HBaseUtilsNGTest {
     @Test(dataProvider = "createtabledata")
     public void testCreateTable(BlackBoxable row) throws Exception {
         HBaseJsonImpl instance = new HBaseJsonImpl();
-        Admin admin = instance.getConnection().getAdmin();
         boolean expResult = true;
         boolean result = new HBaseUtils().createTable(row, instance.getConnection());
         assertEquals(result, expResult);
@@ -113,13 +100,12 @@ public class HBaseUtilsNGTest {
     }
 
     /**
-     * Test of convertJsonToMap method, of class HBaseUtils.
+     * Test of convertRowToHTable method, of class HBaseUtils.
      */
     @Test
     public void testConvertJsonToMap(BlackBoxable row, Map<String, String> valueMap) {
         HBaseUtils instance = new HBaseUtils();
-        Map expResult = null;
-        HBaseTable result = instance.convertJsonToMap(row, true);
+        HBaseTable result = instance.convertRowToHTable(row, true);
         Assert.assertNotNull(result);
     }
 

@@ -16,7 +16,7 @@
  */
 package com.dydabo.blackbox.hbase.obj;
 
-import com.dydabo.blackbox.hbase.utils.HBaseUtils;
+import com.dydabo.blackbox.common.DyDaBoUtils;
 import com.google.gson.Gson;
 import java.text.DecimalFormat;
 import java.util.HashMap;
@@ -63,10 +63,6 @@ public class HBaseTable {
         return columnFamilies;
     }
 
-    public void setColumnFamilies(Map<String, ColumnFamily> columnFamilies) {
-        this.columnFamilies = columnFamilies;
-    }
-
     @Override
     public String toString() {
         return "HBaseTable{" + "rowKey=" + rowKey + ", columnFamilies=" + columnFamilies + '}';
@@ -75,15 +71,26 @@ public class HBaseTable {
     public class ColumnFamily {
 
         private String familyName = null;
-        private Map<String, Column> column = null;
+        private Map<String, Column> columns = null;
 
         public ColumnFamily(String familyName) {
             this.familyName = familyName;
-            this.column = new HashMap<>();
+            this.columns = new HashMap<>();
         }
 
         public void addColumn(String columnName, Object columnValue) {
-            getColumn().put(columnName, new Column(columnName, columnValue));
+            if (columnValue instanceof Map) {
+                Map<Object, Object> thisMap = (Map) columnValue;
+                for (Map.Entry<Object, Object> entry : thisMap.entrySet()) {
+                    String key = String.valueOf(entry.getKey());
+                    Object value = entry.getValue();
+                    if (value != null) {
+                        getColumns().put(key, new Column(key, value));
+                    }
+                }
+            } else {
+                getColumns().put(columnName, new Column(columnName, columnValue));
+            }
         }
 
         public String getFamilyName() {
@@ -94,17 +101,17 @@ public class HBaseTable {
             this.familyName = familyName;
         }
 
-        public Map<String, Column> getColumn() {
-            return column;
+        public Map<String, Column> getColumns() {
+            return columns;
         }
 
-        public void setColumn(Map<String, Column> column) {
-            this.column = column;
+        public void setColumns(Map<String, Column> columns) {
+            this.columns = columns;
         }
 
         @Override
         public String toString() {
-            return "ColumnFamily{" + "familyName=" + familyName + ", column=" + column + '}';
+            return "ColumnFamily{" + "familyName=" + familyName + ", column=" + columns + '}';
         }
 
     }
@@ -128,7 +135,7 @@ public class HBaseTable {
         }
 
         public String getColumnValue() {
-            if (HBaseUtils.isPrimitiveOrPrimitiveWrapperOrString(columnValue)) {
+            if (DyDaBoUtils.isPrimitiveOrPrimitiveWrapperOrString(columnValue)) {
                 if (columnValue instanceof Number) {
                     DecimalFormat df = new DecimalFormat("#");
                     df.setMaximumFractionDigits(10);

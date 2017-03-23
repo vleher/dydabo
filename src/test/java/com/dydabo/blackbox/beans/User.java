@@ -16,13 +16,11 @@
  */
 package com.dydabo.blackbox.beans;
 
-import com.dydabo.blackbox.BlackBoxable;
-
 /**
  *
  * @author viswadas leher <vleher@gmail.com>
  */
-public abstract class User implements BlackBoxable {
+public abstract class User {
 
     private String userName;
     private Integer userId;
