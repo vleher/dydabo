@@ -70,8 +70,13 @@ success = instanceOne.update(user);
 success = instanceOne.delete(user);
 // search/get for the row
 User u = new User(null, "David.*");
-// this will fetch all users with the name David
-List<User> searchResults = instanceOne.fetch(u);
+// this will search all users with the name David
+List<User> searchResults = instanceOne.search(u);
+
+List<String> rowKeys = new ArrayList<>();
+rowKeys.add("key-one");
+rowKeys.add("key-two");
+List<User> rowList = instanceOne.fetch(rowKeys);
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This is just a generalized simple example to demonstrate the functionality of the library.
