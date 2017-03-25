@@ -81,6 +81,15 @@ List<User> rowList = instanceOne.fetch(rowKeys);
 
 This is just a generalized simple example to demonstrate the functionality of the library.
 
+Current Dependencies
+----------------------------------------------------------
 
+Google Gson 
+Hbase driver
+
+Current Status
+----------------------------------------------------------
+
+Early Alpha
 
 
