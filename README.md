@@ -84,8 +84,8 @@ This is just a generalized simple example to demonstrate the functionality of th
 Current Dependencies
 ----------------------------------------------------------
 
-*Google Gson 
-*Hbase driver
+ * Google Gson 
+ * Hbase driver
 
 Current Status
 ----------------------------------------------------------
