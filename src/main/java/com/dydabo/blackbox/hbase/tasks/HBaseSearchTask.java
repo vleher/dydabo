@@ -23,19 +23,15 @@ import com.dydabo.blackbox.hbase.HBaseJsonImpl;
 import com.dydabo.blackbox.hbase.obj.HBaseTable;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.hadoop.hbase.Cell;
-import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Result;
@@ -79,6 +75,27 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
         this.connection = connection;
         this.rows = rows;
         this.utils = new HBaseUtils<T>();
+    }
+
+    protected boolean parseForFilters(HBaseTable thisTable, FilterList filterList, boolean hasFilters) {
+        for (Map.Entry<String, HBaseTable.ColumnFamily> colFamEntry : thisTable.getColumnFamilies().entrySet()) {
+            String familyName = colFamEntry.getKey();
+            HBaseTable.ColumnFamily colFamily = colFamEntry.getValue();
+            for (Map.Entry<String, HBaseTable.Column> columnEntry : colFamily.getColumns().entrySet()) {
+                String colName = columnEntry.getKey();
+                HBaseTable.Column colValue = columnEntry.getValue();
+                String regexValue = colValue.getColumnValueAsString();
+                if (regexValue instanceof String && DyDaBoUtils.isValidRegex((String) regexValue)) {
+                    regexValue = utils.sanitizeRegex(regexValue);
+                    RegexStringComparator regexComp = new RegexStringComparator((String) regexValue);
+                    SingleColumnValueFilter scvf = new SingleColumnValueFilter(Bytes.toBytes(familyName),
+                            Bytes.toBytes(colName), CompareFilter.CompareOp.EQUAL, regexComp);
+                    filterList.addFilter(scvf);
+                    hasFilters = true;
+                }
+            }
+        }
+        return hasFilters;
     }
 
     /**
@@ -125,48 +142,35 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
             // consider create to be is nothing but alter...so
             try (Table hTable = admin.getConnection().getTable(utils.getTableName(row))) {
                 Scan scan = new Scan();
-                // Get the filters : just simple filters for now
-                HBaseTable thisTable = utils.convertRowToHTable(row, false);
-
+                // Get the filters : just simple regex filters for now
+                HBaseTable thisTable = utils.convertRowToHTable(row, true);
                 FilterList filterList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
                 boolean hasFilters = false;
-                for (Map.Entry<String, HBaseTable.ColumnFamily> colFamEntry : thisTable.getColumnFamilies().entrySet()) {
-                    String familyName = colFamEntry.getKey();
-                    HBaseTable.ColumnFamily colFamily = colFamEntry.getValue();
-                    for (Map.Entry<String, HBaseTable.Column> columnEntry : colFamily.getColumns().entrySet()) {
-                        String colName = columnEntry.getKey();
-                        HBaseTable.Column colValue = columnEntry.getValue();
-                        String regexValue = colValue.getColumnValue();
-                        if (regexValue instanceof String && DyDaBoUtils.isValidRegex((String) regexValue)) {
-                            RegexStringComparator regexComp = new RegexStringComparator((String) regexValue);
-                            SingleColumnValueFilter scvf = new SingleColumnValueFilter(Bytes.toBytes(familyName),
-                                    Bytes.toBytes(colName), CompareFilter.CompareOp.EQUAL, regexComp);
-                            filterList.addFilter(scvf);
-                            hasFilters = true;
-                        }
-
-                    }
-                }
+                hasFilters = parseForFilters(thisTable, filterList, hasFilters);
                 if (hasFilters) {
+                    Logger.getLogger(HBaseJsonImpl.class.getName()).log(Level.INFO, "Filters:" + filterList);
                     scan.setFilter(filterList);
                 }
 
                 try (ResultScanner resultScanner = hTable.getScanner(scan)) {
-                    for (Result result = resultScanner.next(); result != null; result = resultScanner.next()) {
-                        JsonObject jsonObject = new JsonObject();
+                    for (Result result : resultScanner) {
+                        HBaseTable resultTable = new HBaseTable(Bytes.toString(result.getRow()));
+                        NavigableMap<byte[], NavigableMap<byte[], byte[]>> map = result.getNoVersionMap();
 
-                        for (Cell listCell : result.listCells()) {
-                            String value = Bytes.toString(CellUtil.cloneValue(listCell));
-                            String keyName = Bytes.toString(CellUtil.cloneQualifier(listCell));
-                            JsonElement elem = DyDaBoUtils.parseJsonString(value);
-                            if (elem != null) {
-                                jsonObject.add(keyName, elem);
-                            } else {
-                                jsonObject.add(keyName, new JsonPrimitive(value));
+                        for (Map.Entry<byte[], NavigableMap<byte[], byte[]>> entry : map.entrySet()) {
+                            String familyName = Bytes.toString(entry.getKey());
+                            NavigableMap<byte[], byte[]> famColMap = entry.getValue();
+
+                            for (Map.Entry<byte[], byte[]> cols : famColMap.entrySet()) {
+                                String colName = Bytes.toString(cols.getKey());
+                                String colValue = Bytes.toString(cols.getValue());
+
+                                resultTable.getColumnFamily(familyName).addColumn(colName, colValue);
                             }
+
                         }
 
-                        T resultObject = new Gson().fromJson(jsonObject, (Class<T>) row.getClass());
+                        T resultObject = new Gson().fromJson(resultTable.toJsonObject(), (Class<T>) row.getClass());
                         if (resultObject != null) {
                             results.add(resultObject);
                         }

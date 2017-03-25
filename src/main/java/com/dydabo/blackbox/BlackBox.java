@@ -38,6 +38,64 @@ public interface BlackBox<T extends BlackBoxable> {
     boolean delete(List<T> rows) throws BlackBoxException;
 
     /**
+     *
+     * @param row
+     *
+     * @return
+     *
+     * @throws BlackBoxException
+     */
+    boolean delete(T row) throws BlackBoxException;
+
+    /**
+     * Get all matching rows given a list of row keys.
+     *
+     * @param rowKeys list of row keys
+     * @param bean    the POJO to return
+     *
+     * @return
+     *
+     * @returna list of POJO that match the keys
+     *
+     * @throws BlackBoxException
+     */
+    List<T> fetch(List<String> rowKeys, T bean) throws BlackBoxException;
+
+    /**
+     *
+     * @param rowKey
+     * @param bean
+     *
+     * @return
+     *
+     * @throws BlackBoxException
+     */
+    List<T> fetch(String rowKey, T bean) throws BlackBoxException;
+
+    /**
+     * Get all matching rows given a list of partial keys. This uses the fuzzy filter to search through keys
+     *
+     * @param rowKeys list of partial keys in regex format
+     * @param bean    the POJO type to return
+     *
+     * @return a list of POJO that match the keys
+     *
+     * @throws BlackBoxException
+     */
+    List<T> fetchByPartialKey(List<String> rowKeys, T bean) throws BlackBoxException;
+
+    /**
+     *
+     * @param rowKey
+     * @param bean
+     *
+     * @return
+     *
+     * @throws BlackBoxException
+     */
+    List<T> fetchByPartialKey(String rowKey, T bean) throws BlackBoxException;
+
+    /**
      * Inserts a list of rows into the table. The rows should not already exist in the table.
      *
      * @param rows a list of POJO
@@ -47,6 +105,16 @@ public interface BlackBox<T extends BlackBoxable> {
      * @throws com.dydabo.blackbox.BlackBoxException
      */
     boolean insert(List<T> rows) throws BlackBoxException;
+
+    /**
+     *
+     * @param row
+     *
+     * @return
+     *
+     * @throws BlackBoxException
+     */
+    boolean insert(T row) throws BlackBoxException;
 
     /**
      * Search for all matching rows in the table, given a list of POJO. You can add known values to the POJO fields or regular
@@ -64,16 +132,14 @@ public interface BlackBox<T extends BlackBoxable> {
     List<T> search(List<T> rows) throws BlackBoxException;
 
     /**
-     * Get all matching rows given a list of row keys.
      *
-     * @param rowKeys list of row keys
-     * @param bean    the POJO to return
+     * @param row
      *
-     * @returna list of POJO that match the keys
+     * @return
      *
      * @throws BlackBoxException
      */
-    List<T> fetch(List<String> rowKeys, T bean) throws BlackBoxException;
+    List<T> search(T row) throws BlackBoxException;
 
     /**
      * Update or insert the rows that match the POJO. If a row does not exist, then it will added otherwise the existing row
@@ -86,5 +152,15 @@ public interface BlackBox<T extends BlackBoxable> {
      * @throws com.dydabo.blackbox.BlackBoxException
      */
     boolean update(List<T> newRows) throws BlackBoxException;
+
+    /**
+     *
+     * @param newRow
+     *
+     * @return
+     *
+     * @throws BlackBoxException
+     */
+    boolean update(T newRow) throws BlackBoxException;
 
 }

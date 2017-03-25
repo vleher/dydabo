@@ -115,9 +115,13 @@ public class HBaseDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
         try (Admin admin = getConnection().getAdmin()) {
             // consider create to be is nothing but alter...so
             try (Table hTable = admin.getConnection().getTable(utils.getTableName(row))) {
-                Delete delete = new Delete(Bytes.toBytes(row.getBBRowKey()));
-                //delete.addFamily(Bytes.toBytes(HBaseTable.DEFAULT_FAMILY));
-                hTable.delete(delete);
+                if (utils.isValidRowKey(row)) {
+                    Delete delete = new Delete(Bytes.toBytes(row.getBBRowKey()));
+                    //delete.addFamily(Bytes.toBytes(HBaseTable.DEFAULT_FAMILY));
+                    hTable.delete(delete);
+                } else {
+                    return false;
+                }
             }
             return true;
         } catch (IOException ex) {

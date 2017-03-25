@@ -16,6 +16,7 @@
  */
 package com.dydabo.blackbox.hbase.utils;
 
+import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.common.DyDaBoUtils;
 import com.dydabo.blackbox.hbase.obj.HBaseTable;
@@ -64,7 +65,7 @@ public class HBaseUtils<T extends BlackBoxable> {
      *
      * @throws java.io.IOException
      */
-    public boolean createTable(T row, Connection connection) throws IOException {
+    public boolean createTable(T row, Connection connection) throws IOException, BlackBoxException {
         try (Admin admin = connection.getAdmin()) {
             Object lockObject = new Object();
             TableName tableName = getTableName(row);
@@ -102,11 +103,15 @@ public class HBaseUtils<T extends BlackBoxable> {
      * @return
      *
      * @throws JsonSyntaxException
+     * @throws com.dydabo.blackbox.BlackBoxException
      */
-    public HBaseTable convertRowToHTable(T row, boolean includeObject) throws JsonSyntaxException {
+    public HBaseTable convertRowToHTable(T row, boolean includeObject) throws JsonSyntaxException, BlackBoxException {
         Map<String, Object> thisValueMap = new Gson().fromJson(row.getBBJson(), Map.class);
-        HBaseTable hbaseTable = new HBaseTable(row.getBBRowKey());
 
+//        if (!isValidRowKey(row)) {
+//            throw new BlackBoxException("The object should have a valid row key");
+//        }
+        HBaseTable hbaseTable = new HBaseTable(row.getBBRowKey());
         for (Map.Entry<String, Object> entry : thisValueMap.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
@@ -128,6 +133,8 @@ public class HBaseUtils<T extends BlackBoxable> {
 
     /**
      *
+     * Checks if the specified row already exists in the table
+     *
      * @param row    the value of row
      * @param hTable the value of hTable
      *
@@ -135,7 +142,10 @@ public class HBaseUtils<T extends BlackBoxable> {
      *
      * @throws java.io.IOException
      */
-    public boolean checkIfRowExists(T row, Table hTable) throws IOException {
+    public boolean checkIfRowExists(T row, Table hTable) throws IOException, BlackBoxException {
+        if (!isValidRowKey(row)) {
+            throw new BlackBoxException("Invalid Row Key");
+        }
         Get get = new Get(Bytes.toBytes(row.getBBRowKey()));
         Result result = hTable.get(get);
         if (result.isEmpty()) {
@@ -143,6 +153,21 @@ public class HBaseUtils<T extends BlackBoxable> {
         } else {
             return true;
         }
+    }
+
+    public String sanitizeRegex(String regexValue) {
+        // TODO: alter regex to search inside lists and arrays
+        return regexValue;
+    }
+
+    public boolean isValidRowKey(T row) {
+        if (row == null) {
+            return false;
+        }
+        if (DyDaBoUtils.isBlankOrNull(row.getBBRowKey())) {
+            return false;
+        }
+        return true;
     }
 
 }

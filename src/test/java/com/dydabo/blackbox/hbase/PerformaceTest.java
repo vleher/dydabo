@@ -22,6 +22,7 @@ import com.dydabo.blackbox.BlackBoxFactory;
 import com.dydabo.blackbox.beans.Customer;
 import com.dydabo.blackbox.hbase.utils.DyDaBoTestUtils;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -60,9 +61,15 @@ public class PerformaceTest {
             // Insert new customers
             List<Customer> users = utils.generateCustomers(testSize);
             instance.update(users);
-            List results = instance.search(users);
-            System.out.println("Results : (" + testSize + ") :" + results.size());
-            Assert.assertEquals(results.size(), testSize);
+
+            List userQueryList = new ArrayList();
+            for (Customer user : users) {
+                userQueryList.add(new Customer(null, user.getUserName()));
+            }
+
+            List results = instance.search(userQueryList);
+
+            Assert.assertTrue(results.size() > testSize);
         } catch (BlackBoxException ex) {
             Logger.getLogger(PerformaceTest.class.getName()).log(Level.SEVERE, null, ex);
             Assert.fail("Performace Test Failed to execute");

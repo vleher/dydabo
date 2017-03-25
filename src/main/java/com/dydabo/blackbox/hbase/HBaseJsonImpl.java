@@ -27,6 +27,7 @@ import com.dydabo.blackbox.hbase.tasks.HBaseSearchTask;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 import java.util.logging.Level;
@@ -118,15 +119,26 @@ public class HBaseJsonImpl<T extends BlackBoxable> implements BlackBox<T> {
 
     @Override
     public List<T> fetch(List<String> rowKeys, T row) throws BlackBoxException {
-        List<T> combinedResults = new ArrayList<>();
         ForkJoinPool fjPool = ForkJoinPool.commonPool();
         try {
-            HBaseFetchTask<T> fetchTask = new HBaseFetchTask<>(getConnection(), rowKeys, row);
+            HBaseFetchTask<T> fetchTask = new HBaseFetchTask<>(getConnection(), rowKeys, row, false);
             return fjPool.invoke(fetchTask);
         } catch (IOException ex) {
             Logger.getLogger(HBaseJsonImpl.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return combinedResults;
+        return new ArrayList<>();
+    }
+
+    @Override
+    public List<T> fetchByPartialKey(List<String> rowKeys, T bean) throws BlackBoxException {
+        ForkJoinPool fjPool = ForkJoinPool.commonPool();
+        try {
+            HBaseFetchTask<T> fetchTask = new HBaseFetchTask<>(getConnection(), rowKeys, bean, true);
+            return fjPool.invoke(fetchTask);
+        } catch (IOException ex) {
+            Logger.getLogger(HBaseJsonImpl.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return new ArrayList<>();
     }
 
     @Override
@@ -143,6 +155,36 @@ public class HBaseJsonImpl<T extends BlackBoxable> implements BlackBox<T> {
         }
 
         return successFlag;
+    }
+
+    @Override
+    public boolean delete(T row) throws BlackBoxException {
+        return delete(Arrays.asList(row));
+    }
+
+    @Override
+    public boolean insert(T row) throws BlackBoxException {
+        return insert(Arrays.asList(row));
+    }
+
+    @Override
+    public List<T> search(T row) throws BlackBoxException {
+        return search(Arrays.asList(row));
+    }
+
+    @Override
+    public List<T> fetch(String rowKey, T bean) throws BlackBoxException {
+        return fetch(Arrays.asList(rowKey), bean);
+    }
+
+    @Override
+    public List<T> fetchByPartialKey(String rowKey, T bean) throws BlackBoxException {
+        return fetchByPartialKey(Arrays.asList(rowKey), bean);
+    }
+
+    @Override
+    public boolean update(T newRow) throws BlackBoxException {
+        return update(Arrays.asList(newRow));
     }
 
     /**

@@ -16,6 +16,7 @@
  */
 package com.dydabo.blackbox.hbase.tasks;
 
+import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.beans.Customer;
 import com.dydabo.blackbox.beans.Employee;
@@ -42,7 +43,7 @@ public class HBaseInsertTaskNGTest {
     private final Connection connection;
     private Random random = new Random();
 
-    public HBaseInsertTaskNGTest() throws IOException {
+    public HBaseInsertTaskNGTest() throws IOException, BlackBoxException {
         this.connection = new HBaseJsonImpl<BlackBoxable>().getConnection();
         new HBaseUtils<BlackBoxable>().createTable(new Customer(111, "sss"), connection);
         new HBaseUtils<BlackBoxable>().createTable(new Employee(111, "sss"), connection);

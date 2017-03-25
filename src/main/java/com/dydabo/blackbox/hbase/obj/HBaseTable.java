@@ -18,6 +18,9 @@ package com.dydabo.blackbox.hbase.obj;
 
 import com.dydabo.blackbox.common.DyDaBoUtils;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,6 +47,15 @@ public class HBaseTable {
     public HBaseTable(String rowKey) {
         this.rowKey = rowKey;
         this.columnFamilies = new HashMap<>();
+        createFamily(DEFAULT_FAMILY);
+    }
+
+    public ColumnFamily getColumnFamily(String familyName) {
+        ColumnFamily colFamily = getColumnFamilies().get(familyName);
+        if (colFamily == null) {
+            colFamily = createFamily(familyName);
+        }
+        return colFamily;
     }
 
     /**
@@ -90,6 +102,18 @@ public class HBaseTable {
      */
     public Map<String, ColumnFamily> getColumnFamilies() {
         return columnFamilies;
+    }
+
+    public JsonObject toJsonObject() {
+        JsonObject jsonObject = getDefaultFamily().toJsonObject();
+
+        for (ColumnFamily columnFamily : getColumnFamilies().values()) {
+            if (!DEFAULT_FAMILY.equals(columnFamily.getFamilyName())) {
+                jsonObject.add(columnFamily.getFamilyName(), columnFamily.toJsonObject());
+            }
+        }
+
+        return jsonObject;
     }
 
     @Override
@@ -166,6 +190,21 @@ public class HBaseTable {
             this.columns = columns;
         }
 
+        public JsonObject toJsonObject() {
+            JsonObject jsonObject = new JsonObject();
+            for (Column coln : getColumns().values()) {
+                String keyName = coln.getColumnName();
+                String value = coln.getColumnValueAsString();
+                JsonElement elem = DyDaBoUtils.parseJsonString(value);
+                if (elem != null) {
+                    jsonObject.add(keyName, elem);
+                } else {
+                    jsonObject.add(keyName, new JsonPrimitive(value));
+                }
+            }
+            return jsonObject;
+        }
+
         @Override
         public String toString() {
             return "ColumnFamily{" + "familyName=" + familyName + ", column=" + columns + '}';
@@ -207,11 +246,23 @@ public class HBaseTable {
             this.columnName = columnName;
         }
 
+        public Object getColumnValue() {
+            return columnValue;
+        }
+
+        /**
+         *
+         * @param columnValue
+         */
+        public void setColumnValue(Object columnValue) {
+            this.columnValue = columnValue;
+        }
+
         /**
          *
          * @return
          */
-        public String getColumnValue() {
+        public String getColumnValueAsString() {
             if (DyDaBoUtils.isPrimitiveOrPrimitiveWrapperOrString(columnValue)) {
                 if (columnValue instanceof Number) {
                     DecimalFormat df = new DecimalFormat("#");
@@ -224,14 +275,6 @@ public class HBaseTable {
             } else {
                 return (new Gson().toJson(columnValue));
             }
-        }
-
-        /**
-         *
-         * @param columnValue
-         */
-        public void setColumnValue(Object columnValue) {
-            this.columnValue = columnValue;
         }
 
         @Override

@@ -16,6 +16,7 @@
  */
 package com.dydabo.blackbox.hbase.tasks;
 
+import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.beans.Customer;
 import com.dydabo.blackbox.beans.Employee;
@@ -41,7 +42,7 @@ public class HBaseFetchTaskNGTest {
 
     private Connection connection;
 
-    public HBaseFetchTaskNGTest() throws IOException {
+    public HBaseFetchTaskNGTest() throws IOException, BlackBoxException {
         this.connection = new HBaseJsonImpl<BlackBoxable>().getConnection();
         new HBaseUtils<BlackBoxable>().createTable(new Customer(111, "sss"), connection);
         new HBaseUtils<BlackBoxable>().createTable(new Employee(111, "sss"), connection);
@@ -73,7 +74,7 @@ public class HBaseFetchTaskNGTest {
         rowKeys.add("2");
         final Customer cust = new Customer(null, null);
 
-        HBaseFetchTask instance = new HBaseFetchTask(connection, rowKeys, cust);
+        HBaseFetchTask instance = new HBaseFetchTask(connection, rowKeys, cust, false);
         List result = instance.fetch(rowKeys);
         Assert.assertNotNull(result);
 
@@ -92,7 +93,7 @@ public class HBaseFetchTaskNGTest {
      */
     @Test
     public void testGetConnection() {
-        HBaseFetchTask instance = new HBaseFetchTask(connection, Collections.emptyList(), null);
+        HBaseFetchTask instance = new HBaseFetchTask(connection, Collections.emptyList(), null, false);
         Connection result = instance.getConnection();
         Assert.assertNotNull(result);
     }

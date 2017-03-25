@@ -50,7 +50,9 @@ public class HBaseConnectionManager {
     /**
      *
      * @param config
+     *
      * @return
+     *
      * @throws IOException
      */
     public static Connection getConnection(Configuration config) throws IOException {

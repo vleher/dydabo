@@ -124,22 +124,25 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
                                 "Change the rowkey or call update. Current RowKey " + row.getBBRowKey());
                     }
                 }
+
                 // Find all the fields in the object
-
                 HBaseTable thisTable = utils.convertRowToHTable(row, true);
-                Put put = new Put(Bytes.toBytes(row.getBBRowKey()));
-                for (Map.Entry<String, HBaseTable.ColumnFamily> entry : thisTable.getColumnFamilies().entrySet()) {
+                if (utils.isValidRowKey(row)) {
+                    Put put = new Put(Bytes.toBytes(row.getBBRowKey()));
+                    for (Map.Entry<String, HBaseTable.ColumnFamily> entry : thisTable.getColumnFamilies().entrySet()) {
+                        String familyName = entry.getKey();
+                        HBaseTable.ColumnFamily colFamily = entry.getValue();
+                        for (Map.Entry<String, HBaseTable.Column> entry1 : colFamily.getColumns().entrySet()) {
+                            String colName = entry1.getKey();
+                            HBaseTable.Column colValue = entry1.getValue();
+                            put.addColumn(Bytes.toBytes(familyName), Bytes.toBytes(colName), Bytes.toBytes(colValue.getColumnValueAsString()));
+                        }
 
-                    String familyName = entry.getKey();
-                    HBaseTable.ColumnFamily colFamily = entry.getValue();
-                    for (Map.Entry<String, HBaseTable.Column> entry1 : colFamily.getColumns().entrySet()) {
-                        String colName = entry1.getKey();
-                        HBaseTable.Column colValue = entry1.getValue();
-                        put.addColumn(Bytes.toBytes(familyName), Bytes.toBytes(colName), Bytes.toBytes(colValue.getColumnValue()));
                     }
-
+                    hTable.put(put);
+                } else {
+                    successFlag = false;
                 }
-                hTable.put(put);
             }
         } catch (IOException ex) {
             Logger.getLogger(HBaseJsonImpl.class.getName()).log(Level.SEVERE, null, ex);
