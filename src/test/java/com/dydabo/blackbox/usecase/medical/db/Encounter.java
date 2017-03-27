@@ -1,19 +1,19 @@
-/*
- * Copyright (C) 2017 viswadas leher <vleher@gmail.com>
+/*******************************************************************************
+ * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ *******************************************************************************/
 package com.dydabo.blackbox.usecase.medical.db;
 
 import com.dydabo.blackbox.BlackBoxable;
@@ -25,7 +25,7 @@ import java.util.List;
  *
  * @author viswadas leher <vleher@gmail.com>
  */
-public class PatientEncounter implements BlackBoxable {
+public class Encounter implements BlackBoxable {
 
     private String pId = null;
     private String eId = null;
@@ -45,117 +45,233 @@ public class PatientEncounter implements BlackBoxable {
     // Complete Duplicate Data
     private Patient patient = null;
 
-    public PatientEncounter() {
+    /**
+     *
+     */
+    public Encounter() {
     }
 
-    public PatientEncounter(String eId, String pId) {
+    /**
+     *
+     * @param eId
+     * @param pId
+     */
+    public Encounter(String eId, String pId) {
         this.eId = eId;
         this.pId = pId;
     }
 
-    public PatientEncounter(String eId, String pId, String pFN, String pLN) {
+    /**
+     *
+     * @param eId
+     * @param pId
+     * @param pFN
+     * @param pLN
+     */
+    public Encounter(String eId, String pId, String pFN, String pLN) {
         this(eId, pId);
         this.pFN = pFN;
         this.pLN = pLN;
     }
 
-    public PatientEncounter(String eId, Patient pat) {
+    /**
+     *
+     * @param eId
+     * @param pat
+     */
+    public Encounter(String eId, Patient pat) {
         this(eId, pat.getpId());
         this.patient = pat;
     }
 
+    /**
+     *
+     * @return
+     */
     public String getpId() {
         return pId;
     }
 
+    /**
+     *
+     * @param pId
+     */
     public void setpId(String pId) {
         this.pId = pId;
     }
 
+    /**
+     *
+     * @return
+     */
     public String geteId() {
         return eId;
     }
 
+    /**
+     *
+     * @param eId
+     */
     public void seteId(String eId) {
         this.eId = eId;
     }
 
+    /**
+     *
+     * @return
+     */
     public String getpNotes() {
         return pNotes;
     }
 
+    /**
+     *
+     * @param pNotes
+     */
     public void setpNotes(String pNotes) {
         this.pNotes = pNotes;
     }
 
+    /**
+     *
+     * @return
+     */
     public List<Procedure> getProcs() {
         return procs;
     }
 
+    /**
+     *
+     * @param procs
+     */
     public void setProcs(List<Procedure> procs) {
         this.procs = procs;
     }
 
+    /**
+     *
+     * @return
+     */
     public List<Medication> getMeds() {
         return meds;
     }
 
+    /**
+     *
+     * @param meds
+     */
     public void setMeds(List<Medication> meds) {
         this.meds = meds;
     }
 
+    /**
+     *
+     * @return
+     */
     public List<Diagnosis> getDiags() {
         return diags;
     }
 
+    /**
+     *
+     * @param diags
+     */
     public void setDiags(List<Diagnosis> diags) {
         this.diags = diags;
     }
 
+    /**
+     *
+     * @return
+     */
     public List<Claim> getCls() {
         return cls;
     }
 
+    /**
+     *
+     * @return
+     */
     public String getpFN() {
         return pFN;
     }
 
+    /**
+     *
+     * @param pFN
+     */
     public void setpFN(String pFN) {
         this.pFN = pFN;
     }
 
+    /**
+     *
+     * @return
+     */
     public String getpLN() {
         return pLN;
     }
 
+    /**
+     *
+     * @param pLN
+     */
     public void setpLN(String pLN) {
         this.pLN = pLN;
     }
 
+    /**
+     *
+     * @return
+     */
     public Patient getPatient() {
         return patient;
     }
 
+    /**
+     *
+     * @param patient
+     */
     public void setPatient(Patient patient) {
         this.patient = patient;
     }
 
+    /**
+     *
+     * @param cls
+     */
     public void setCls(List<Claim> cls) {
         this.cls = cls;
     }
 
+    /**
+     *
+     * @return
+     */
     public String getMedIds() {
         return medIds;
     }
 
+    /**
+     *
+     * @param medIds
+     */
     public void setMedIds(String medIds) {
         this.medIds = medIds;
     }
 
+    /**
+     *
+     * @return
+     */
     public String getDiagIds() {
         return diagIds;
     }
 
+    /**
+     *
+     * @param diagIds
+     */
     public void setDiagIds(String diagIds) {
         this.diagIds = diagIds;
     }
@@ -165,6 +281,10 @@ public class PatientEncounter implements BlackBoxable {
         return getpId() + ":" + geteId();
     }
 
+    /**
+     *
+     * @return
+     */
     @Override
     public String getBBJson() {
         return new Gson().toJson(this);
@@ -175,16 +295,28 @@ public class PatientEncounter implements BlackBoxable {
         return "PatientEncounter{" + "pId=" + pId + ", eId=" + eId + ", pNotes=" + pNotes + ", procs=" + procs + ", meds=" + meds + ", diags=" + diags + ", cls=" + cls + ", pFN=" + pFN + ", pLN=" + pLN + ", patient=" + patient + '}';
     }
 
+    /**
+     *
+     * @param diagnosis
+     */
     public void addDiagnosis(Diagnosis diagnosis) {
         getDiags().add(diagnosis);
         setDiagIds(getDiagIds() + "," + diagnosis.getdId());
     }
 
+    /**
+     *
+     * @param medication
+     */
     public void addMedication(Medication medication) {
         getMeds().add(medication);
         setMedIds(getMedIds() + "," + medication.getmId());
     }
 
+    /**
+     *
+     * @param claim
+     */
     public void addClaim(Claim claim) {
         getCls().add(claim);
     }

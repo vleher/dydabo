@@ -1,19 +1,19 @@
-/*
- * Copyright (C) 2017 viswadas leher <vleher@gmail.com>
+/*******************************************************************************
+ * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ *******************************************************************************/
 package com.dydabo.blackbox.usecase.medical.db;
 
 import com.dydabo.blackbox.BlackBoxable;
@@ -39,15 +39,27 @@ public class Patient implements BlackBoxable {
     private List<String> em = new ArrayList<>();
     private PhoneNumber pPh = null;
 
+    /**
+     *
+     */
     public Patient() {
     }
 
+    /**
+     *
+     * @param id
+     * @param firstName
+     * @param lastName
+     */
     public Patient(String id, String firstName, String lastName) {
         this.pId = id;
         this.fN = firstName;
         this.lN = lastName;
     }
 
+    /**
+     *
+     */
     public void initData() {
         // dummy pre polualted values
         em.add(getpId() + "@hospital.com");
@@ -68,42 +80,82 @@ public class Patient implements BlackBoxable {
         setDob(new Date(ms));
     }
 
+    /**
+     *
+     * @return
+     */
     public String getpId() {
         return pId;
     }
 
+    /**
+     *
+     * @param pId
+     */
     public void setpId(String pId) {
         this.pId = pId;
     }
 
+    /**
+     *
+     * @return
+     */
     public String getfN() {
         return fN;
     }
 
+    /**
+     *
+     * @param fN
+     */
     public void setfN(String fN) {
         this.fN = fN;
     }
 
+    /**
+     *
+     * @return
+     */
     public String getlN() {
         return lN;
     }
 
+    /**
+     *
+     * @param lN
+     */
     public void setlN(String lN) {
         this.lN = lN;
     }
 
+    /**
+     *
+     * @return
+     */
     public Date getDob() {
         return dob;
     }
 
+    /**
+     *
+     * @param dob
+     */
     public void setDob(Date dob) {
         this.dob = dob;
     }
 
+    /**
+     *
+     * @return
+     */
     public Map<String, Address> getAddress() {
         return address;
     }
 
+    /**
+     *
+     * @param address
+     */
     public void setAddress(Map<String, Address> address) {
         this.address = address;
     }
@@ -121,6 +173,10 @@ public class Patient implements BlackBoxable {
         return getpId() + ":" + getfN() + ":" + getlN();
     }
 
+    /**
+     *
+     * @return
+     */
     @Override
     public String getBBJson() {
         return new Gson().toJson(this);

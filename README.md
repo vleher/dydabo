@@ -21,16 +21,16 @@ The eventual goal of the library can be summed up as below:
 * Ability to query and retrieve data from the back end based on a POJO
 * Ability to add new fields to POJO or columns to the database easily
 * No need to learn a query language to access data (SQL, CQL, HQL etc. etc.)
-* Ability to use regular expressions as query language to match against values
-* No configuration or XML files to maintain with class names and variables
-* No to minimal use of annotations required
+* Ability to use regular expressions as a query language to match against values
+* No configuration or XML files to maintain in the source
+* No (or very minimal) use of annotations in the source code
 * Ability to store data in to multiple databases (such as Apache HBase, Apache Cassandra, CouchDB, MongoDB etc)
 * Good performance for most and common search use cases
 
 
 ### Audience
 
-**So, who can use this?** Anybody who can get it up and running can use it. 
+**So, who can use this?** Anybody who can set it up and running can use it. and good luck with that. ;-)
 
 **Who should use this?** Just some of different scenarios that I can think of:
 
@@ -40,16 +40,15 @@ The eventual goal of the library can be summed up as below:
 
 **Who should not use this?** There will be several limitations to the library when compared to the vanilla database driver functionality. Refer to the limitations section below.
 
+### Limitations
+
+* It is very unlikely that every single functionality and flexibility of query execution that the database driver supports will be exposed through this library. If you need such granularity, flexibility and power then you will be better off using the driver directly.
+* If you want ultimate control over how your data is stored and managed then this is **NOT** the library for you. The idea here is to completely isolate the user/developer from "*low level*" database design and management.
+* Dependency on Google Gson library and HBase java client libraries.
 
 ### Supported Databases
 
 Currently, HBase (and Hadoop) is the database of choice and the only one that is supported. Other NoSql databases are being worked on.
-
-### Limitations
-
-* It is very unlikely that every single functionality and flexibility of query execution that the database driver supports will be exposed through this library. If you need such granularity, flexibility and power then you will be better off using the driver directly.
-* If you want ultimate control over how your data is stored and managed then this is **NOT** the library for you. The idea here is to completely isolate the developer from "*low level*" database design and management.
-* Dependency on Google Gson library and HBase java client libraries.
 
 
 ### Status of the Project
@@ -58,80 +57,12 @@ The project is still a work in progress and is in early alpha...so don't expect 
 
 There are still several features that needs to be implemented, and the interfaces are bound to change. So, all in all it is probably not good for prime time. I have used it in a couple of very simple projects and it has so far worked quite well.
 
-### Quick Usage Guide
-
-
-Get the BlackBox instance, using either of the following statements (for HBase):
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-BlackBox instanceOne = BlackBoxFactory.getDatabase(BlackBoxFactory.HBASE);
-BlackBox instanceTwo = BlackBoxFactory.getHBaseDatabase(config);
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Create a POJO or your data classes
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-public class User implements BlackBoxable {
-
-	private String userName;
-	private Integer userId;
-	private Double taxRate;
-
-	public User(Integer userId, String userName) {
-		this.userId = userId;
-		this.userName = userName;
-	}
-
-......
-
-}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Now you can insert, update, delete, fetch and search the data using the POJO
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Get the database instance 
-BlackBox instanceOne = BlackBoxFactory.getDatabase(BlackBoxFactory.HBASE);
-
-// Create a POJO instance
-User user = new User(21, "name");
-// insert the POJO into the table as a row
-instanceOne.insert(user);
-
-// Create several different instances of User and add to a list
-List<User> userList = new ArrayList<>();
-userList.add(new User(123, "David Jones");
-userList.add(new User(234, "Lady Gaga");
-// insert to database
-boolean success = instanceOne.insert(user);
-
-// update the existing row
-success = instanceOne.update(user);
-
-// delete the row
-success = instanceOne.delete(user);
-
-// search/get for the rows where user name starts with "David" 
-User u = new User(null, "David.*");
-// this will return all users with the name David
-List<User> searchResults = instanceOne.search(u);
-
-// get rows using row keys
-List<String> rowKeys = new ArrayList<>();
-rowKeys.add("key-one");
-rowKeys.add("key-two");
-// this will return the users with the specified row keys
-List<User> rowList = instanceOne.fetch(rowKeys);
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This is just a generalized simple example to demonstrate the functionality of the library.
-
 ### Documentation and Use Cases
 
-Coming soon....
+ * dydabo API: Coming soon....
+ * dydabo User Guide: This guide contains examples and use cases on how to use dydabo in your project and code.
 
 ### Current Dependencies
-
 
  * Google Gson 
  * Hbase java driver

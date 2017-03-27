@@ -1,18 +1,19 @@
-/*
- * Copyright (C) 2017 viswadas leher <vleher@gmail.com>
+/** *****************************************************************************
+ * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ ******************************************************************************
  */
 package com.dydabo.blackbox.usecase.medical;
 
@@ -23,9 +24,9 @@ import com.dydabo.blackbox.usecase.medical.db.Claim;
 import com.dydabo.blackbox.usecase.medical.db.ClaimCharges;
 import com.dydabo.blackbox.usecase.medical.db.ClaimDetails;
 import com.dydabo.blackbox.usecase.medical.db.Diagnosis;
+import com.dydabo.blackbox.usecase.medical.db.Encounter;
 import com.dydabo.blackbox.usecase.medical.db.Medication;
 import com.dydabo.blackbox.usecase.medical.db.Patient;
-import com.dydabo.blackbox.usecase.medical.db.PatientEncounter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,30 +46,58 @@ import org.testng.annotations.Test;
 public class MedicalUseCaseTest {
 
     private static BlackBox blackBox;
+
+    /**
+     *
+     */
     public List<String> Diagnosis = Arrays.asList("Diabetes", "High Blood Pressure", "Low Blood Pressure", "Polio", "Fever",
             "Common Cold", "Allergy");
+
+    /**
+     *
+     */
     public List<String> FirstNames = Arrays.asList("David", "Peter", "Tom", "Dick", "Harry", "John", "Bill", "Adele", "Britney",
             "Mariah", "Tina", "Diana", "Dionne", "Cyndi", "Kim", "Lindsey", "Shiela", "Bette");
+
+    /**
+     *
+     */
     public List<String> LastNames = Arrays.asList("Johnson", "Becker", "Smith", "Gates", "King", "Spears", "Perry", "Carey",
             "Gomez", "Lopez", "Turner", "Ross", "Warwick", "Lauper", "Carnes", "Midler", "Jackson", "Hayes");
 
+    /**
+     *
+     */
     public List<String> Meds = Arrays.asList("Acetylmethadol", "Benzethidine", "Difenoxin", "Furethidine", "Phenoperidine");
 
     int knownPatientId = 123456;
     Random random = new Random();
 
+    /**
+     *
+     * @throws BlackBoxException
+     * @throws IOException
+     */
     public MedicalUseCaseTest() throws BlackBoxException, IOException {
         blackBox = BlackBoxFactory.getDatabase(BlackBoxFactory.HBASE);
         // Pre-populate with some dynamic data.
-        generatePatients(2);
-        generateEncounters(3);
+        generatePatients(200);
+        generateEncounters(3000);
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @BeforeClass
     public static void setUpClass() throws Exception {
 
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @AfterClass
     public static void tearDownClass() throws Exception {
     }
@@ -76,11 +105,11 @@ public class MedicalUseCaseTest {
     private void generateEncounters(int count) throws BlackBoxException {
         Patient p = new Patient();
         List<Patient> pList = blackBox.search(Arrays.asList(p));
-        List<PatientEncounter> encounters = new ArrayList<>();
+        List<Encounter> encounters = new ArrayList<>();
         for (int j = 0; j < count; j++) {
             int id = random.nextInt();
             final Patient currentPatient = pList.get(Math.abs(id % pList.size()));
-            PatientEncounter enc = new PatientEncounter(id + "E", currentPatient);
+            Encounter enc = new Encounter(id + "E", currentPatient);
 
             enc.setPatient(currentPatient);
             enc.setpFN(currentPatient.getfN());
@@ -108,7 +137,7 @@ public class MedicalUseCaseTest {
             dCount = random.nextInt(2);
             for (int i = 0; i < dCount; i++) {
                 final Random random = new Random();
-                final Claim claim = new Claim(random.nextInt() + "CL");
+                final Claim claim = new Claim(random.nextInt() + "CL", currentPatient.getpId());
 
                 //  generate random # of details and charges
                 int cdCount = random.nextInt(5);
@@ -157,22 +186,38 @@ public class MedicalUseCaseTest {
         blackBox.update(Arrays.asList(p));
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @BeforeMethod
     public void setUpMethod() throws Exception {
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @AfterMethod
     public void tearDownMethod() throws Exception {
     }
 
+    /**
+     *
+     * @throws BlackBoxException
+     */
     @Test
     public void testAllPatientEncounters() throws BlackBoxException {
         // All Encounters
-        PatientEncounter pe = new PatientEncounter();
-        List<PatientEncounter> peL1 = blackBox.search(Arrays.asList(pe));
+        Encounter pe = new Encounter();
+        List<Encounter> peL1 = blackBox.search(Arrays.asList(pe));
         Assert.assertTrue(peL1.size() > 0);
     }
 
+    /**
+     *
+     * @throws BlackBoxException
+     */
     @Test
     public void testAllPatients() throws BlackBoxException {
         // All Patients
@@ -181,6 +226,10 @@ public class MedicalUseCaseTest {
         Assert.assertTrue(pList1.size() > 0);
     }
 
+    /**
+     *
+     * @throws BlackBoxException
+     */
     @Test
     public void testPatientByName() throws BlackBoxException {
         // All Patients with a specific first name (column value search)
@@ -199,18 +248,26 @@ public class MedicalUseCaseTest {
 
     }
 
+    /**
+     *
+     * @throws BlackBoxException
+     */
     @Test
     public void testPatientEncountersById() throws BlackBoxException {
-        PatientEncounter pe = new PatientEncounter();
+        Encounter pe = new Encounter();
         // All encounters by patient Id (row key)
         List<String> query = Arrays.asList(knownPatientId + "P:.*");
-        List<PatientEncounter> peL2 = blackBox.fetchByPartialKey(query, pe);
-        for (PatientEncounter penc : peL2) {
+        List<Encounter> peL2 = blackBox.fetchByPartialKey(query, pe);
+        for (Encounter penc : peL2) {
             Assert.assertEquals(penc.getpId(), knownPatientId + "P");
         }
 
     }
 
+    /**
+     *
+     * @throws BlackBoxException
+     */
     @Test
     public void testPatientEncountersByMedId() throws BlackBoxException {
 
@@ -218,17 +275,21 @@ public class MedicalUseCaseTest {
         List<Medication> med1 = blackBox.search(new Medication());
         if (med1.size() > 0) {
             String randMedId = med1.get(Math.abs(random.nextInt() % med1.size())).getmId();
-            PatientEncounter pe2 = new PatientEncounter();
+            Encounter pe2 = new Encounter();
             pe2.setMedIds(".*" + randMedId + ".*");
 
-            List<PatientEncounter> encs = blackBox.search(pe2);
-            for (PatientEncounter enc : encs) {
+            List<Encounter> encs = blackBox.search(pe2);
+            for (Encounter enc : encs) {
                 Assert.assertTrue(enc.getMedIds().contains(randMedId));
                 Assert.assertTrue(!enc.getPatient().getfN().isEmpty());
             }
         }
     }
 
+    /**
+     *
+     * @throws BlackBoxException
+     */
     @Test
     public void testPatientEncountersByMedIdAndPFName() throws BlackBoxException {
         // get a patient
@@ -241,102 +302,118 @@ public class MedicalUseCaseTest {
         // random medication name
         String medId = allMeds.get(Math.abs(random.nextInt() % allMeds.size())).getmId();
         // search encounters
-        PatientEncounter pe = new PatientEncounter();
+        Encounter pe = new Encounter();
         pe.setpFN(firstName);
         pe.setMedIds(".*" + medId + ".*");
-        List<PatientEncounter> results = blackBox.search(pe);
+        List<Encounter> results = blackBox.search(pe);
 
-        for (PatientEncounter r : results) {
+        for (Encounter r : results) {
             Assert.assertEquals(r.getPatient().getfN(), firstName);
             Assert.assertEquals(r.getpFN(), firstName);
             Assert.assertTrue(r.getMedIds().contains(medId));
         }
     }
 
+    /**
+     *
+     * @throws BlackBoxException
+     */
     @Test
     public void testAllPatientsWithDiagnosis() throws BlackBoxException {
 
         String diagId = Diagnosis.get(Math.abs(random.nextInt() % Diagnosis.size()));
 
-        PatientEncounter pe = new PatientEncounter();
+        Encounter pe = new Encounter();
         pe.setDiagIds(".*" + diagId + ".*");
 
-        List<PatientEncounter> peList = blackBox.search(pe);
-        for (PatientEncounter enc : peList) {
+        List<Encounter> peList = blackBox.search(pe);
+        for (Encounter enc : peList) {
             Assert.assertTrue(enc.getDiagIds().contains(diagId));
         }
 
-        PatientEncounter pe1 = new PatientEncounter();
+        Encounter pe1 = new Encounter();
         List<Diagnosis> diags = new ArrayList<>();
         Diagnosis d = new Diagnosis(diagId);
         diags.add(d);
 
         pe1.setDiags(diags);
 
-        List<PatientEncounter> peList1 = blackBox.search(pe1);
-        for (PatientEncounter enc : peList) {
+        List<Encounter> peList1 = blackBox.search(pe1);
+        for (Encounter enc : peList) {
             Assert.assertTrue(enc.getDiagIds().contains(diagId));
         }
 
     }
 
+    /**
+     *
+     * @throws BlackBoxException
+     */
     @Test
     public void testPatientEncountersByName() throws BlackBoxException {
 
         // get some data that exists
-        List<PatientEncounter> allPEs = blackBox.search(new PatientEncounter());
+        List<Encounter> allPEs = blackBox.search(new Encounter());
         int rId = Math.abs(random.nextInt() % allPEs.size());
         String firstName = allPEs.get(rId).getpFN();
         String lastName = allPEs.get(rId).getpLN();
 
-        PatientEncounter pe1 = new PatientEncounter();
+        Encounter pe1 = new Encounter();
         // All encounters for patient names
         List<Patient> p2 = blackBox.fetchByPartialKey(".*:" + firstName + ":" + lastName, new Patient());
-        List<PatientEncounter> peL3 = new ArrayList<>();
+        List<Encounter> peL3 = new ArrayList<>();
         for (Patient patient : p2) {
-            List<PatientEncounter> temp = blackBox.fetchByPartialKey(patient.getpId() + ":.*", pe1);
+            List<Encounter> temp = blackBox.fetchByPartialKey(patient.getpId() + ":.*", pe1);
             peL3.addAll(temp);
         }
 
         Assert.assertTrue(peL3.size() > 0);
-        for (PatientEncounter pe : peL3) {
+        for (Encounter pe : peL3) {
             Assert.assertEquals(pe.getpFN(), firstName);
             Assert.assertEquals(pe.getpLN(), lastName);
             Assert.assertEquals(pe.getPatient().getfN(), firstName);
             Assert.assertEquals(pe.getPatient().getlN(), lastName);
         }
 
-        PatientEncounter pe2 = new PatientEncounter(null, null, firstName, lastName);
-        List<PatientEncounter> peL4 = blackBox.search(pe2);
+        Encounter pe2 = new Encounter(null, null, firstName, lastName);
+        List<Encounter> peL4 = blackBox.search(pe2);
         Assert.assertTrue(peL4.size() > 0);
         Assert.assertEquals(peL4.size(), peL3.size());
 
-        for (PatientEncounter pe : peL4) {
+        for (Encounter pe : peL4) {
             Assert.assertEquals(pe.getpFN(), firstName);
             Assert.assertEquals(pe.getpLN(), lastName);
             Assert.assertEquals(pe.getPatient().getfN(), firstName);
             Assert.assertEquals(pe.getPatient().getlN(), lastName);
         }
 
-        PatientEncounter pe3 = new PatientEncounter(null, new Patient(null, firstName, null));
-        List<PatientEncounter> peL5 = blackBox.search(pe3);
+        Encounter pe3 = new Encounter(null, new Patient(null, firstName, null));
+        List<Encounter> peL5 = blackBox.search(pe3);
         Assert.assertTrue(peL5.size() > 0);
-        for (PatientEncounter pe : peL5) {
+        for (Encounter pe : peL5) {
             Assert.assertEquals(pe.getPatient().getfN(), firstName);
         }
     }
 
+    /**
+     *
+     * @throws BlackBoxException
+     */
     @Test
     public void testPatientWithId() throws BlackBoxException {
         Patient p = new Patient();
         // All Patients with patient id (row key search)
         String pIDKey = "123456P:.*";
-        List<Patient> pList2 = blackBox.fetchByPartialKey(Arrays.asList(pIDKey), p);
+        List<Patient> pList2 = blackBox.fetchByPartialKey(pIDKey, p);
         for (Patient pat : pList2) {
             Assert.assertEquals(pat.getpId(), "123456P");
         }
     }
 
+    /**
+     *
+     * @throws BlackBoxException
+     */
     @Test
     public void testPatientsWithFirstAndLastName() throws BlackBoxException {
 
@@ -350,4 +427,44 @@ public class MedicalUseCaseTest {
         }
     }
 
+    /**
+     *
+     * @throws BlackBoxException
+     */
+    @Test
+    public void testAllClaimChargesForPatient() throws BlackBoxException {
+        // Get a random patient id
+        List<Patient> allPats = blackBox.search(new Patient());
+        // get a random patient
+        Patient p = allPats.get(Math.abs(random.nextInt() % allPats.size()));
+
+        Claim cl = new Claim(null, null);
+        cl.setpId(p.getpId());
+
+        List<Claim> allClaims = blackBox.search(cl);
+        double totalAmount = 0;
+        for (Claim thisClaim : allClaims) {
+            Assert.assertEquals(thisClaim.toString(), p.getpId(), thisClaim.getpId());
+            for (ClaimCharges cCharge : thisClaim.getcCharges()) {
+                totalAmount += cCharge.getAmount();
+            }
+        }
+
+        Assert.assertTrue(totalAmount > 0);
+    }
+
+    @Test
+    public void testAllClaimsForPatient() throws BlackBoxException {
+        // Get a random patient id
+        List<Patient> allPats = blackBox.search(new Patient());
+        // get a random patient
+        Patient p = allPats.get(Math.abs(random.nextInt() % allPats.size()));
+
+        final Encounter encounter = new Encounter(null, new Patient(null, p.getfN(), null));
+
+        List<Encounter> encList = blackBox.search(encounter);
+        for (Encounter enc : encList) {
+            System.out.println(enc.getpFN() + " :" + enc.getCls());
+        }
+    }
 }

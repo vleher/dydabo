@@ -1,19 +1,19 @@
-/*
- * Copyright (C) 2017 viswadas leher <vleher@gmail.com>
+/*******************************************************************************
+ * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ *******************************************************************************/
 package com.dydabo.blackbox.hbase.utils;
 
 import com.dydabo.blackbox.BlackBoxException;
@@ -64,6 +64,7 @@ public class HBaseUtils<T extends BlackBoxable> {
      * @return the boolean
      *
      * @throws java.io.IOException
+     * @throws com.dydabo.blackbox.BlackBoxException
      */
     public boolean createTable(T row, Connection connection) throws IOException, BlackBoxException {
         try (Admin admin = connection.getAdmin()) {
@@ -106,11 +107,10 @@ public class HBaseUtils<T extends BlackBoxable> {
      * @throws com.dydabo.blackbox.BlackBoxException
      */
     public HBaseTable convertRowToHTable(T row, boolean includeObject) throws JsonSyntaxException, BlackBoxException {
-        Map<String, Object> thisValueMap = new Gson().fromJson(row.getBBJson(), Map.class);
+        // TODO: this can be better
+        String rowJson = new Gson().toJson(row);
+        Map<String, Object> thisValueMap = new Gson().fromJson(rowJson, Map.class);
 
-//        if (!isValidRowKey(row)) {
-//            throw new BlackBoxException("The object should have a valid row key");
-//        }
         HBaseTable hbaseTable = new HBaseTable(row.getBBRowKey());
         for (Map.Entry<String, Object> entry : thisValueMap.entrySet()) {
             String key = entry.getKey();
@@ -141,6 +141,7 @@ public class HBaseUtils<T extends BlackBoxable> {
      * @return the boolean
      *
      * @throws java.io.IOException
+     * @throws com.dydabo.blackbox.BlackBoxException
      */
     public boolean checkIfRowExists(T row, Table hTable) throws IOException, BlackBoxException {
         if (!isValidRowKey(row)) {
@@ -155,11 +156,23 @@ public class HBaseUtils<T extends BlackBoxable> {
         }
     }
 
+    /**
+     *
+     * @param regexValue
+     *
+     * @return
+     */
     public String sanitizeRegex(String regexValue) {
         // TODO: alter regex to search inside lists and arrays
         return regexValue;
     }
 
+    /**
+     *
+     * @param row
+     *
+     * @return
+     */
     public boolean isValidRowKey(T row) {
         if (row == null) {
             return false;

@@ -17,19 +17,9 @@
 package com.dydabo.blackbox;
 
 /**
- * Generic exception for the library
  *
  * @author viswadas leher <vleher@gmail.com>
  */
-public class BlackBoxException extends Exception {
-
-    /**
-     * Constructor
-     *
-     * @param message the message to be passed with the exception
-     */
-    public BlackBoxException(String message) {
-        super(message);
-    }
+public interface BlackBoxKeyable extends BlackBoxable {
 
 }
