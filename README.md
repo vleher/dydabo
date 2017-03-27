@@ -2,17 +2,17 @@
 **Dy**namic **Da**tabase Black**Bo**x (**dydabo**) was born out of several different data abstraction modules that I had written for several different projects.
 The idea here is to create an abstraction that will "*completely*" eliminate the need to know how your data is stored in the back end or data store.
 
-In that sense this can probably be classified as a Object Data Modeling (ODM) library, instead of a Object Mapping library like Hibernate.
+In that sense this can probably be classified as a Object Data Modeling (ODM) library, rather than a Object Mapping library like Hibernate. Although this library does make some implicit object mapping.
 
 ### Background
 
-In the world of relational databases, you need to know what data you are going to store and how you are going to access it, usually ahead of time. Depending on these requirements, you come up with a database schema that is normalized and efficient enough to give you a good performance for both storing and querying. Every time you wanted to add a new piece of data, you had to modify the database schema and modify your code to handle the new piece of data.
+In the world of relational databases, you need to know what data you are going to store and how you are going to access it, usually ahead of time. Depending on the requirements, you come up with a database schema that is normalized and efficient enough to give you a good performance for both storing and querying. Every time you need to add a new piece of data, you will modify the database schema and modify your code to handle the new piece of data.
 
 All that *kind* of changed with the NoSql databases. Now, you can insert columns (and data) on the fly and deal with large amounts of data. You still need to know how you are going to access the data, so that you can formulate the data and row keys appropriately.
 
 ### Goals
 
-**dydabo** is a Java library that can be used to convert and persist Plain Old Java Objects (POJO) into one or several back end databases. The library should take care of almost all database activities, such as the creation of tables, insertion, update, deletion of row from the tables etc. Also, the library should shield the users from learning yet another query language to get data out of the data store.
+**dydabo** is a Java library that can be used to convert and persist Plain Old Java Objects (POJO) into one or several back end databases. The library should take care of almost all database activities, such as the creation of tables, insertion, update, deletion of row from the tables etc. Also, the library should shield the users completely from any of the database knowledge or information.
 
 The eventual goal of the library can be summed up as below:
 
@@ -30,12 +30,12 @@ The eventual goal of the library can be summed up as below:
 
 ### Audience
 
-**So, who can use this?** Anybody who can set it up and running can use it. and good luck with that. ;-)
+**So, who can use this?** Anybody who can set it up and running can use it....and good luck with that. ;-)
 
 **Who should use this?** Just some of different scenarios that I can think of:
 
 * Someone who wants to develop an application quickly and easily without worrying about the back end. You can use this during the development phase of the project, before you have a complete understanding of all your requirements and query/access details. Once you have completed the application, you can identify the types of data access you need, and you will/may be able to come up with a better database design.
-* You don't necessarily need to have terabytes of data to use a NoSql database. Any small or medium size application can use it just as effectively. A simple application that do not have tons of data, and every query need not be tuned to the fraction of a milli-second may find this easier to maintain.
+* You don't necessarily need to have terabytes of data to use a NoSql database. Any small or medium size application can use it just as effectively. A simple application that do not have tons of data, and where every query need not be tuned to the fraction of a milli-second may find this easier to maintain.
 * You don't want to dabble with SQL, CQL, HQL queries. If you design your POJO "*wisely*" so as to easily access most of the data you want, with good row key selection then the library should suffice. 
 
 **Who should not use this?** There will be several limitations to the library when compared to the vanilla database driver functionality. Refer to the limitations section below.
@@ -60,7 +60,7 @@ There are still several features that needs to be implemented, and the interface
 ### Documentation and Use Cases
 
  * dydabo API: Coming soon....
- * dydabo User Guide: This guide contains examples and use cases on how to use dydabo in your project and code.
+ * dydabo [User Guide](https://github.com/vleher/dydabo/blob/master/USERGUIDE.md): This guide contains examples and some use cases on how to use dydabo in your project and code.
 
 ### Current Dependencies
 
