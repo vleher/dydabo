@@ -1,11 +1,11 @@
-/*******************************************************************************
+/** *****************************************************************************
  * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *******************************************************************************/
+ ******************************************************************************
+ */
 package com.dydabo.blackbox;
 
 import com.dydabo.blackbox.hbase.HBaseJsonImpl;
@@ -33,6 +34,8 @@ import org.testng.annotations.Test;
  * @author viswadas leher <vleher@gmail.com>
  */
 public class BlackBoxFactoryNGTest {
+
+    private final Logger logger = Logger.getLogger(BlackBoxFactoryNGTest.class.getName());
 
     /**
      *
@@ -85,7 +88,7 @@ public class BlackBoxFactoryNGTest {
             result = BlackBoxFactory.getDatabase("Dummy");
             Assert.assertNull(result);
         } catch (IOException ex) {
-            Logger.getLogger(BlackBoxFactoryNGTest.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
             Assert.fail(ex.getMessage(), ex);
         }
 

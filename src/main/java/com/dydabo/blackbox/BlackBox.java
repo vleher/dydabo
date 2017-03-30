@@ -1,11 +1,11 @@
-/*******************************************************************************
+/** *****************************************************************************
  * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *******************************************************************************/
+ ******************************************************************************
+ */
 package com.dydabo.blackbox;
 
 import java.util.List;
@@ -86,6 +87,18 @@ public interface BlackBox<T extends BlackBoxable> {
 
     /**
      *
+     * @param rowKeys
+     * @param bean
+     * @param maxResults
+     *
+     * @return
+     *
+     * @throws BlackBoxException
+     */
+    List<T> fetchByPartialKey(List<String> rowKeys, T bean, int maxResults) throws BlackBoxException;
+
+    /**
+     *
      * @param rowKey
      * @param bean
      *
@@ -94,6 +107,18 @@ public interface BlackBox<T extends BlackBoxable> {
      * @throws BlackBoxException
      */
     List<T> fetchByPartialKey(String rowKey, T bean) throws BlackBoxException;
+
+    /**
+     *
+     * @param rowKey
+     * @param bean
+     * @param maxResults
+     *
+     * @return
+     *
+     * @throws BlackBoxException
+     */
+    List<T> fetchByPartialKey(String rowKey, T bean, int maxResults) throws BlackBoxException;
 
     /**
      * Inserts a list of rows into the table. The rows should not already exist in the table.
@@ -133,6 +158,17 @@ public interface BlackBox<T extends BlackBoxable> {
 
     /**
      *
+     * @param rows
+     * @param maxResults
+     *
+     * @return
+     *
+     * @throws BlackBoxException
+     */
+    List<T> search(List<T> rows, int maxResults) throws BlackBoxException;
+
+    /**
+     *
      * @param row
      *
      * @return
@@ -140,6 +176,40 @@ public interface BlackBox<T extends BlackBoxable> {
      * @throws BlackBoxException
      */
     List<T> search(T row) throws BlackBoxException;
+
+    /**
+     *
+     * @param row
+     * @param maxResults
+     *
+     * @return
+     *
+     * @throws BlackBoxException
+     */
+    List<T> search(T row, int maxResults) throws BlackBoxException;
+
+    /**
+     *
+     * @param startRow
+     * @param endRow
+     *
+     * @return
+     *
+     * @throws BlackBoxException
+     */
+    List<T> search(T startRow, T endRow) throws BlackBoxException;
+
+    /**
+     *
+     * @param startRow
+     * @param endRow
+     * @param maxResults
+     *
+     * @return
+     *
+     * @throws BlackBoxException
+     */
+    List<T> search(T startRow, T endRow, int maxResults) throws BlackBoxException;
 
     /**
      * Update or insert the rows that match the POJO. If a row does not exist, then it will added otherwise the existing row

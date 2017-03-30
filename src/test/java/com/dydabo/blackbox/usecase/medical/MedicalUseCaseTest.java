@@ -81,8 +81,8 @@ public class MedicalUseCaseTest {
     public MedicalUseCaseTest() throws BlackBoxException, IOException {
         blackBox = BlackBoxFactory.getDatabase(BlackBoxFactory.HBASE);
         // Pre-populate with some dynamic data.
-        generatePatients(200);
-        generateEncounters(3000);
+        generatePatients(1);
+        generateEncounters(1);
     }
 
     /**
@@ -116,7 +116,7 @@ public class MedicalUseCaseTest {
             enc.setpLN(currentPatient.getlN());
 
             // Add random # of diagnosis
-            int dCount = random.nextInt(2);
+            int dCount = random.nextInt(2) + 1;
             for (int i = 0; i < dCount; i++) {
                 final Diagnosis diagnosis = new Diagnosis(Diagnosis.get(random.nextInt(10000) % Diagnosis.size()));
                 if (blackBox.update(diagnosis)) {
@@ -124,7 +124,7 @@ public class MedicalUseCaseTest {
                 }
             }
             // Add random Medications
-            dCount = random.nextInt(2);
+            dCount = random.nextInt(2) + 1;
             for (int i = 0; i < dCount; i++) {
                 final Medication medication = new Medication(Meds.get(random.nextInt(10000) % Meds.size()));
                 medication.setmDose(random.nextInt(8));
@@ -134,20 +134,20 @@ public class MedicalUseCaseTest {
             }
 
             // add random # of claims
-            dCount = random.nextInt(2);
+            dCount = random.nextInt(2) + 1;
             for (int i = 0; i < dCount; i++) {
                 final Random random = new Random();
                 final Claim claim = new Claim(random.nextInt() + "CL", currentPatient.getpId());
 
                 //  generate random # of details and charges
-                int cdCount = random.nextInt(5);
+                int cdCount = random.nextInt(5) + 1;
                 for (int k = 0; k < cdCount; k++) {
                     ClaimDetails cDet = new ClaimDetails(random.nextInt() + "CD");
                     if (blackBox.update(cDet)) {
                         claim.getcDets().add(cDet);
                     }
                 }
-                cdCount = random.nextInt(5);
+                cdCount = random.nextInt(5) + 1;
                 for (int k = 0; k < cdCount; k++) {
                     ClaimCharges cc = new ClaimCharges(random.nextInt() + "CC", random.nextInt(10000) * 1.1);
                     if (blackBox.update(cc)) {
@@ -226,6 +226,30 @@ public class MedicalUseCaseTest {
         Assert.assertTrue(pList1.size() > 0);
     }
 
+    @Test
+    public void testFetchQueryPerformance() throws BlackBoxException {
+        // get some data that exists
+        List<Encounter> allPEs = blackBox.search(new Encounter());
+        int rId = Math.abs(random.nextInt() % allPEs.size());
+        String firstName = allPEs.get(rId).getpFN();
+        String lastName = allPEs.get(rId).getpLN();
+
+        long startTime = System.nanoTime();
+        List<Patient> p4 = blackBox.fetchByPartialKey(".*:" + firstName + ":" + lastName, new Patient());
+        long endTime = System.nanoTime();
+        System.out.println("1 :" + p4.size() + ":" + (endTime - startTime));
+
+        startTime = System.nanoTime();
+        List<Patient> p5 = blackBox.fetchByPartialKey(".*:" + ".*:" + lastName, new Patient());
+        endTime = System.nanoTime();
+        System.out.println("2 :" + p5.size() + ":" + (endTime - startTime));
+
+        startTime = System.nanoTime();
+        List<Patient> p6 = blackBox.fetchByPartialKey(".*:" + firstName + ":.*", new Patient());
+        endTime = System.nanoTime();
+        System.out.println("3 :" + p6.size() + ":" + (endTime - startTime));
+    }
+
     /**
      *
      * @throws BlackBoxException
@@ -280,8 +304,10 @@ public class MedicalUseCaseTest {
 
             List<Encounter> encs = blackBox.search(pe2);
             for (Encounter enc : encs) {
-                Assert.assertTrue(enc.getMedIds().contains(randMedId));
-                Assert.assertTrue(!enc.getPatient().getfN().isEmpty());
+                Assert.assertTrue(enc.getMedIds(), enc.getMedIds().contains(randMedId));
+                if (enc.getPatient() != null) {
+                    Assert.assertTrue(enc.getPatient().toString(), !enc.getPatient().getfN().isEmpty());
+                }
             }
         }
     }
@@ -308,9 +334,11 @@ public class MedicalUseCaseTest {
         List<Encounter> results = blackBox.search(pe);
 
         for (Encounter r : results) {
-            Assert.assertEquals(r.getPatient().getfN(), firstName);
-            Assert.assertEquals(r.getpFN(), firstName);
-            Assert.assertTrue(r.getMedIds().contains(medId));
+            if (r.getPatient() != null) {
+                Assert.assertEquals(r.getPatient().toString(), r.getPatient().getfN(), firstName);
+            }
+            Assert.assertEquals(r.toString(), r.getpFN(), firstName);
+            Assert.assertTrue(r.getMedIds(), r.getMedIds().contains(medId));
         }
     }
 
@@ -327,18 +355,6 @@ public class MedicalUseCaseTest {
         pe.setDiagIds(".*" + diagId + ".*");
 
         List<Encounter> peList = blackBox.search(pe);
-        for (Encounter enc : peList) {
-            Assert.assertTrue(enc.getDiagIds().contains(diagId));
-        }
-
-        Encounter pe1 = new Encounter();
-        List<Diagnosis> diags = new ArrayList<>();
-        Diagnosis d = new Diagnosis(diagId);
-        diags.add(d);
-
-        pe1.setDiags(diags);
-
-        List<Encounter> peList1 = blackBox.search(pe1);
         for (Encounter enc : peList) {
             Assert.assertTrue(enc.getDiagIds().contains(diagId));
         }
@@ -371,8 +387,10 @@ public class MedicalUseCaseTest {
         for (Encounter pe : peL3) {
             Assert.assertEquals(pe.getpFN(), firstName);
             Assert.assertEquals(pe.getpLN(), lastName);
-            Assert.assertEquals(pe.getPatient().getfN(), firstName);
-            Assert.assertEquals(pe.getPatient().getlN(), lastName);
+            if (pe.getPatient() != null) {
+                Assert.assertEquals(pe.getPatient().toString(), pe.getPatient().getfN(), firstName);
+                Assert.assertEquals(pe.getPatient().toString(), pe.getPatient().getlN(), lastName);
+            }
         }
 
         Encounter pe2 = new Encounter(null, null, firstName, lastName);
@@ -383,16 +401,22 @@ public class MedicalUseCaseTest {
         for (Encounter pe : peL4) {
             Assert.assertEquals(pe.getpFN(), firstName);
             Assert.assertEquals(pe.getpLN(), lastName);
-            Assert.assertEquals(pe.getPatient().getfN(), firstName);
-            Assert.assertEquals(pe.getPatient().getlN(), lastName);
+            if (pe.getPatient() != null) {
+                Assert.assertEquals(pe.getPatient().getfN(), firstName);
+                Assert.assertEquals(pe.getPatient().getlN(), lastName);
+            }
         }
 
         Encounter pe3 = new Encounter(null, new Patient(null, firstName, null));
         List<Encounter> peL5 = blackBox.search(pe3);
         Assert.assertTrue(peL5.size() > 0);
         for (Encounter pe : peL5) {
-            Assert.assertEquals(pe.getPatient().getfN(), firstName);
+            if (pe.getPatient() != null) {
+                Assert.assertEquals(pe.getPatient().getfN(), firstName);
+            }
+            Assert.assertEquals(pe.getpFN(), firstName);
         }
+
     }
 
     /**
@@ -445,12 +469,14 @@ public class MedicalUseCaseTest {
         double totalAmount = 0;
         for (Claim thisClaim : allClaims) {
             Assert.assertEquals(thisClaim.toString(), p.getpId(), thisClaim.getpId());
+            System.out.println("Claim :" + thisClaim);
             for (ClaimCharges cCharge : thisClaim.getcCharges()) {
                 totalAmount += cCharge.getAmount();
             }
         }
-
-        Assert.assertTrue(totalAmount > 0);
+        if (allClaims.size() > 0) {
+            Assert.assertTrue(totalAmount + "", totalAmount > 0);
+        }
     }
 
     @Test
@@ -464,7 +490,109 @@ public class MedicalUseCaseTest {
 
         List<Encounter> encList = blackBox.search(encounter);
         for (Encounter enc : encList) {
-            System.out.println(enc.getpFN() + " :" + enc.getCls());
+            Assert.assertEquals(p.getfN(), enc.getpFN());
         }
+    }
+
+    @Test
+    public void testGetEncounterByPatient() throws BlackBoxException {
+        Encounter pe = new Encounter();
+        List<Encounter> peL1 = blackBox.search(Arrays.asList(pe));
+        int randId = random.nextInt(100000000) % peL1.size();
+
+        String patientId = peL1.get(randId).getpId();
+        String encId = peL1.get(randId).geteId();
+
+        long startTime = System.nanoTime();
+        List<Encounter> resultOne = blackBox.fetchByPartialKey(patientId, new Encounter());
+        long endTime = System.nanoTime();
+        long execTime = endTime - startTime;
+        System.out.println("1 :" + resultOne.size() + ":" + execTime);
+        if (resultOne.size() > 0) {
+            Assert.assertTrue(execTime / resultOne.size() < 50000000);
+        }
+
+        startTime = System.nanoTime();
+        List<Encounter> resultTwo = blackBox.fetch(patientId + ":" + encId, new Encounter());
+        endTime = System.nanoTime();
+        execTime = endTime - startTime;
+        System.out.println("2 :" + resultTwo.size() + ":" + execTime);
+        if (resultTwo.size() > 0) {
+            Assert.assertTrue(execTime / resultTwo.size() < 50000000);
+        }
+
+        startTime = System.nanoTime();
+        List<Encounter> resultThree = blackBox.fetchByPartialKey(".*" + patientId + ":" + encId, new Encounter());
+        endTime = System.nanoTime();
+        execTime = endTime - startTime;
+        System.out.println("3 :" + resultThree.size() + ":" + execTime);
+        if (resultThree.size() > 0) {
+            Assert.assertTrue(execTime / resultThree.size() < 50000000);
+        }
+
+        startTime = System.nanoTime();
+        List<Encounter> resultFour = blackBox.fetchByPartialKey(".*" + patientId + ":.*", new Encounter());
+        endTime = System.nanoTime();
+        execTime = endTime - startTime;
+        System.out.println("4 :" + resultFour.size() + ":" + execTime);
+        if (resultFour.size() > 0) {
+            Assert.assertTrue(execTime / resultFour.size() < 50000000);
+        }
+
+        startTime = System.nanoTime();
+        List<Encounter> resultFive = blackBox.fetchByPartialKey(patientId + ":.*", new Encounter());
+        endTime = System.nanoTime();
+        execTime = endTime - startTime;
+        System.out.println("5 :" + resultFive.size() + ":" + execTime);
+        if (resultFive.size() > 0) {
+            Assert.assertTrue(execTime / resultFive.size() < 50000000);
+        }
+
+    }
+
+    @Test
+    public void testRangeSearch() throws BlackBoxException {
+        final double minVal = random.nextDouble() * 100;
+        final double maxVal = random.nextDouble() * 23443 + minVal;
+
+        ClaimCharges startClaimCharge = new ClaimCharges(null, minVal);
+        ClaimCharges endClaimCharge = new ClaimCharges(null, maxVal);
+        System.out.println("Search Charges:" + minVal + " to " + maxVal);
+        List<ClaimCharges> all = blackBox.search(new ClaimCharges(null, null));
+        int count = 0;
+        for (ClaimCharges cc : all) {
+            if (cc.getAmount() >= minVal && cc.getAmount() < maxVal) {
+                count++;
+            }
+        }
+
+        List<ClaimCharges> resultOne = blackBox.search(startClaimCharge, endClaimCharge);
+        System.out.println("Charges :" + count + " :" + resultOne.size());
+        Assert.assertEquals(count, resultOne.size());
+        for (ClaimCharges claimCharges : resultOne) {
+            Assert.assertTrue(claimCharges.getAmount() >= minVal);
+            Assert.assertTrue(claimCharges.getAmount() < maxVal);
+        }
+        // For only patients with id starting with 1
+        startClaimCharge = new ClaimCharges("^1.*", minVal);
+        endClaimCharge = new ClaimCharges("^2.*", maxVal);
+        System.out.println("Search Charges:" + minVal + " to " + maxVal);
+        all = blackBox.search(new ClaimCharges(null, null));
+        count = 0;
+        for (ClaimCharges cc : all) {
+            if (cc.getCcId().startsWith("1") && cc.getAmount() >= minVal && cc.getAmount() < maxVal) {
+                count++;
+            }
+        }
+
+        resultOne = blackBox.search(startClaimCharge, endClaimCharge);
+
+        System.out.println("Charges :" + count + " :" + resultOne.size());
+        Assert.assertEquals(count, resultOne.size());
+        for (ClaimCharges claimCharges : resultOne) {
+            Assert.assertTrue(claimCharges.getAmount() >= minVal);
+            Assert.assertTrue(claimCharges.getAmount() < maxVal);
+        }
+
     }
 }

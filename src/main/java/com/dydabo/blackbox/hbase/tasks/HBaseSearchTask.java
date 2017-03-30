@@ -1,11 +1,11 @@
-/*******************************************************************************
+/** *****************************************************************************
  * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *******************************************************************************/
+ ******************************************************************************
+ */
 package com.dydabo.blackbox.hbase.tasks;
 
 import com.dydabo.blackbox.BlackBoxException;
@@ -28,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.NavigableMap;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -38,6 +38,7 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.filter.BinaryComparator;
 import org.apache.hadoop.hbase.filter.CompareFilter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.RegexStringComparator;
@@ -52,8 +53,9 @@ import org.apache.hadoop.hbase.util.Bytes;
 public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
 
     private final Connection connection;
-    private final HBaseUtils<T> utils;
+    private final Logger logger = Logger.getLogger(HBaseJsonImpl.class.getName());
     private List<T> rows;
+    private final HBaseUtils<T> utils;
 
     /**
      *
@@ -77,14 +79,33 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
         this.utils = new HBaseUtils<T>();
     }
 
+    @Override
+    protected List<T> compute() {
+        try {
+            return search(rows);
+        } catch (BlackBoxException ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }
+        return new ArrayList<>();
+    }
+
+    /**
+     *
+     * @return
+     */
+    public Connection getConnection() {
+        return connection;
+    }
+
     /**
      *
      * @param thisTable
      * @param filterList
-     * @param hasFilters
+     *
      * @return
      */
-    protected boolean parseForFilters(HBaseTable thisTable, FilterList filterList, boolean hasFilters) {
+    protected boolean parseForFilters(HBaseTable thisTable, FilterList filterList) {
+        boolean hasFilters = false;
         for (Map.Entry<String, HBaseTable.ColumnFamily> colFamEntry : thisTable.getColumnFamilies().entrySet()) {
             String familyName = colFamEntry.getKey();
             HBaseTable.ColumnFamily colFamily = colFamEntry.getValue();
@@ -92,13 +113,21 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
                 String colName = columnEntry.getKey();
                 HBaseTable.Column colValue = columnEntry.getValue();
                 String regexValue = colValue.getColumnValueAsString();
+                regexValue = utils.sanitizeRegex(regexValue);
                 if (regexValue instanceof String && DyDaBoUtils.isValidRegex((String) regexValue)) {
-                    regexValue = utils.sanitizeRegex(regexValue);
-                    RegexStringComparator regexComp = new RegexStringComparator((String) regexValue);
-                    SingleColumnValueFilter scvf = new SingleColumnValueFilter(Bytes.toBytes(familyName),
-                            Bytes.toBytes(colName), CompareFilter.CompareOp.EQUAL, regexComp);
-                    filterList.addFilter(scvf);
-                    hasFilters = true;
+                    if (DyDaBoUtils.isNumber(colValue.getColumnValue())) {
+                        BinaryComparator regexComp = new BinaryComparator(utils.getAsByteArray(colValue.getColumnValue()));
+                        SingleColumnValueFilter scvf = new SingleColumnValueFilter(Bytes.toBytes(familyName),
+                                Bytes.toBytes(colName), CompareFilter.CompareOp.EQUAL, regexComp);
+                        filterList.addFilter(scvf);
+                        hasFilters = true;
+                    } else {
+                        RegexStringComparator regexComp = new RegexStringComparator((String) regexValue);
+                        SingleColumnValueFilter scvf = new SingleColumnValueFilter(Bytes.toBytes(familyName),
+                                Bytes.toBytes(colName), CompareFilter.CompareOp.EQUAL, regexComp);
+                        filterList.addFilter(scvf);
+                        hasFilters = true;
+                    }
                 }
             }
         }
@@ -152,30 +181,15 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
                 // Get the filters : just simple regex filters for now
                 HBaseTable thisTable = utils.convertRowToHTable(row, true);
                 FilterList filterList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
-                boolean hasFilters = false;
-                hasFilters = parseForFilters(thisTable, filterList, hasFilters);
+                boolean hasFilters = parseForFilters(thisTable, filterList);
                 if (hasFilters) {
-                    Logger.getLogger(HBaseJsonImpl.class.getName()).log(Level.INFO, "Filters:" + filterList);
+                    logger.log(Level.INFO, "Filters:" + filterList);
                     scan.setFilter(filterList);
                 }
 
                 try (ResultScanner resultScanner = hTable.getScanner(scan)) {
                     for (Result result : resultScanner) {
-                        HBaseTable resultTable = new HBaseTable(Bytes.toString(result.getRow()));
-                        NavigableMap<byte[], NavigableMap<byte[], byte[]>> map = result.getNoVersionMap();
-
-                        for (Map.Entry<byte[], NavigableMap<byte[], byte[]>> entry : map.entrySet()) {
-                            String familyName = Bytes.toString(entry.getKey());
-                            NavigableMap<byte[], byte[]> famColMap = entry.getValue();
-
-                            for (Map.Entry<byte[], byte[]> cols : famColMap.entrySet()) {
-                                String colName = Bytes.toString(cols.getKey());
-                                String colValue = Bytes.toString(cols.getValue());
-
-                                resultTable.getColumnFamily(familyName).addColumn(colName, colValue);
-                            }
-
-                        }
+                        HBaseTable resultTable = utils.parseResultToHTable(result, row);
 
                         T resultObject = new Gson().fromJson(resultTable.toJsonObject(), (Class<T>) row.getClass());
                         if (resultObject != null) {
@@ -185,27 +199,9 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
                 }
             }
         } catch (IOException ex) {
-            Logger.getLogger(HBaseJsonImpl.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
         return results;
-    }
-
-    @Override
-    protected List<T> compute() {
-        try {
-            return search(rows);
-        } catch (BlackBoxException ex) {
-            Logger.getLogger(HBaseSearchTask.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return new ArrayList<>();
-    }
-
-    /**
-     *
-     * @return
-     */
-    public Connection getConnection() {
-        return connection;
     }
 
 }

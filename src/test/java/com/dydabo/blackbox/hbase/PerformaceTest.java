@@ -43,6 +43,7 @@ public class PerformaceTest {
 
     private static DyDaBoTestUtils utils;
     private static BlackBox instance;
+    private final Logger logger = Logger.getLogger(PerformaceTest.class.getName());
 
     /**
      *
@@ -79,7 +80,7 @@ public class PerformaceTest {
 
             Assert.assertTrue(results.size() > testSize);
         } catch (BlackBoxException ex) {
-            Logger.getLogger(PerformaceTest.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
             Assert.fail("Performace Test Failed to execute");
         }
     }

@@ -1,11 +1,11 @@
-/*******************************************************************************
+/** *****************************************************************************
  * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *******************************************************************************/
+ ******************************************************************************
+ */
 package com.dydabo.blackbox.hbase.tasks;
 
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.common.DyDaBoUtils;
 import com.dydabo.blackbox.hbase.obj.HBaseTable;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import com.google.gson.Gson;
@@ -25,8 +27,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.NavigableMap;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -51,6 +51,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 public class HBaseFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
 
     private final Connection connection;
+    private final Logger logger = Logger.getLogger(HBaseFetchTask.class.getName());
     private final HBaseUtils<T> utils;
     private List<String> rowKeys;
     private T bean = null;
@@ -110,7 +111,7 @@ public class HBaseFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
                 Result[] results = hTable.get(getList);
                 for (Result result : results) {
                     if (result.listCells() != null) {
-                        HBaseTable resultTable = parseToHBaseTable(result);
+                        HBaseTable resultTable = utils.parseResultToHTable(result, bean);
 
                         T resultObject = new Gson().fromJson(resultTable.toJsonObject(), (Class<T>) bean.getClass());
                         if (resultObject != null) {
@@ -120,7 +121,7 @@ public class HBaseFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
                 }
             }
         } catch (IOException ex) {
-            Logger.getLogger(HBaseFetchTask.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
 
         return allResults;
@@ -133,12 +134,17 @@ public class HBaseFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
                 for (String rowKey : rowKeys) {
                     Scan scan = new Scan();
 
+                    String rowPrefix = DyDaBoUtils.getStringPrefix(rowKey);
+
                     Filter rowFilter = new RowFilter(CompareFilter.CompareOp.EQUAL, new RegexStringComparator(rowKey));
+                    if (!DyDaBoUtils.isBlankOrNull(rowPrefix)) {
+                        scan.setRowPrefixFilter(Bytes.toBytes(rowPrefix));
+                    }
                     scan.setFilter(rowFilter);
 
                     try (ResultScanner resultScanner = hTable.getScanner(scan)) {
                         for (Result result : resultScanner) {
-                            HBaseTable resultTable = parseToHBaseTable(result);
+                            HBaseTable resultTable = utils.parseResultToHTable(result, bean);
 
                             T resultObject = new Gson().fromJson(resultTable.toJsonObject(), (Class<T>) bean.getClass());
                             if (resultObject != null) {
@@ -150,7 +156,7 @@ public class HBaseFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
 
             }
         } catch (IOException ex) {
-            Logger.getLogger(HBaseFetchTask.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
         return results;
     }
@@ -160,7 +166,7 @@ public class HBaseFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
         try {
             return HBaseFetchTask.this.fetch(rowKeys);
         } catch (BlackBoxException ex) {
-            Logger.getLogger(HBaseSearchTask.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
         return new ArrayList<>();
     }
@@ -171,29 +177,6 @@ public class HBaseFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
      */
     public Connection getConnection() {
         return connection;
-    }
-
-    /**
-     *
-     * @param result
-     * @return
-     */
-    protected HBaseTable parseToHBaseTable(Result result) {
-        HBaseTable resultTable = new HBaseTable(Bytes.toString(result.getRow()));
-        NavigableMap<byte[], NavigableMap<byte[], byte[]>> map = result.getNoVersionMap();
-        for (Map.Entry<byte[], NavigableMap<byte[], byte[]>> entry : map.entrySet()) {
-            String familyName = Bytes.toString(entry.getKey());
-            NavigableMap<byte[], byte[]> famColMap = entry.getValue();
-
-            for (Map.Entry<byte[], byte[]> cols : famColMap.entrySet()) {
-                String colName = Bytes.toString(cols.getKey());
-                String colValue = Bytes.toString(cols.getValue());
-
-                resultTable.getColumnFamily(familyName).addColumn(colName, colValue);
-            }
-
-        }
-        return resultTable;
     }
 
 }

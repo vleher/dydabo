@@ -1,11 +1,11 @@
-/*******************************************************************************
+/** *****************************************************************************
  * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *******************************************************************************/
+ ******************************************************************************
+ */
 package com.dydabo.blackbox.hbase;
 
 import com.dydabo.blackbox.BlackBox;
@@ -44,6 +45,7 @@ public class UseCaseOneTest {
 
     BlackBox instance = null;
     DyDaBoTestUtils utils = new DyDaBoTestUtils();
+    Random random = new Random();
 
     /**
      *
@@ -117,11 +119,11 @@ public class UseCaseOneTest {
 
         // Search
         List<BlackBoxable> eList = new ArrayList();
-        eList.add(new Employee(null, "Dav.*"));
-        eList.add(new Customer(null, "Dav.*"));
+        eList.add(new Employee(null, "^Dav.*"));
+        eList.add(new Customer(null, "^Dav.*"));
 
         List<BlackBoxable> searchResult = instance.search(eList);
-
+        System.out.println("Search Result :" + searchResult.size());
         for (BlackBoxable res : searchResult) {
             if (res instanceof User) {
                 final String uName = ((User) res).getUserName();
@@ -131,7 +133,22 @@ public class UseCaseOneTest {
             }
         }
 
-        // TODO: Search tax rates
+        // Search tax rates
+        Double minTaxRate = random.nextDouble() * 10;
+        Double maxTaxRate = random.nextDouble() * 100 + minTaxRate;
+        Customer startCustomer = new Customer(null, null);
+        startCustomer.setTaxRate(minTaxRate);
+        Customer endCustomer = new Customer(null, null);
+        endCustomer.setTaxRate(maxTaxRate);
+
+        List<Customer> taxRateCust = instance.search(startCustomer, endCustomer);
+        for (Customer customer : taxRateCust) {
+            if (customer.getTaxRate() != null) {
+                Assert.assertTrue(customer.getTaxRate() >= minTaxRate);
+                Assert.assertTrue(customer.getTaxRate() < maxTaxRate);
+            }
+        }
+
         // Delete Users
         userList = utils.generateEmployees(testSize);
         success = instance.delete(userList);
@@ -146,13 +163,16 @@ public class UseCaseOneTest {
     public void testUseCaseThree() throws BlackBoxException {
         // Insert an unique record
         Customer cust = new Customer(new Random().nextInt(1000), "AQWERDSFSTOIOPIoioioiIIII1111");
-        instance.insert(Arrays.asList(cust));
+        cust.setTaxRate(random.nextDouble() * 100);
+        instance.insert(cust);
         Customer cust1 = new Customer(new Random().nextInt(1000), "AQWERDSFSTOIOPIoioioiIIII222");
-        instance.insert(Arrays.asList(cust1));
+        cust1.setTaxRate(random.nextDouble() * 100);
+        instance.insert(cust1);
         Customer cust2 = new Customer(new Random().nextInt(1000), "AQWERDSFSTOIOPIoioioiIIII333");
-        instance.insert(Arrays.asList(cust2));
+        cust2.setTaxRate(random.nextDouble() * 100);
+        instance.insert(cust2);
 
-        List<BlackBoxable> searchResult = instance.search(Arrays.asList(cust));
+        List<BlackBoxable> searchResult = instance.search(cust);
         Assert.assertEquals(searchResult.size(), 1);
 
         searchResult = instance.fetch(Arrays.asList(cust.getBBRowKey(), cust1.getBBRowKey(), cust2.getBBRowKey()), cust);

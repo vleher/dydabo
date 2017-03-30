@@ -30,16 +30,14 @@ public class Claim implements BlackBoxable {
 
     private String cId = null;
     private String pId = null;
-    private List<ClaimDetails> cDets = null;
-    private List<ClaimCharges> cCharges = null;
+    private List<ClaimDetails> cDets = new LinkedList<>();
+    private List<ClaimCharges> cCharges = new LinkedList<>();
 
     /**
      *
      * @param cId
      */
     public Claim(String cId, String pId) {
-        cDets = new LinkedList<>();
-        cCharges = new LinkedList<>();
         this.cId = cId;
         this.pId = pId;
     }

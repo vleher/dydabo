@@ -1,11 +1,11 @@
-/*******************************************************************************
+/** *****************************************************************************
  * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *******************************************************************************/
+ ******************************************************************************
+ */
 package com.dydabo.blackbox.hbase.tasks;
 
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.hbase.HBaseJsonImpl;
 import com.dydabo.blackbox.hbase.obj.HBaseTable;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import java.io.IOException;
@@ -32,6 +32,7 @@ import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.regionserver.NoSuchColumnFamilyException;
 import org.apache.hadoop.hbase.util.Bytes;
 
 /**
@@ -40,6 +41,8 @@ import org.apache.hadoop.hbase.util.Bytes;
  * @param <T>
  */
 public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boolean> {
+
+    private static final Logger logger = Logger.getLogger(HBaseInsertTask.class.getName());
 
     private final Connection connection;
     private final HBaseUtils<T> utils;
@@ -132,20 +135,32 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
                     for (Map.Entry<String, HBaseTable.ColumnFamily> entry : thisTable.getColumnFamilies().entrySet()) {
                         String familyName = entry.getKey();
                         HBaseTable.ColumnFamily colFamily = entry.getValue();
-                        for (Map.Entry<String, HBaseTable.Column> entry1 : colFamily.getColumns().entrySet()) {
-                            String colName = entry1.getKey();
-                            HBaseTable.Column colValue = entry1.getValue();
-                            put.addColumn(Bytes.toBytes(familyName), Bytes.toBytes(colName), Bytes.toBytes(colValue.getColumnValueAsString()));
-                        }
+                        for (Map.Entry<String, HBaseTable.Column> column : colFamily.getColumns().entrySet()) {
+                            String colName = column.getKey();
+                            HBaseTable.Column colValue = column.getValue();
+                            Object thisValue = colValue.getColumnValue();
+                            byte[] byteArray = utils.getAsByteArray(thisValue);
 
+                            if (byteArray != null) {
+                                put.addColumn(Bytes.toBytes(familyName), Bytes.toBytes(colName), byteArray);
+                            }
+
+                        }
                     }
-                    hTable.put(put);
+
+                    try {
+                        hTable.put(put);
+                    } catch (NoSuchColumnFamilyException ncfEx) {
+                        // try altering the table....
+                        utils.alterTable(row, connection);
+                        successFlag = false;
+                    }
                 } else {
                     successFlag = false;
                 }
             }
         } catch (IOException ex) {
-            Logger.getLogger(HBaseJsonImpl.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
             successFlag = false;
         }
         return successFlag;
@@ -156,7 +171,7 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
         try {
             return insert(rows, checkExisting);
         } catch (BlackBoxException ex) {
-            Logger.getLogger(HBaseInsertTask.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
         return false;
     }
