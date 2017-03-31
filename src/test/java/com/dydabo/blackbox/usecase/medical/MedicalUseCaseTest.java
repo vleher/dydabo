@@ -20,10 +20,9 @@ package com.dydabo.blackbox.usecase.medical;
 import com.dydabo.blackbox.BlackBox;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxFactory;
+import com.dydabo.blackbox.hbase.utils.DyDaBoTestUtils;
 import com.dydabo.blackbox.usecase.medical.db.Claim;
 import com.dydabo.blackbox.usecase.medical.db.ClaimCharges;
-import com.dydabo.blackbox.usecase.medical.db.ClaimDetails;
-import com.dydabo.blackbox.usecase.medical.db.Diagnosis;
 import com.dydabo.blackbox.usecase.medical.db.Encounter;
 import com.dydabo.blackbox.usecase.medical.db.Medication;
 import com.dydabo.blackbox.usecase.medical.db.Patient;
@@ -45,33 +44,34 @@ import org.testng.annotations.Test;
  */
 public class MedicalUseCaseTest {
 
-    private static BlackBox blackBox;
+    private BlackBox blackBox;
 
     /**
      *
      */
-    public List<String> Diagnosis = Arrays.asList("Diabetes", "High Blood Pressure", "Low Blood Pressure", "Polio", "Fever",
+    public static List<String> Diagnosis = Arrays.asList("Diabetes", "High Blood Pressure", "Low Blood Pressure", "Polio", "Fever",
             "Common Cold", "Allergy");
 
     /**
      *
      */
-    public List<String> FirstNames = Arrays.asList("David", "Peter", "Tom", "Dick", "Harry", "John", "Bill", "Adele", "Britney",
+    public static List<String> FirstNames = Arrays.asList("David", "Peter", "Tom", "Dick", "Harry", "John", "Bill", "Adele", "Britney",
             "Mariah", "Tina", "Diana", "Dionne", "Cyndi", "Kim", "Lindsey", "Shiela", "Bette");
 
     /**
      *
      */
-    public List<String> LastNames = Arrays.asList("Johnson", "Becker", "Smith", "Gates", "King", "Spears", "Perry", "Carey",
+    public static List<String> LastNames = Arrays.asList("Johnson", "Becker", "Smith", "Gates", "King", "Spears", "Perry", "Carey",
             "Gomez", "Lopez", "Turner", "Ross", "Warwick", "Lauper", "Carnes", "Midler", "Jackson", "Hayes");
 
     /**
      *
      */
-    public List<String> Meds = Arrays.asList("Acetylmethadol", "Benzethidine", "Difenoxin", "Furethidine", "Phenoperidine");
+    public static List<String> Meds = Arrays.asList("Acetylmethadol", "Benzethidine", "Difenoxin", "Furethidine", "Phenoperidine");
 
     int knownPatientId = 123456;
     Random random = new Random();
+    DyDaBoTestUtils testUtils = new DyDaBoTestUtils();
 
     /**
      *
@@ -81,8 +81,8 @@ public class MedicalUseCaseTest {
     public MedicalUseCaseTest() throws BlackBoxException, IOException {
         blackBox = BlackBoxFactory.getDatabase(BlackBoxFactory.HBASE);
         // Pre-populate with some dynamic data.
-        generatePatients(1);
-        generateEncounters(1);
+        testUtils.generatePatients(random.nextInt(98765) % 10);
+        testUtils.generateEncounters(random.nextInt(98765) % 10);
     }
 
     /**
@@ -100,90 +100,6 @@ public class MedicalUseCaseTest {
      */
     @AfterClass
     public static void tearDownClass() throws Exception {
-    }
-
-    private void generateEncounters(int count) throws BlackBoxException {
-        Patient p = new Patient();
-        List<Patient> pList = blackBox.search(Arrays.asList(p));
-        List<Encounter> encounters = new ArrayList<>();
-        for (int j = 0; j < count; j++) {
-            int id = random.nextInt();
-            final Patient currentPatient = pList.get(Math.abs(id % pList.size()));
-            Encounter enc = new Encounter(id + "E", currentPatient);
-
-            enc.setPatient(currentPatient);
-            enc.setpFN(currentPatient.getfN());
-            enc.setpLN(currentPatient.getlN());
-
-            // Add random # of diagnosis
-            int dCount = random.nextInt(2) + 1;
-            for (int i = 0; i < dCount; i++) {
-                final Diagnosis diagnosis = new Diagnosis(Diagnosis.get(random.nextInt(10000) % Diagnosis.size()));
-                if (blackBox.update(diagnosis)) {
-                    enc.addDiagnosis(diagnosis);
-                }
-            }
-            // Add random Medications
-            dCount = random.nextInt(2) + 1;
-            for (int i = 0; i < dCount; i++) {
-                final Medication medication = new Medication(Meds.get(random.nextInt(10000) % Meds.size()));
-                medication.setmDose(random.nextInt(8));
-                if (blackBox.update(medication)) {
-                    enc.addMedication(medication);
-                }
-            }
-
-            // add random # of claims
-            dCount = random.nextInt(2) + 1;
-            for (int i = 0; i < dCount; i++) {
-                final Random random = new Random();
-                final Claim claim = new Claim(random.nextInt() + "CL", currentPatient.getpId());
-
-                //  generate random # of details and charges
-                int cdCount = random.nextInt(5) + 1;
-                for (int k = 0; k < cdCount; k++) {
-                    ClaimDetails cDet = new ClaimDetails(random.nextInt() + "CD");
-                    if (blackBox.update(cDet)) {
-                        claim.getcDets().add(cDet);
-                    }
-                }
-                cdCount = random.nextInt(5) + 1;
-                for (int k = 0; k < cdCount; k++) {
-                    ClaimCharges cc = new ClaimCharges(random.nextInt() + "CC", random.nextInt(10000) * 1.1);
-                    if (blackBox.update(cc)) {
-                        claim.getcCharges().add(cc);
-                    }
-                }
-
-                if (blackBox.update(claim)) {
-                    enc.addClaim(claim);
-                }
-            }
-
-            encounters.add(enc);
-        }
-        blackBox.update(encounters);
-
-    }
-
-    private void generatePatients(int count) throws BlackBoxException {
-        List<Patient> patientList = new ArrayList<>();
-
-        for (int i = 0; i < count; i++) {
-            int id = random.nextInt();
-            Patient patient = new Patient(id + "P", FirstNames.get(Math.abs(id % FirstNames.size())),
-                    LastNames.get(Math.abs(random.nextInt() % LastNames.size())));
-            patient.initData();
-            patientList.add(patient);
-        }
-        // update the table
-        blackBox.update(patientList);
-        // Create some patients with specific ids so that we can query them
-
-        Patient p = new Patient(knownPatientId + "P", FirstNames.get(Math.abs(knownPatientId % FirstNames.size())),
-                LastNames.get(Math.abs(knownPatientId % LastNames.size())));
-        p.initData();
-        blackBox.update(Arrays.asList(p));
     }
 
     /**
@@ -211,7 +127,13 @@ public class MedicalUseCaseTest {
         // All Encounters
         Encounter pe = new Encounter();
         List<Encounter> peL1 = blackBox.search(Arrays.asList(pe));
-        Assert.assertTrue(peL1.size() > 0);
+        Assert.assertTrue("" + peL1.size(), peL1.size() > 0);
+
+        List<Encounter> peL2 = blackBox.search(pe, 7);
+        Assert.assertTrue("" + peL2.size(), peL2.size() <= 7);
+
+        List<Encounter> peL3 = blackBox.search(pe, 23);
+        Assert.assertTrue("" + peL3.size(), peL3.size() <= 23);
     }
 
     /**
@@ -231,6 +153,7 @@ public class MedicalUseCaseTest {
         // get some data that exists
         List<Encounter> allPEs = blackBox.search(new Encounter());
         int rId = Math.abs(random.nextInt() % allPEs.size());
+        System.out.println("rId :" + rId + ":" + allPEs.size());
         String firstName = allPEs.get(rId).getpFN();
         String lastName = allPEs.get(rId).getpLN();
 
@@ -440,15 +363,28 @@ public class MedicalUseCaseTest {
      */
     @Test
     public void testPatientsWithFirstAndLastName() throws BlackBoxException {
+        // get some data that exists
+        List<Encounter> allPEs = blackBox.search(new Encounter());
+        int rId = Math.abs(random.nextInt() % allPEs.size());
+        String firstName = allPEs.get(rId).getpFN();
+        String lastName = allPEs.get(rId).getpLN();
 
         Patient p = new Patient();
-        // All Patients with first name 'Diana' OR last 'Turner'
-        List<String> queryKeys = Arrays.asList(".*:Diana:.*", ".*:.*:Turner");
+        // All Patients with first name
+        List<String> queryKeys = Arrays.asList(".*:" + firstName + ":.*", ".*:.*:" + lastName);
         List<Patient> pList5 = blackBox.fetchByPartialKey(queryKeys, p);
         for (Patient pat : pList5) {
-            boolean result = "Diana".equals(pat.getfN()) || "Turner".equals(pat.getlN());
+            boolean result = firstName.equals(pat.getfN()) || lastName.equals(pat.getlN());
             Assert.assertTrue(result);
         }
+
+        if (pList5.size() > 0) {
+            int maxCount = pList5.size() / 3;
+            List<Patient> pList6 = blackBox.fetchByPartialKey(queryKeys, p, maxCount);
+            System.out.println("" + pList5.size() + ":" + pList6.size() + ":" + maxCount);
+            Assert.assertTrue(pList5.size() + ":" + pList6.size() + ":" + maxCount, pList6.size() <= maxCount * 2);
+        }
+
     }
 
     /**

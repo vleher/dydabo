@@ -52,6 +52,7 @@ public class HBaseFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
 
     private final Connection connection;
     private final Logger logger = Logger.getLogger(HBaseFetchTask.class.getName());
+    private long maxResults;
     private final HBaseUtils<T> utils;
     private List<String> rowKeys;
     private T bean = null;
@@ -76,11 +77,16 @@ public class HBaseFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
      * @param isPartialKeys
      */
     public HBaseFetchTask(Connection connection, List<String> rowKeys, T row, boolean isPartialKeys) {
+        this(connection, rowKeys, row, isPartialKeys, -1);
+    }
+
+    public HBaseFetchTask(Connection connection, List<String> rowKeys, T row, boolean isPartialKeys, long maxResults) {
         this.connection = connection;
         this.rowKeys = rowKeys;
         this.utils = new HBaseUtils<T>();
         this.bean = row;
         this.isPartialKeys = isPartialKeys;
+        this.maxResults = maxResults;
     }
 
     /**
@@ -134,21 +140,32 @@ public class HBaseFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
                 for (String rowKey : rowKeys) {
                     Scan scan = new Scan();
 
+                    if (maxResults > 0) {
+                        scan.setMaxResultSize(maxResults);
+                    }
+
                     String rowPrefix = DyDaBoUtils.getStringPrefix(rowKey);
 
                     Filter rowFilter = new RowFilter(CompareFilter.CompareOp.EQUAL, new RegexStringComparator(rowKey));
                     if (!DyDaBoUtils.isBlankOrNull(rowPrefix)) {
                         scan.setRowPrefixFilter(Bytes.toBytes(rowPrefix));
                     }
+                    logger.info(rowFilter.toString());
                     scan.setFilter(rowFilter);
 
                     try (ResultScanner resultScanner = hTable.getScanner(scan)) {
+                        int count = 0;
                         for (Result result : resultScanner) {
                             HBaseTable resultTable = utils.parseResultToHTable(result, bean);
 
                             T resultObject = new Gson().fromJson(resultTable.toJsonObject(), (Class<T>) bean.getClass());
                             if (resultObject != null) {
                                 results.add(resultObject);
+                                count++;
+                            }
+
+                            if (maxResults > 0 && count >= maxResults) {
+                                break;
                             }
                         }
                     }
@@ -164,7 +181,7 @@ public class HBaseFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
     @Override
     protected List<T> compute() {
         try {
-            return HBaseFetchTask.this.fetch(rowKeys);
+            return fetch(rowKeys);
         } catch (BlackBoxException ex) {
             logger.log(Level.SEVERE, null, ex);
         }

@@ -123,9 +123,19 @@ public class HBaseJsonImpl<T extends BlackBoxable> implements BlackBox<T> {
 
     @Override
     public List<T> fetchByPartialKey(List<String> rowKeys, T bean) throws BlackBoxException {
+        return fetchByPartialKey(rowKeys, bean, -1);
+    }
+
+    @Override
+    public List<T> fetchByPartialKey(String rowKey, T bean) throws BlackBoxException {
+        return fetchByPartialKey(Arrays.asList(rowKey), bean, -1);
+    }
+
+    @Override
+    public List<T> fetchByPartialKey(List<String> rowKeys, T bean, long maxResults) throws BlackBoxException {
         ForkJoinPool fjPool = ForkJoinPool.commonPool();
         try {
-            HBaseFetchTask<T> fetchTask = new HBaseFetchTask<>(getConnection(), rowKeys, bean, true);
+            HBaseFetchTask<T> fetchTask = new HBaseFetchTask<>(getConnection(), rowKeys, bean, true, maxResults);
             return fjPool.invoke(fetchTask);
         } catch (IOException ex) {
             logger.log(Level.SEVERE, null, ex);
@@ -134,18 +144,8 @@ public class HBaseJsonImpl<T extends BlackBoxable> implements BlackBox<T> {
     }
 
     @Override
-    public List<T> fetchByPartialKey(String rowKey, T bean) throws BlackBoxException {
-        return fetchByPartialKey(Arrays.asList(rowKey), bean);
-    }
-
-    @Override
-    public List<T> fetchByPartialKey(List<String> rowKeys, T bean, int maxResults) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public List<T> fetchByPartialKey(String rowKey, T bean, int maxResults) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public List<T> fetchByPartialKey(String rowKey, T bean, long maxResults) throws BlackBoxException {
+        return fetchByPartialKey(Arrays.asList(rowKey), bean, maxResults);
     }
 
     /**
@@ -180,10 +180,25 @@ public class HBaseJsonImpl<T extends BlackBoxable> implements BlackBox<T> {
 
     @Override
     public List<T> search(List<T> rows) throws BlackBoxException {
+        return search(rows, -1);
+    }
+
+    @Override
+    public List<T> search(T startRow, T endRow) throws BlackBoxException {
+        return search(startRow, endRow, -1);
+    }
+
+    @Override
+    public List<T> search(T row) throws BlackBoxException {
+        return search(Arrays.asList(row));
+    }
+
+    @Override
+    public List<T> search(List<T> rows, long maxResults) throws BlackBoxException {
         createTable(rows);
         ForkJoinPool fjPool = ForkJoinPool.commonPool();
         try {
-            HBaseSearchTask<T> searchTask = new HBaseSearchTask<>(getConnection(), rows);
+            HBaseSearchTask<T> searchTask = new HBaseSearchTask<>(getConnection(), rows, maxResults);
             return fjPool.invoke(searchTask);
         } catch (IOException ex) {
             logger.log(Level.SEVERE, null, ex);
@@ -192,7 +207,12 @@ public class HBaseJsonImpl<T extends BlackBoxable> implements BlackBox<T> {
     }
 
     @Override
-    public List<T> search(T startRow, T endRow) throws BlackBoxException {
+    public List<T> search(T row, long maxResults) throws BlackBoxException {
+        return search(Arrays.asList(row), maxResults);
+    }
+
+    @Override
+    public List<T> search(T startRow, T endRow, long maxResults) throws BlackBoxException {
         createTable(Arrays.asList(startRow));
         if (startRow.getClass().equals(endRow.getClass())) {
             ForkJoinPool fjPool = ForkJoinPool.commonPool();
@@ -204,26 +224,6 @@ public class HBaseJsonImpl<T extends BlackBoxable> implements BlackBox<T> {
             }
         }
         return Collections.<T>emptyList();
-    }
-
-    @Override
-    public List<T> search(T row) throws BlackBoxException {
-        return search(Arrays.asList(row));
-    }
-
-    @Override
-    public List<T> search(List<T> rows, int maxResults) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public List<T> search(T row, int maxResults) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public List<T> search(T startRow, T endRow, int maxResults) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override

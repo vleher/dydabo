@@ -95,7 +95,7 @@ public interface BlackBox<T extends BlackBoxable> {
      *
      * @throws BlackBoxException
      */
-    List<T> fetchByPartialKey(List<String> rowKeys, T bean, int maxResults) throws BlackBoxException;
+    List<T> fetchByPartialKey(List<String> rowKeys, T bean, long maxResults) throws BlackBoxException;
 
     /**
      *
@@ -118,7 +118,7 @@ public interface BlackBox<T extends BlackBoxable> {
      *
      * @throws BlackBoxException
      */
-    List<T> fetchByPartialKey(String rowKey, T bean, int maxResults) throws BlackBoxException;
+    List<T> fetchByPartialKey(String rowKey, T bean, long maxResults) throws BlackBoxException;
 
     /**
      * Inserts a list of rows into the table. The rows should not already exist in the table.
@@ -165,7 +165,7 @@ public interface BlackBox<T extends BlackBoxable> {
      *
      * @throws BlackBoxException
      */
-    List<T> search(List<T> rows, int maxResults) throws BlackBoxException;
+    List<T> search(List<T> rows, long maxResults) throws BlackBoxException;
 
     /**
      *
@@ -186,7 +186,7 @@ public interface BlackBox<T extends BlackBoxable> {
      *
      * @throws BlackBoxException
      */
-    List<T> search(T row, int maxResults) throws BlackBoxException;
+    List<T> search(T row, long maxResults) throws BlackBoxException;
 
     /**
      *
@@ -209,7 +209,7 @@ public interface BlackBox<T extends BlackBoxable> {
      *
      * @throws BlackBoxException
      */
-    List<T> search(T startRow, T endRow, int maxResults) throws BlackBoxException;
+    List<T> search(T startRow, T endRow, long maxResults) throws BlackBoxException;
 
     /**
      * Update or insert the rows that match the POJO. If a row does not exist, then it will added otherwise the existing row
