@@ -25,26 +25,28 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * Library specific utility methods
  *
  * @author viswadas leher <vleher@gmail.com>
  */
 public class DyDaBoUtils {
 
     /**
-     *
+     * Empty array string representation
      */
     public static final String EMPTY_ARRAY = "[]";
 
     /**
-     *
+     * Empty Map string representation
      */
     public static final String EMPTY_MAP = "{}";
 
     /**
+     * The prefix to a regular expression.
      *
-     * @param rowKey
+     * @param rowKey the row key that may or may not be a regex
      *
-     * @return
+     * @return the prefix to string
      */
     public static String getStringPrefix(String rowKey) {
         String prefix = "";
@@ -60,6 +62,7 @@ public class DyDaBoUtils {
     }
 
     /**
+     * Standard method for checking for null or empty string.
      *
      * @param str
      *
@@ -75,6 +78,7 @@ public class DyDaBoUtils {
     }
 
     /**
+     * Customized check for regex.
      *
      * @param regexValue
      *
@@ -124,7 +128,9 @@ public class DyDaBoUtils {
      */
     public static boolean isPrimitiveOrPrimitiveWrapperOrString(Object obj) {
         Class<?> type = obj.getClass();
-        return (type.isPrimitive() && type != void.class) || type == Double.class || type == Float.class || type == Long.class || type == Integer.class || type == Short.class || type == Character.class || type == Byte.class || type == Boolean.class || type == String.class;
+        return (type.isPrimitive() && type != void.class) || type == Double.class || type == Float.class ||
+                 type == Long.class || type == Integer.class || type == Short.class || type == Character.class ||
+                 type == Byte.class || type == Boolean.class || type == String.class;
     }
 
     /**

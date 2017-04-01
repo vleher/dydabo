@@ -19,7 +19,7 @@ package com.dydabo.blackbox.hbase.tasks;
 
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.hbase.obj.HBaseTable;
+import com.dydabo.blackbox.hbase.obj.HBaseTableRow;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import java.io.IOException;
 import java.util.Arrays;
@@ -129,15 +129,15 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
                 }
 
                 // Find all the fields in the object
-                HBaseTable thisTable = utils.convertRowToHTable(row, true);
+                HBaseTableRow thisTable = utils.convertRowToHTable(row, true);
                 if (utils.isValidRowKey(row)) {
                     Put put = new Put(Bytes.toBytes(row.getBBRowKey()));
-                    for (Map.Entry<String, HBaseTable.ColumnFamily> entry : thisTable.getColumnFamilies().entrySet()) {
+                    for (Map.Entry<String, HBaseTableRow.ColumnFamily> entry : thisTable.getColumnFamilies().entrySet()) {
                         String familyName = entry.getKey();
-                        HBaseTable.ColumnFamily colFamily = entry.getValue();
-                        for (Map.Entry<String, HBaseTable.Column> column : colFamily.getColumns().entrySet()) {
+                        HBaseTableRow.ColumnFamily colFamily = entry.getValue();
+                        for (Map.Entry<String, HBaseTableRow.Column> column : colFamily.getColumns().entrySet()) {
                             String colName = column.getKey();
-                            HBaseTable.Column colValue = column.getValue();
+                            HBaseTableRow.Column colValue = column.getValue();
                             Object thisValue = colValue.getColumnValue();
                             byte[] byteArray = utils.getAsByteArray(thisValue);
 
@@ -151,7 +151,7 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
                     try {
                         hTable.put(put);
                     } catch (NoSuchColumnFamilyException ncfEx) {
-                        // try altering the table....
+                        // TODO: try altering the table....
                         utils.alterTable(row, connection);
                         successFlag = false;
                     }

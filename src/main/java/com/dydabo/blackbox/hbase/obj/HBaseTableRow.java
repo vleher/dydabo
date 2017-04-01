@@ -30,7 +30,7 @@ import java.util.Map;
  *
  * @author viswadas leher <vleher@gmail.com>
  */
-public class HBaseTable {
+public class HBaseTableRow {
 
     // The ColumnFamily names should be as small as possible for performance
     /**
@@ -45,7 +45,7 @@ public class HBaseTable {
      *
      * @param rowKey
      */
-    public HBaseTable(String rowKey) {
+    public HBaseTableRow(String rowKey) {
         this.rowKey = rowKey;
         this.columnFamilies = new HashMap<>();
         createFamily(DEFAULT_FAMILY);

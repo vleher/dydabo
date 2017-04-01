@@ -21,7 +21,7 @@ import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.common.DyDaBoUtils;
 import com.dydabo.blackbox.hbase.HBaseJsonImpl;
-import com.dydabo.blackbox.hbase.obj.HBaseTable;
+import com.dydabo.blackbox.hbase.obj.HBaseTableRow;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import com.google.gson.Gson;
 import java.io.IOException;
@@ -106,14 +106,14 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
      *
      * @return
      */
-    protected boolean parseForFilters(HBaseTable thisTable, FilterList filterList) {
+    protected boolean parseForFilters(HBaseTableRow thisTable, FilterList filterList) {
         boolean hasFilters = false;
-        for (Map.Entry<String, HBaseTable.ColumnFamily> colFamEntry : thisTable.getColumnFamilies().entrySet()) {
+        for (Map.Entry<String, HBaseTableRow.ColumnFamily> colFamEntry : thisTable.getColumnFamilies().entrySet()) {
             String familyName = colFamEntry.getKey();
-            HBaseTable.ColumnFamily colFamily = colFamEntry.getValue();
-            for (Map.Entry<String, HBaseTable.Column> columnEntry : colFamily.getColumns().entrySet()) {
+            HBaseTableRow.ColumnFamily colFamily = colFamEntry.getValue();
+            for (Map.Entry<String, HBaseTableRow.Column> columnEntry : colFamily.getColumns().entrySet()) {
                 String colName = columnEntry.getKey();
-                HBaseTable.Column colValue = columnEntry.getValue();
+                HBaseTableRow.Column colValue = columnEntry.getValue();
                 String regexValue = colValue.getColumnValueAsString();
                 regexValue = utils.sanitizeRegex(regexValue);
                 if (regexValue instanceof String && DyDaBoUtils.isValidRegex((String) regexValue)) {
@@ -186,7 +186,7 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
                     scan.setMaxResultSize(maxResults);
                 }
                 // Get the filters : just simple regex filters for now
-                HBaseTable thisTable = utils.convertRowToHTable(row, true);
+                HBaseTableRow thisTable = utils.convertRowToHTable(row, true);
                 FilterList filterList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
                 boolean hasFilters = parseForFilters(thisTable, filterList);
                 if (hasFilters) {
@@ -197,7 +197,7 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
                 try (ResultScanner resultScanner = hTable.getScanner(scan)) {
                     int count = 0;
                     for (Result result : resultScanner) {
-                        HBaseTable resultTable = utils.parseResultToHTable(result, row);
+                        HBaseTableRow resultTable = utils.parseResultToHTable(result, row);
 
                         T resultObject = new Gson().fromJson(resultTable.toJsonObject(), (Class<T>) row.getClass());
                         if (resultObject != null) {

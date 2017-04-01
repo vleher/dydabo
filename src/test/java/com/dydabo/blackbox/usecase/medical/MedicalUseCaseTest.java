@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
-import org.junit.Assert;
+import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -127,13 +127,13 @@ public class MedicalUseCaseTest {
         // All Encounters
         Encounter pe = new Encounter();
         List<Encounter> peL1 = blackBox.search(Arrays.asList(pe));
-        Assert.assertTrue("" + peL1.size(), peL1.size() > 0);
+        Assert.assertTrue(peL1.size() > 0, "" + peL1.size());
 
         List<Encounter> peL2 = blackBox.search(pe, 7);
-        Assert.assertTrue("" + peL2.size(), peL2.size() <= 7);
+        Assert.assertTrue((peL2.size() <= 7), "" + peL2.size());
 
         List<Encounter> peL3 = blackBox.search(pe, 23);
-        Assert.assertTrue("" + peL3.size(), peL3.size() <= 23);
+        Assert.assertTrue(peL3.size() <= 23, "" + peL3.size());
     }
 
     /**
@@ -227,9 +227,9 @@ public class MedicalUseCaseTest {
 
             List<Encounter> encs = blackBox.search(pe2);
             for (Encounter enc : encs) {
-                Assert.assertTrue(enc.getMedIds(), enc.getMedIds().contains(randMedId));
+                Assert.assertTrue(enc.getMedIds().contains(randMedId), enc.getMedIds());
                 if (enc.getPatient() != null) {
-                    Assert.assertTrue(enc.getPatient().toString(), !enc.getPatient().getfN().isEmpty());
+                    Assert.assertTrue(!enc.getPatient().getfN().isEmpty(), enc.getPatient().toString());
                 }
             }
         }
@@ -258,10 +258,10 @@ public class MedicalUseCaseTest {
 
         for (Encounter r : results) {
             if (r.getPatient() != null) {
-                Assert.assertEquals(r.getPatient().toString(), r.getPatient().getfN(), firstName);
+                Assert.assertEquals(r.getPatient().getfN(), firstName, r.getPatient().toString());
             }
-            Assert.assertEquals(r.toString(), r.getpFN(), firstName);
-            Assert.assertTrue(r.getMedIds(), r.getMedIds().contains(medId));
+            Assert.assertEquals(r.getpFN(), firstName, r.toString());
+            Assert.assertTrue(r.getMedIds().contains(medId), r.getMedIds());
         }
     }
 
@@ -311,8 +311,8 @@ public class MedicalUseCaseTest {
             Assert.assertEquals(pe.getpFN(), firstName);
             Assert.assertEquals(pe.getpLN(), lastName);
             if (pe.getPatient() != null) {
-                Assert.assertEquals(pe.getPatient().toString(), pe.getPatient().getfN(), firstName);
-                Assert.assertEquals(pe.getPatient().toString(), pe.getPatient().getlN(), lastName);
+                Assert.assertEquals(pe.getPatient().getfN(), firstName, pe.getPatient().toString());
+                Assert.assertEquals(pe.getPatient().getlN(), lastName, pe.getPatient().toString());
             }
         }
 
@@ -382,7 +382,7 @@ public class MedicalUseCaseTest {
             int maxCount = pList5.size() / 3;
             List<Patient> pList6 = blackBox.fetchByPartialKey(queryKeys, p, maxCount);
             System.out.println("" + pList5.size() + ":" + pList6.size() + ":" + maxCount);
-            Assert.assertTrue(pList5.size() + ":" + pList6.size() + ":" + maxCount, pList6.size() <= maxCount * 2);
+            Assert.assertTrue(pList6.size() <= maxCount * 2, pList5.size() + ":" + pList6.size() + ":" + maxCount);
         }
 
     }
@@ -411,7 +411,7 @@ public class MedicalUseCaseTest {
             }
         }
         if (allClaims.size() > 0) {
-            Assert.assertTrue(totalAmount + "", totalAmount > 0);
+            Assert.assertTrue(totalAmount > 0, totalAmount + "");
         }
     }
 

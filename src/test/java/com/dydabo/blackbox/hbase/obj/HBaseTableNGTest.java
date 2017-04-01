@@ -34,13 +34,13 @@ public class HBaseTableNGTest {
      *
      */
     protected static final String KEY = "key";
-    private static HBaseTable instance;
+    private static HBaseTableRow instance;
 
     /**
      *
      */
     public HBaseTableNGTest() {
-        this.instance = new HBaseTable(KEY);
+        this.instance = new HBaseTableRow(KEY);
     }
 
     /**
@@ -50,7 +50,7 @@ public class HBaseTableNGTest {
     @BeforeClass
     public static void setUpClass() throws Exception {
         instance.createFamily("default");
-        HBaseTable.ColumnFamily fam = instance.getColumnFamilies().get("default");
+        HBaseTableRow.ColumnFamily fam = instance.getColumnFamilies().get("default");
         fam.addColumn("col1", "colVal1");
     }
 
@@ -79,26 +79,26 @@ public class HBaseTableNGTest {
     }
 
     /**
-     * Test of getDefaultFamily method, of class HBaseTable.
+     * Test of getDefaultFamily method, of class HBaseTableRow.
      */
     @Test
     public void testGetDefaultFamily() {
-        HBaseTable.ColumnFamily result = instance.getDefaultFamily();
+        HBaseTableRow.ColumnFamily result = instance.getDefaultFamily();
         Assert.assertNotNull(result);
     }
 
     /**
-     * Test of createFamily method, of class HBaseTable.
+     * Test of createFamily method, of class HBaseTableRow.
      */
     @Test
     public void testCreateFamily() {
         String familyName = "testFamily";
-        HBaseTable.ColumnFamily result = instance.createFamily(familyName);
+        HBaseTableRow.ColumnFamily result = instance.createFamily(familyName);
         Assert.assertNotNull(result);
     }
 
     /**
-     * Test of getRowKey method, of class HBaseTable.
+     * Test of getRowKey method, of class HBaseTableRow.
      */
     @Test
     public void testGetRowKey() {
@@ -108,7 +108,7 @@ public class HBaseTableNGTest {
     }
 
     /**
-     * Test of setRowKey method, of class HBaseTable.
+     * Test of setRowKey method, of class HBaseTableRow.
      */
     @Test
     public void testSetRowKey() {
@@ -121,7 +121,7 @@ public class HBaseTableNGTest {
     }
 
     /**
-     * Test of getColumnFamilies method, of class HBaseTable.
+     * Test of getColumnFamilies method, of class HBaseTableRow.
      */
     @Test
     public void testGetColumnFamilies() {
@@ -131,7 +131,7 @@ public class HBaseTableNGTest {
     }
 
     /**
-     * Test of toString method, of class HBaseTable.
+     * Test of toString method, of class HBaseTableRow.
      */
     @Test
     public void testToString() {

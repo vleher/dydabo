@@ -21,7 +21,7 @@ import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.beans.Customer;
 import com.dydabo.blackbox.beans.Employee;
 import com.dydabo.blackbox.hbase.HBaseJsonImpl;
-import com.dydabo.blackbox.hbase.obj.HBaseTable;
+import com.dydabo.blackbox.hbase.obj.HBaseTableRow;
 import com.google.gson.JsonSyntaxException;
 import java.io.IOException;
 import java.util.Arrays;
@@ -144,7 +144,7 @@ public class HBaseUtilsNGTest {
     @Test
     public void testConvertJsonToMap() throws JsonSyntaxException, BlackBoxException {
         HBaseUtils instance = new HBaseUtils();
-        HBaseTable result = instance.convertRowToHTable(new Customer(12, "1234"), true);
+        HBaseTableRow result = instance.convertRowToHTable(new Customer(12, "1234"), true);
         Assert.assertNotNull(result);
     }
 

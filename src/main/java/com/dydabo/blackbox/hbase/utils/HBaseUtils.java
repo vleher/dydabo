@@ -20,7 +20,7 @@ package com.dydabo.blackbox.hbase.utils;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.common.DyDaBoUtils;
-import com.dydabo.blackbox.hbase.obj.HBaseTable;
+import com.dydabo.blackbox.hbase.obj.HBaseTableRow;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import java.io.IOException;
@@ -44,6 +44,7 @@ import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.util.Bytes;
 
 /**
+ * Hbase specific utility methods
  *
  * @author viswadas leher <vleher@gmail.com>
  * @param <T>
@@ -69,8 +70,8 @@ public class HBaseUtils<T extends BlackBoxable> {
             TableName tableName = getTableName(row);
 
             HTableDescriptor tableDescriptor = new HTableDescriptor(tableName);
-            HBaseTable hTable = convertRowToHTable(row, true);
-            for (HBaseTable.ColumnFamily value : hTable.getColumnFamilies().values()) {
+            HBaseTableRow hTable = convertRowToHTable(row, true);
+            for (HBaseTableRow.ColumnFamily value : hTable.getColumnFamilies().values()) {
                 HColumnDescriptor dFamily = new HColumnDescriptor(value.getFamilyName());
                 tableDescriptor.addFamily(dFamily);
             }
@@ -115,11 +116,11 @@ public class HBaseUtils<T extends BlackBoxable> {
      * @throws JsonSyntaxException
      * @throws com.dydabo.blackbox.BlackBoxException
      */
-    public HBaseTable convertRowToHTable(T row, boolean includeObject) throws JsonSyntaxException, BlackBoxException {
+    public HBaseTableRow convertRowToHTable(T row, boolean includeObject) throws JsonSyntaxException, BlackBoxException {
         String rowJson = new Gson().toJson(row);
         Map<String, Object> thisValueMap = new Gson().fromJson(rowJson, Map.class);
 
-        HBaseTable hbaseTable = new HBaseTable(row.getBBRowKey());
+        HBaseTableRow hbaseTable = new HBaseTableRow(row.getBBRowKey());
         for (Map.Entry<String, Object> entry : thisValueMap.entrySet()) {
             String key = entry.getKey();
             hbaseTable.getDefaultFamily().addColumn(key, entry.getValue());
@@ -153,8 +154,8 @@ public class HBaseUtils<T extends BlackBoxable> {
 
             HTableDescriptor tableDescriptor = new HTableDescriptor(tableName);
 
-            HBaseTable hTable = convertRowToHTable(row, true);
-            for (HBaseTable.ColumnFamily value : hTable.getColumnFamilies().values()) {
+            HBaseTableRow hTable = convertRowToHTable(row, true);
+            for (HBaseTableRow.ColumnFamily value : hTable.getColumnFamilies().values()) {
                 HColumnDescriptor dFamily = new HColumnDescriptor(value.getFamilyName());
                 tableDescriptor.addFamily(dFamily);
             }
@@ -235,8 +236,8 @@ public class HBaseUtils<T extends BlackBoxable> {
      *
      * @return
      */
-    public HBaseTable parseResultToHTable(Result result, T row) {
-        HBaseTable resultTable = new HBaseTable(Bytes.toString(result.getRow()));
+    public HBaseTableRow parseResultToHTable(Result result, T row) {
+        HBaseTableRow resultTable = new HBaseTableRow(Bytes.toString(result.getRow()));
         NavigableMap<byte[], NavigableMap<byte[], byte[]>> map = result.getNoVersionMap();
         for (Map.Entry<byte[], NavigableMap<byte[], byte[]>> entry : map.entrySet()) {
             String familyName = Bytes.toString(entry.getKey());

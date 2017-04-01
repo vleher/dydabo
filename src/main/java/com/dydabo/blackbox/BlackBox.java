@@ -20,7 +20,7 @@ package com.dydabo.blackbox;
 import java.util.List;
 
 /**
- * The BlackBox interface allows you to insert, update, delete, search and fetch Objects from the Underlying database.
+ * The BlackBox interface allows you to insert, update, delete, search and fetch objects from the underlying database.
  *
  * @author viswadas leher
  * @param <T>
