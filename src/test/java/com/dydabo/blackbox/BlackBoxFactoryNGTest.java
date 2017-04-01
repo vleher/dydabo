@@ -17,7 +17,7 @@
  */
 package com.dydabo.blackbox;
 
-import com.dydabo.blackbox.hbase.HBaseJsonImpl;
+import com.dydabo.blackbox.hbase.HBaseBlackBoxImpl;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -83,7 +83,7 @@ public class BlackBoxFactoryNGTest {
         try {
             // Test Hbase
             BlackBox result = BlackBoxFactory.getDatabase(BlackBoxFactory.HBASE);
-            Assert.assertTrue(result instanceof HBaseJsonImpl);
+            Assert.assertTrue(result instanceof HBaseBlackBoxImpl);
 
             result = BlackBoxFactory.getDatabase("Dummy");
             Assert.assertNull(result);
@@ -103,7 +103,7 @@ public class BlackBoxFactoryNGTest {
     public void testGetHBaseDatabase() throws Exception {
         Configuration config = HBaseConfiguration.create();
         BlackBox result = BlackBoxFactory.getHBaseDatabase(config);
-        Assert.assertTrue(result instanceof HBaseJsonImpl);
+        Assert.assertTrue(result instanceof HBaseBlackBoxImpl);
     }
 
     /**

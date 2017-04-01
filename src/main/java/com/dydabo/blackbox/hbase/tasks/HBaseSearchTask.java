@@ -20,7 +20,7 @@ package com.dydabo.blackbox.hbase.tasks;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.common.DyDaBoUtils;
-import com.dydabo.blackbox.hbase.HBaseJsonImpl;
+import com.dydabo.blackbox.hbase.HBaseBlackBoxImpl;
 import com.dydabo.blackbox.hbase.obj.HBaseTableRow;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import com.google.gson.Gson;
@@ -53,7 +53,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
 
     private final Connection connection;
-    private final Logger logger = Logger.getLogger(HBaseJsonImpl.class.getName());
+    private final Logger logger = Logger.getLogger(HBaseBlackBoxImpl.class.getName());
     private List<T> rows;
     private final HBaseUtils<T> utils;
     private final long maxResults;

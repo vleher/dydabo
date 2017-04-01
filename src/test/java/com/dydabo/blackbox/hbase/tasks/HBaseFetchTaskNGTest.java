@@ -20,7 +20,7 @@ import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.beans.Customer;
 import com.dydabo.blackbox.beans.Employee;
-import com.dydabo.blackbox.hbase.HBaseJsonImpl;
+import com.dydabo.blackbox.hbase.HBaseBlackBoxImpl;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -48,7 +48,7 @@ public class HBaseFetchTaskNGTest {
      * @throws BlackBoxException
      */
     public HBaseFetchTaskNGTest() throws IOException, BlackBoxException {
-        this.connection = new HBaseJsonImpl<BlackBoxable>().getConnection();
+        this.connection = new HBaseBlackBoxImpl<BlackBoxable>().getConnection();
         new HBaseUtils<BlackBoxable>().createTable(new Customer(111, "sss"), connection);
         new HBaseUtils<BlackBoxable>().createTable(new Employee(111, "sss"), connection);
     }

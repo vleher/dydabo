@@ -77,12 +77,12 @@ public class HBaseJsonImplNGTest {
     }
 
     /**
-     * Test of getConfig method, of class HBaseJsonImpl.
+     * Test of getConfig method, of class HBaseBlackBoxImpl.
      */
     @Test
     public void testGetConnnection() {
         try {
-            HBaseJsonImpl instance = new HBaseJsonImpl();
+            HBaseBlackBoxImpl instance = new HBaseBlackBoxImpl();
             Connection result = instance.getConnection();
             Assert.assertNotNull(result);
         } catch (IOException ex) {

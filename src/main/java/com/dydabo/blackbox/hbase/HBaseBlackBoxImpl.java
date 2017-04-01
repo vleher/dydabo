@@ -44,16 +44,16 @@ import org.apache.hadoop.hbase.client.Connection;
  * @author viswadas leher <vleher@gmail.com>
  * @param <T>
  */
-public class HBaseJsonImpl<T extends BlackBoxable> implements BlackBox<T> {
+public class HBaseBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
 
     private final Configuration config;
-    private final Logger logger = Logger.getLogger(HBaseJsonImpl.class.getName());
+    private final Logger logger = Logger.getLogger(HBaseBlackBoxImpl.class.getName());
 
     /**
      *
      * @throws IOException
      */
-    public HBaseJsonImpl() throws IOException {
+    public HBaseBlackBoxImpl() throws IOException {
         this.config = HBaseConfiguration.create();
     }
 
@@ -63,7 +63,7 @@ public class HBaseJsonImpl<T extends BlackBoxable> implements BlackBox<T> {
      *
      * @throws java.io.IOException
      */
-    public HBaseJsonImpl(Configuration config) throws IOException {
+    public HBaseBlackBoxImpl(Configuration config) throws IOException {
         this.config = config;
     }
 

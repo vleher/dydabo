@@ -20,7 +20,7 @@ import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.beans.Customer;
 import com.dydabo.blackbox.beans.Employee;
-import com.dydabo.blackbox.hbase.HBaseJsonImpl;
+import com.dydabo.blackbox.hbase.HBaseBlackBoxImpl;
 import com.dydabo.blackbox.hbase.obj.HBaseTableRow;
 import com.google.gson.JsonSyntaxException;
 import java.io.IOException;
@@ -84,7 +84,7 @@ public class HBaseUtilsNGTest {
     }
 
     /**
-     * Test of getTableName method, of class HBaseJsonImpl.
+     * Test of getTableName method, of class HBaseBlackBoxImpl.
      *
      * @param row
      * @param tableName
@@ -110,7 +110,7 @@ public class HBaseUtilsNGTest {
     }
 
     /**
-     * Test of createTable method, of class HBaseJsonImpl.
+     * Test of createTable method, of class HBaseBlackBoxImpl.
      *
      * @param row
      *
@@ -118,7 +118,7 @@ public class HBaseUtilsNGTest {
      */
     @Test(dataProvider = "createtabledata")
     public void testCreateTable(BlackBoxable row) throws Exception {
-        HBaseJsonImpl instance = new HBaseJsonImpl();
+        HBaseBlackBoxImpl instance = new HBaseBlackBoxImpl();
         boolean expResult = true;
         boolean result = new HBaseUtils().createTable(row, instance.getConnection());
         assertEquals(result, expResult);
@@ -159,7 +159,7 @@ public class HBaseUtilsNGTest {
     @Test(dataProvider = "rowexistsdata")
     public void testCheckIfRowExists(BlackBoxable row, boolean expResult) throws Exception {
         HBaseUtils instance = new HBaseUtils();
-        final HBaseJsonImpl<BlackBoxable> hBaseJsonImpl = new HBaseJsonImpl<>();
+        final HBaseBlackBoxImpl<BlackBoxable> hBaseJsonImpl = new HBaseBlackBoxImpl<>();
         Admin admin = hBaseJsonImpl.getConnection().getAdmin();
         try {
             Table hTable = admin.getConnection().getTable(instance.getTableName(row));

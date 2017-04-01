@@ -17,7 +17,7 @@
  */
 package com.dydabo.blackbox;
 
-import com.dydabo.blackbox.hbase.HBaseJsonImpl;
+import com.dydabo.blackbox.hbase.HBaseBlackBoxImpl;
 import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 
@@ -50,7 +50,7 @@ public class BlackBoxFactory {
     public static BlackBox<?> getDatabase(String databaseType) throws IOException {
         switch (databaseType) {
             case HBASE:
-                return new HBaseJsonImpl();
+                return new HBaseBlackBoxImpl();
             default:
                 return null;
         }
@@ -66,6 +66,6 @@ public class BlackBoxFactory {
      * @throws IOException
      */
     public static BlackBox<?> getHBaseDatabase(Configuration config) throws IOException {
-        return new HBaseJsonImpl<>(config);
+        return new HBaseBlackBoxImpl<>(config);
     }
 }
