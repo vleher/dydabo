@@ -180,9 +180,7 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
             // consider create to be is nothing but alter...so
             try (Table hTable = admin.getConnection().getTable(utils.getTableName(row))) {
                 Scan scan = new Scan();
-                logger.info("XXXX Max Results set to :" + maxResults);
                 if (maxResults > 0) {
-                    logger.info("Max Results set to :" + maxResults);
                     scan.setMaxResultSize(maxResults);
                 }
                 // Get the filters : just simple regex filters for now

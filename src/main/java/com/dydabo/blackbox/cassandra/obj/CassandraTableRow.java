@@ -1,21 +1,19 @@
-/** *****************************************************************************
+/*
  * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
- ******************************************************************************
  */
-package com.dydabo.blackbox.hbase.obj;
+package com.dydabo.blackbox.cassandra.obj;
 
 import com.dydabo.blackbox.common.DyDaBoUtils;
 import com.google.gson.Gson;
@@ -25,18 +23,21 @@ import com.google.gson.JsonPrimitive;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  *
  * @author viswadas leher <vleher@gmail.com>
  */
-public class HBaseTableRow {
+public class CassandraTableRow {
 
+    // TODO: Merge this with HBaseTableRow
     // The ColumnFamily names should be as small as possible for performance
     /**
      *
      */
     public static final String DEFAULT_FAMILY = "D";
+    private static final Logger logger = Logger.getLogger(CassandraTableRow.class.getName());
 
     private String rowKey;
     private Map<String, ColumnFamily> columnFamilies = null;
@@ -45,7 +46,7 @@ public class HBaseTableRow {
      *
      * @param rowKey
      */
-    public HBaseTableRow(String rowKey) {
+    public CassandraTableRow(String rowKey) {
         this.rowKey = rowKey;
         this.columnFamilies = new HashMap<>();
         createFamily(DEFAULT_FAMILY);
@@ -129,7 +130,7 @@ public class HBaseTableRow {
 
     @Override
     public String toString() {
-        return "HBaseTable{" + "rowKey=" + rowKey + ", columnFamilies=" + columnFamilies + '}';
+        return "CassandraTable {" + "rowKey=" + rowKey + ", columnFamilies=" + columnFamilies + '}';
     }
 
     /**
@@ -221,11 +222,13 @@ public class HBaseTableRow {
             for (Column coln : getColumns().values()) {
                 String keyName = coln.getColumnName();
                 String value = coln.getColumnValueAsString();
-                JsonElement elem = DyDaBoUtils.parseJsonString(value);
-                if (elem != null) {
-                    jsonObject.add(keyName, elem);
-                } else {
-                    jsonObject.add(keyName, new JsonPrimitive(value));
+                if (!DyDaBoUtils.isBlankOrNull(value)) {
+                    JsonElement elem = DyDaBoUtils.parseJsonString(value);
+                    if (elem != null) {
+                        jsonObject.add(keyName, elem);
+                    } else {
+                        jsonObject.add(keyName, new JsonPrimitive(value));
+                    }
                 }
             }
             return jsonObject;
@@ -312,7 +315,7 @@ public class HBaseTableRow {
 
         @Override
         public String toString() {
-            return "Column{" + "columnName=" + columnName + ", columnValue=" + columnValue + '}';
+            return "Column {" + "columnName=" + columnName + ", columnValue=" + columnValue + '}';
         }
 
     }

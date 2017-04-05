@@ -24,7 +24,7 @@ import com.dydabo.blackbox.db.HBaseConnectionManager;
 import com.dydabo.blackbox.hbase.tasks.HBaseDeleteTask;
 import com.dydabo.blackbox.hbase.tasks.HBaseFetchTask;
 import com.dydabo.blackbox.hbase.tasks.HBaseInsertTask;
-import com.dydabo.blackbox.hbase.tasks.HBaseRangeSearch;
+import com.dydabo.blackbox.hbase.tasks.HBaseRangeSearchTask;
 import com.dydabo.blackbox.hbase.tasks.HBaseSearchTask;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import java.io.IOException;
@@ -74,14 +74,15 @@ public class HBaseBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
      * @throws BlackBoxException
      */
     protected void createTable(List<T> rows) throws BlackBoxException {
-        if (rows.size() > 0) {
+        for (T row : rows) {
             try {
-                new HBaseUtils<T>().createTable(rows.get(0), getConnection());
+                new HBaseUtils<T>().createTable(row, getConnection());
             } catch (IOException ex) {
                 logger.log(Level.SEVERE, null, ex);
                 throw new BlackBoxException(ex.getMessage());
             }
         }
+
     }
 
     @Override
@@ -217,7 +218,7 @@ public class HBaseBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
         if (startRow.getClass().equals(endRow.getClass())) {
             ForkJoinPool fjPool = ForkJoinPool.commonPool();
             try {
-                HBaseRangeSearch<T> searchTask = new HBaseRangeSearch<>(getConnection(), startRow, endRow);
+                HBaseRangeSearchTask<T> searchTask = new HBaseRangeSearchTask<>(getConnection(), startRow, endRow, maxResults);
                 return fjPool.invoke(searchTask);
             } catch (IOException ex) {
                 logger.log(Level.SEVERE, null, ex);

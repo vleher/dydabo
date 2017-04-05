@@ -47,11 +47,12 @@ import org.apache.hadoop.hbase.util.Bytes;
  * @author viswadas leher <vleher@gmail.com>
  * @param <T>
  */
-public class HBaseRangeSearch<T extends BlackBoxable> extends RecursiveTask<List<T>> {
+public class HBaseRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
 
     private final Connection connection;
     private T endRow;
-    private final Logger logger = Logger.getLogger(HBaseRangeSearch.class.getName());
+    private final Logger logger = Logger.getLogger(HBaseRangeSearchTask.class.getName());
+    private final long maxResults;
     private T startRow;
     private final HBaseUtils<T> utils;
 
@@ -61,11 +62,12 @@ public class HBaseRangeSearch<T extends BlackBoxable> extends RecursiveTask<List
      * @param startRow
      * @param endRow
      */
-    public HBaseRangeSearch(Connection connection, T startRow, T endRow) {
+    public HBaseRangeSearchTask(Connection connection, T startRow, T endRow, long maxResults) {
         this.connection = connection;
         this.startRow = startRow;
         this.endRow = endRow;
         this.utils = new HBaseUtils<>();
+        this.maxResults = maxResults;
     }
 
     @Override
@@ -91,7 +93,14 @@ public class HBaseRangeSearch<T extends BlackBoxable> extends RecursiveTask<List
                             HBaseTableRow resultTable = utils.parseResultToHTable(result, startRow);
                             T resultObject = new Gson().fromJson(resultTable.toJsonObject(), (Class<T>) startRow.getClass());
                             if (resultObject != null) {
-                                results.add(resultObject);
+                                if (maxResults < 0) {
+                                    results.add(resultObject);
+                                } else if (maxResults > 0 && results.size() < maxResults) {
+                                    results.add(resultObject);
+                                } else {
+                                    break;
+                                }
+
                             }
                         }
                     }
@@ -130,14 +139,14 @@ public class HBaseRangeSearch<T extends BlackBoxable> extends RecursiveTask<List
             HBaseTableRow.ColumnFamily colfamily = entry.getValue();
             for (Map.Entry<String, HBaseTableRow.Column> col : colfamily.getColumns().entrySet()) {
                 String colName = col.getKey();
-                HBaseTableRow.Column colValue = col.getValue();
-                final Object columnValue = colValue.getColumnValue();
+                HBaseTableRow.Column column = col.getValue();
+                final Object columnValue = column.getColumnValue();
 
-                if (DyDaBoUtils.isNumber(columnValue)) {
+                if (columnValue != null && DyDaBoUtils.isNumber(columnValue)) {
                     // Binary Comparator Filter
 //                    String regexValue = colValue.getColumnValueAsString();
 //                    regexValue = utils.sanitizeRegex(regexValue);
-                    if (colValue != null) {
+                    if (column != null) {
                         BinaryComparator binaryComp = new BinaryComparator(utils.getAsByteArray(columnValue));
                         SingleColumnValueFilter startFilter = new SingleColumnValueFilter(Bytes.toBytes(familyName),
                                 Bytes.toBytes(colName), CompareFilter.CompareOp.GREATER_OR_EQUAL, binaryComp);
@@ -158,7 +167,7 @@ public class HBaseRangeSearch<T extends BlackBoxable> extends RecursiveTask<List
                     }
                 } else {
                     // Rgeular expression filter
-                    String regexValue = colValue.getColumnValueAsString();
+                    String regexValue = column.getColumnValueAsString();
                     regexValue = utils.sanitizeRegex(regexValue);
                     if (regexValue instanceof String && DyDaBoUtils.isValidRegex((String) regexValue)) {
 
@@ -180,8 +189,6 @@ public class HBaseRangeSearch<T extends BlackBoxable> extends RecursiveTask<List
                         hasFilters = true;
                     }
                 }
-
-                System.out.println(colName + " :" + columnValue.getClass());
 
             }
         }

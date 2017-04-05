@@ -17,6 +17,7 @@
  */
 package com.dydabo.blackbox.common;
 
+import com.dydabo.blackbox.beans.Customer;
 import com.dydabo.blackbox.usecase.medical.db.Patient;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
@@ -150,4 +151,9 @@ public class DyDaBoUtilsNGTest {
         Assert.assertFalse(DyDaBoUtils.isPrimitiveOrPrimitiveWrapperOrString(new Patient()));
     }
 
+    @Test
+    public void testGetFieldFromType() {
+        Customer cust = new Customer(null, null);
+        DyDaBoUtils.getFieldFromType(cust.getClass());
+    }
 }

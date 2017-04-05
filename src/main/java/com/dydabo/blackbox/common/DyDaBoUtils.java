@@ -23,6 +23,7 @@ import com.google.gson.JsonSyntaxException;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Library specific utility methods
@@ -40,6 +41,7 @@ public class DyDaBoUtils {
      * Empty Map string representation
      */
     public static final String EMPTY_MAP = "{}";
+    private static final Logger logger = Logger.getLogger(DyDaBoUtils.class.getName());
 
     /**
      * The prefix to a regular expression.
@@ -51,6 +53,7 @@ public class DyDaBoUtils {
     public static String getStringPrefix(String rowKey) {
         String prefix = "";
         char[] charArray = rowKey.toCharArray();
+        // TODO : account for '^'
         for (char c : charArray) {
             if (Character.isAlphabetic(c) || Character.isDigit(c)) {
                 prefix += c;
@@ -127,10 +130,13 @@ public class DyDaBoUtils {
      * @return the boolean
      */
     public static boolean isPrimitiveOrPrimitiveWrapperOrString(Object obj) {
+        if (obj == null) {
+            return false;
+        }
         Class<?> type = obj.getClass();
         return (type.isPrimitive() && type != void.class) || type == Double.class || type == Float.class ||
-                 type == Long.class || type == Integer.class || type == Short.class || type == Character.class ||
-                 type == Byte.class || type == Boolean.class || type == String.class;
+                type == Long.class || type == Integer.class || type == Short.class || type == Character.class ||
+                type == Byte.class || type == Boolean.class || type == String.class;
     }
 
     /**
@@ -140,6 +146,9 @@ public class DyDaBoUtils {
      * @return
      */
     public static boolean isNumber(Object obj) {
+        if (obj == null) {
+            return false;
+        }
         Class<?> type = obj.getClass();
         return type == Double.class || type == Float.class || type == Long.class || type == Integer.class || type == Short.class;
     }
@@ -152,11 +161,14 @@ public class DyDaBoUtils {
      */
     public static Map<String, Field> getFieldFromType(Class<?> type) {
         Map<String, Field> fields = new HashMap<>();
-        for (Class<?> c = type; c != null; c = c.getSuperclass()) {
+        for (Class<?> c = type; c != Object.class; c = c.getSuperclass()) {
+            //logger.info("c:" + c);
             for (Field declaredField : c.getDeclaredFields()) {
+                //logger.info("f:" + declaredField);
                 fields.put(declaredField.getName(), declaredField);
             }
         }
+        //logger.info("All Fields:" + fields);
         return fields;
     }
 

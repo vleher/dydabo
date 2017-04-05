@@ -34,14 +34,14 @@ import static org.testng.Assert.fail;
  *
  * @author viswadas leher <vleher@gmail.com>
  */
-public class HBaseJsonImplNGTest {
+public class HBaseBlackBoxImplNGTest {
 
-    private final Logger logger = Logger.getLogger(HBaseJsonImplNGTest.class.getName());
+    private final Logger logger = Logger.getLogger(HBaseBlackBoxImplNGTest.class.getName());
 
     /**
      *
      */
-    public HBaseJsonImplNGTest() {
+    public HBaseBlackBoxImplNGTest() {
     }
 
     /**

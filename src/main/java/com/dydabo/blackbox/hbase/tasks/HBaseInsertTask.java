@@ -56,10 +56,7 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
      * @param checkExisting
      */
     public HBaseInsertTask(Connection connection, T row, boolean checkExisting) {
-        this.connection = connection;
-        this.rows = Arrays.asList(row);
-        this.checkExisting = checkExisting;
-        this.utils = new HBaseUtils<T>();
+        this(connection, Arrays.asList(row), checkExisting);
     }
 
     /**

@@ -26,6 +26,7 @@ import com.google.gson.JsonSyntaxException;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -117,13 +118,23 @@ public class HBaseUtils<T extends BlackBoxable> {
      * @throws com.dydabo.blackbox.BlackBoxException
      */
     public HBaseTableRow convertRowToHTable(T row, boolean includeObject) throws JsonSyntaxException, BlackBoxException {
-        String rowJson = new Gson().toJson(row);
-        Map<String, Object> thisValueMap = new Gson().fromJson(rowJson, Map.class);
 
         HBaseTableRow hbaseTable = new HBaseTableRow(row.getBBRowKey());
-        for (Map.Entry<String, Object> entry : thisValueMap.entrySet()) {
+        Map<String, Field> fields = DyDaBoUtils.getFieldFromType(row.getClass());
+        for (Map.Entry<String, Field> entry : fields.entrySet()) {
             String key = entry.getKey();
-            hbaseTable.getDefaultFamily().addColumn(key, entry.getValue());
+            Field field = entry.getValue();
+
+            try {
+                if (!field.isSynthetic()) {
+                    field.setAccessible(true);
+                    hbaseTable.getDefaultFamily().addColumn(key, field.get(row));
+                }
+            } catch (IllegalArgumentException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            } catch (IllegalAccessException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            }
         }
 
         return hbaseTable;
@@ -196,6 +207,8 @@ public class HBaseUtils<T extends BlackBoxable> {
         } else if (thisValue instanceof List) {
             String jsonString = new Gson().toJson((List) thisValue);
             byteArray = Bytes.toBytes((String) jsonString);
+        } else if (thisValue instanceof Date) {
+            byteArray = Bytes.toBytes((String) thisValue.toString());
         } else {
             logger.severe("Unknown Value :" + thisValue);
         }

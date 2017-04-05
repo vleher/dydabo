@@ -17,6 +17,7 @@
  */
 package com.dydabo.blackbox;
 
+import com.dydabo.blackbox.cassandra.CassandraBlackBoxImpl;
 import com.dydabo.blackbox.hbase.HBaseBlackBoxImpl;
 import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
@@ -33,6 +34,8 @@ public class BlackBoxFactory {
      * Constant specifying the HBase database
      */
     public final static String HBASE = "hbase";
+
+    public final static String CASSANDRA = "cassandra";
 
     private BlackBoxFactory() {
         // No instance of this factory class
@@ -51,6 +54,8 @@ public class BlackBoxFactory {
         switch (databaseType) {
             case HBASE:
                 return new HBaseBlackBoxImpl();
+            case CASSANDRA:
+                return new CassandraBlackBoxImpl();
             default:
                 return null;
         }
@@ -68,4 +73,10 @@ public class BlackBoxFactory {
     public static BlackBox<?> getHBaseDatabase(Configuration config) throws IOException {
         return new HBaseBlackBoxImpl<>(config);
     }
+
+    public static BlackBox<?> getCassandraDatabase() {
+        // TODO: customizable...configuration of the database
+        return new CassandraBlackBoxImpl<>();
+    }
+
 }

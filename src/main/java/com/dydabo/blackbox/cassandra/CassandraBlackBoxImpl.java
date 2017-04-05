@@ -15,10 +15,21 @@
  */
 package com.dydabo.blackbox.cassandra;
 
+import com.datastax.driver.core.Session;
 import com.dydabo.blackbox.BlackBox;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.cassandra.tasks.CassandraDeleteTask;
+import com.dydabo.blackbox.cassandra.tasks.CassandraFetchTask;
+import com.dydabo.blackbox.cassandra.tasks.CassandraInsertTask;
+import com.dydabo.blackbox.cassandra.tasks.CassandraRangeSearchTask;
+import com.dydabo.blackbox.cassandra.tasks.CassandraSearchTask;
+import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
+import com.dydabo.blackbox.db.CassandraConnectionManager;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ForkJoinPool;
 
 /**
  *
@@ -26,24 +37,35 @@ import java.util.List;
  */
 public class CassandraBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
 
+    CassandraUtils utils = new CassandraUtils();
+
     @Override
     public boolean delete(List<T> rows) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        boolean successFlag = true;
+        createTable(rows);
+        ForkJoinPool fjPool = ForkJoinPool.commonPool();
+        CassandraDeleteTask<T> deleteJob = new CassandraDeleteTask<>(getSession(), rows);
+        Boolean flag = fjPool.invoke(deleteJob);
+        successFlag = successFlag && flag;
+        return successFlag;
     }
 
     @Override
     public boolean delete(T row) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return delete(Arrays.asList(row));
     }
 
     @Override
     public List<T> fetch(List<String> rowKeys, T bean) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        createTable(Arrays.asList(bean));
+        ForkJoinPool fjPool = ForkJoinPool.commonPool();
+        CassandraFetchTask<T> searchTask = new CassandraFetchTask<>(getSession(), rowKeys, bean, false, -1);
+        return fjPool.invoke(searchTask);
     }
 
     @Override
     public List<T> fetch(String rowKey, T bean) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return fetch(Arrays.asList(rowKey), bean);
     }
 
     @Override
@@ -68,52 +90,85 @@ public class CassandraBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T
 
     @Override
     public boolean insert(List<T> rows) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        boolean successFlag = true;
+        createTable(rows);
+        ForkJoinPool fjPool = ForkJoinPool.commonPool();
+        CassandraInsertTask<T> insertJob = new CassandraInsertTask<>(getSession(), rows, true);
+        boolean flag = fjPool.invoke(insertJob);
+        successFlag = successFlag && flag;
+
+        return successFlag;
     }
 
     @Override
     public boolean insert(T row) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return insert(Arrays.asList(row));
     }
 
     @Override
     public List<T> search(List<T> rows) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return search(rows, -1);
     }
 
     @Override
     public List<T> search(List<T> rows, long maxResults) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        createTable(rows);
+        ForkJoinPool fjPool = ForkJoinPool.commonPool();
+        CassandraSearchTask<T> searchTask = new CassandraSearchTask<>(getSession(), rows, maxResults);
+        return fjPool.invoke(searchTask);
     }
 
     @Override
     public List<T> search(T row) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return search(Arrays.asList(row));
     }
 
     @Override
     public List<T> search(T row, long maxResults) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return search(Arrays.asList(row), maxResults);
     }
 
     @Override
     public List<T> search(T startRow, T endRow) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return search(startRow, endRow, -1);
     }
 
     @Override
     public List<T> search(T startRow, T endRow, long maxResults) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        createTable(Arrays.asList(startRow));
+        if (startRow.getClass().equals(endRow.getClass())) {
+            ForkJoinPool fjPool = ForkJoinPool.commonPool();
+            CassandraRangeSearchTask<T> searchTask = new CassandraRangeSearchTask<>(getSession(), startRow, endRow, maxResults);
+            return fjPool.invoke(searchTask);
+        }
+        return Collections.<T>emptyList();
     }
 
     @Override
-    public boolean update(List<T> newRows) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public boolean update(List<T> rows) throws BlackBoxException {
+        boolean successFlag = true;
+        createTable(rows);
+        ForkJoinPool fjPool = ForkJoinPool.commonPool();
+        CassandraInsertTask<T> insertJob = new CassandraInsertTask<>(getSession(), rows, true);
+        boolean flag = fjPool.invoke(insertJob);
+        successFlag = successFlag && flag;
+
+        return successFlag;
     }
 
     @Override
     public boolean update(T newRow) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return update(Arrays.asList(newRow));
     }
 
+    protected void createTable(List<T> rows) throws BlackBoxException {
+        for (T row : rows) {
+            new CassandraUtils<T>().createTable(row);
+        }
+
+    }
+
+    protected Session getSession() {
+        return CassandraConnectionManager.getSession("bb");
+    }
 }
