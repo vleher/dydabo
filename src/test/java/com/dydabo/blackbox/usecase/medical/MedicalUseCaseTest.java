@@ -479,7 +479,7 @@ public class MedicalUseCaseTest {
         long execTime = endTime - startTime;
         logger.info("1 :" + resultOne.size() + ":" + execTime);
         if (resultOne.size() > 0) {
-            Assert.assertTrue(execTime / resultOne.size() < 50000000);
+            Assert.assertTrue(execTime / resultOne.size() < 10000000, "" + (execTime / resultOne.size()));
         }
 
         startTime = System.nanoTime();
@@ -488,7 +488,7 @@ public class MedicalUseCaseTest {
         execTime = endTime - startTime;
         logger.info("2 :" + resultTwo.size() + ":" + execTime);
         if (resultTwo.size() > 0) {
-            Assert.assertTrue(execTime / resultTwo.size() < 50000000);
+            Assert.assertTrue(execTime / resultTwo.size() < 10000000, "" + (execTime / resultTwo.size()));
         }
 
         startTime = System.nanoTime();
@@ -497,7 +497,7 @@ public class MedicalUseCaseTest {
         execTime = endTime - startTime;
         logger.info("3 :" + resultThree.size() + ":" + execTime);
         if (resultThree.size() > 0) {
-            Assert.assertTrue(execTime / resultThree.size() < 50000000);
+            Assert.assertTrue(execTime / resultThree.size() < 10000000, "" + (execTime / resultThree.size()));
         }
 
         startTime = System.nanoTime();
@@ -506,7 +506,7 @@ public class MedicalUseCaseTest {
         execTime = endTime - startTime;
         logger.info("4 :" + resultFour.size() + ":" + execTime);
         if (resultFour.size() > 0) {
-            Assert.assertTrue(execTime / resultFour.size() < 50000000);
+            Assert.assertTrue(execTime / resultFour.size() < 10000000, "" + (execTime / resultFour.size()));
         }
 
         startTime = System.nanoTime();
@@ -515,7 +515,7 @@ public class MedicalUseCaseTest {
         execTime = endTime - startTime;
         logger.info("5 :" + resultFive.size() + ":" + execTime);
         if (resultFive.size() > 0) {
-            Assert.assertTrue(execTime / resultFive.size() < 50000000);
+            Assert.assertTrue(execTime / resultFive.size() < 10000000, "" + (execTime / resultFive.size()));
         }
 
     }

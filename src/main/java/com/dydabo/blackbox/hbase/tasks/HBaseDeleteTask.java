@@ -21,8 +21,10 @@ import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -89,17 +91,22 @@ public class HBaseDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
                 successFlag = successFlag && delete(t);
             }
             return successFlag;
-        } else {
-            Boolean successFlag = Boolean.TRUE;
-            int mid = rows.size() / 2;
-            HBaseDeleteTask<T> fDeleteJob = new HBaseDeleteTask<>(getConnection(), rows.subList(0, mid));
-            HBaseDeleteTask<T> sDeleteJob = new HBaseDeleteTask<>(getConnection(), rows.subList(mid, rows.size()));
-            fDeleteJob.fork();
-            Boolean secondFlag = sDeleteJob.compute();
-            Boolean firstFlag = fDeleteJob.join();
-            successFlag = successFlag && secondFlag && firstFlag;
-            return successFlag;
         }
+
+        Boolean successFlag = Boolean.TRUE;
+        // create a task for each element or row in the list
+        List<ForkJoinTask<Boolean>> taskList = new ArrayList();
+        for (T row : rows) {
+            ForkJoinTask<Boolean> fjTask = new HBaseDeleteTask<>(getConnection(), Arrays.asList(row)).fork();
+            taskList.add(fjTask);
+        }
+        // wait for all to join
+        for (ForkJoinTask<Boolean> forkJoinTask : taskList) {
+            successFlag = successFlag && forkJoinTask.join();
+        }
+
+        return successFlag;
+
     }
 
     /**

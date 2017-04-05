@@ -22,8 +22,10 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -85,17 +87,21 @@ public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<B
                 successFlag = successFlag && delete(t);
             }
             return successFlag;
-        } else {
-            Boolean successFlag = Boolean.TRUE;
-            int mid = rows.size() / 2;
-            CassandraDeleteTask<T> fDeleteJob = new CassandraDeleteTask<>(getSession(), rows.subList(0, mid));
-            CassandraDeleteTask<T> sDeleteJob = new CassandraDeleteTask<>(getSession(), rows.subList(mid, rows.size()));
-            fDeleteJob.fork();
-            Boolean secondFlag = sDeleteJob.compute();
-            Boolean firstFlag = fDeleteJob.join();
-            successFlag = successFlag && secondFlag && firstFlag;
-            return successFlag;
         }
+
+        Boolean successFlag = Boolean.TRUE;
+        // create a task for each element or row in the list
+        List<ForkJoinTask<Boolean>> taskList = new ArrayList();
+        for (T row : rows) {
+            ForkJoinTask<Boolean> fjTask = new CassandraDeleteTask<>(getSession(), Arrays.asList(row)).fork();
+            taskList.add(fjTask);
+        }
+        // wait for all to join
+        for (ForkJoinTask<Boolean> forkJoinTask : taskList) {
+            successFlag = successFlag && forkJoinTask.join();
+        }
+
+        return successFlag;
     }
 
     /**

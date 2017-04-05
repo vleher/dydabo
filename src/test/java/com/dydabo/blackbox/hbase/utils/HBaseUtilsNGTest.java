@@ -1,11 +1,11 @@
-/*******************************************************************************
+/** *****************************************************************************
  * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *******************************************************************************/
+ ******************************************************************************
+ */
 package com.dydabo.blackbox.hbase.utils;
 
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.beans.Customer;
 import com.dydabo.blackbox.beans.Employee;
+import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.dydabo.blackbox.hbase.HBaseBlackBoxImpl;
-import com.dydabo.blackbox.hbase.obj.HBaseTableRow;
 import com.google.gson.JsonSyntaxException;
 import java.io.IOException;
 import java.util.Arrays;
@@ -144,7 +145,7 @@ public class HBaseUtilsNGTest {
     @Test
     public void testConvertJsonToMap() throws JsonSyntaxException, BlackBoxException {
         HBaseUtils instance = new HBaseUtils();
-        HBaseTableRow result = instance.convertRowToHTable(new Customer(12, "1234"), true);
+        GenericDBTableRow result = instance.convertRowToTableRow(new Customer(12, "1234"));
         Assert.assertNotNull(result);
     }
 

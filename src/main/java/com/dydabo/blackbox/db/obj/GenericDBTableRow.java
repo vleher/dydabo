@@ -15,7 +15,7 @@
  *
  ******************************************************************************
  */
-package com.dydabo.blackbox.hbase.obj;
+package com.dydabo.blackbox.db.obj;
 
 import com.dydabo.blackbox.common.DyDaBoUtils;
 import com.google.gson.Gson;
@@ -30,7 +30,7 @@ import java.util.Map;
  *
  * @author viswadas leher <vleher@gmail.com>
  */
-public class HBaseTableRow {
+public class GenericDBTableRow {
 
     // The ColumnFamily names should be as small as possible for performance
     /**
@@ -45,7 +45,7 @@ public class HBaseTableRow {
      *
      * @param rowKey
      */
-    public HBaseTableRow(String rowKey) {
+    public GenericDBTableRow(String rowKey) {
         this.rowKey = rowKey;
         this.columnFamilies = new HashMap<>();
         createFamily(DEFAULT_FAMILY);
@@ -221,11 +221,13 @@ public class HBaseTableRow {
             for (Column coln : getColumns().values()) {
                 String keyName = coln.getColumnName();
                 String value = coln.getColumnValueAsString();
-                JsonElement elem = DyDaBoUtils.parseJsonString(value);
-                if (elem != null) {
-                    jsonObject.add(keyName, elem);
-                } else {
-                    jsonObject.add(keyName, new JsonPrimitive(value));
+                if (!DyDaBoUtils.isBlankOrNull(value)) {
+                    JsonElement elem = DyDaBoUtils.parseJsonString(value);
+                    if (elem != null) {
+                        jsonObject.add(keyName, elem);
+                    } else {
+                        jsonObject.add(keyName, new JsonPrimitive(value));
+                    }
                 }
             }
             return jsonObject;

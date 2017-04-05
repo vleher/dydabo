@@ -38,7 +38,7 @@ public class CassandraConnectionManager {
     public static synchronized Session getSession(String keyspace) {
 
         if (sessionPool.get(keyspace) == null) {
-            if (clusterPool.get("myCluster") == null) {
+            if (clusterPool.get("myCluster") == null) { // TODO: parametirize this
                 Cluster cluster = Cluster.builder()
                         .withClusterName("myCluster")
                         .addContactPoint("127.0.0.1")
@@ -49,7 +49,7 @@ public class CassandraConnectionManager {
             Cluster cluster = clusterPool.get("myCluster");
             Session session = cluster.connect();
 
-            // keysapce query TODO: create a keyspace name
+            // keysapce query TODO: create a keyspace name, make it all configurable
             String ksQuery = "create keyspace if not exists " + keyspace + " with replication = {'class':'SimpleStrategy', 'replication_factor':1};";
             session.execute(ksQuery);
             session = cluster.connect(keyspace);

@@ -1,6 +1,6 @@
 # dydabo
 **Dy**namic **Da**tabase Black**Bo**x (**dydabo**) was born out of several different data abstraction modules that I had written for several different projects.
-The idea here is to create an abstraction that will "*completely*" eliminate the need to know how your data is stored in the back end or data store.
+The idea here is to create an abstraction that will ***completely*** eliminate the need to know how your data is stored in the back end or data store.
 
 In that sense this can probably be classified as a Object Data Modeling (ODM) library, rather than a Object Mapping library like Hibernate. Although this library does make some implicit object mapping.
 
@@ -21,7 +21,7 @@ The eventual goal of the library can be summed up as below:
 * Ability to query and retrieve data from the back end based on a POJO
 * Ability to add new fields to POJO or columns to the database easily
 * No need to learn a query language to access data (SQL, CQL, HQL etc. etc.)
-* Ability to use regular expressions as a query language to match against values
+* Ability to use regular expressions or wildcard as a query language to match against values
 * No configuration or XML files to maintain in the source
 * No (or very minimal) use of annotations in the source code
 * Ability to store data in to multiple databases (such as Apache HBase, Apache Cassandra, CouchDB, MongoDB etc)
@@ -30,20 +30,25 @@ The eventual goal of the library can be summed up as below:
 
 ### Audience
 
-**So, who can use this?** Anybody who can set it up and running can use it....and good luck with that. ;-)
+**So, who can use this?** Anybody who can set it up and get it running can use it....and good luck with that. ;-)
 
 **Who should use this?** Just some of different scenarios that I can think of:
 
 * Someone who wants to develop an application quickly and easily without worrying about the back end. You can use this during the development phase of the project, before you have a complete understanding of all your requirements and query/access details. Once you have completed the application, you can identify the types of data access you need, and you will/may be able to come up with a better database design.
 * You don't necessarily need to have terabytes of data to use a NoSql database. Any small or medium size application can use it just as effectively. A simple application that do not have tons of data, and where every query need not be tuned to the fraction of a milli-second may find this easier to maintain.
-* You don't want to dabble with SQL, CQL, HQL queries. If you design your POJO "*wisely*" so as to easily access most of the data you want, with good row key selection then the library should suffice. 
+* You don't want to dabble with SQL, CQL, HQL queries. If you design your POJO ***wisely*** so as to easily access most of the data you want, with good row key selection then the library should suffice. 
 
-**Who should not use this?** There will be several limitations to the library when compared to the vanilla database driver functionality. Refer to the limitations section below.
+**Who should not use this?** 
+
+* Developers or Users who love to configure everything using XML files and/or annotations.
+*  
+
+There will be several limitations to the library when compared to the vanilla database driver functionality. Refer to the limitations section below.
 
 ### Limitations
 
 * It is very unlikely that every single functionality and flexibility of query execution that the database driver supports will be exposed through this library. If you need such granularity, flexibility and power then you will be better off using the driver directly.
-* If you want ultimate control over how your data is stored and managed then this is **NOT** the library for you. The idea here is to completely isolate the user/developer from "*low level*" database design and management.
+* If you want ultimate control over how your data is stored and managed then this is **NOT** the library for you. The idea here is to completely isolate the user/developer from *low level* database design and management.
 * Dependency on Google Gson library and HBase java client libraries.
 
 ### Supported Databases
@@ -59,7 +64,7 @@ There are still several features that needs to be implemented, and the interface
 
 ### Documentation and Use Cases
 
- * dydabo API: Coming soon....
+ * dydabo API: Coming soon....(when it is finalized)
  * dydabo [User Guide](https://github.com/vleher/dydabo/blob/master/USERGUIDE.md): This guide contains examples and some use cases on how to use dydabo in your project and code.
 
 ### Current Dependencies

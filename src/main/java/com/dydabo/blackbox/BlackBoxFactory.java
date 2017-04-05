@@ -19,6 +19,7 @@ package com.dydabo.blackbox;
 
 import com.dydabo.blackbox.cassandra.CassandraBlackBoxImpl;
 import com.dydabo.blackbox.hbase.HBaseBlackBoxImpl;
+import com.dydabo.blackbox.mongodb.MongoBlackBoxImpl;
 import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 
@@ -37,6 +38,8 @@ public class BlackBoxFactory {
 
     public final static String CASSANDRA = "cassandra";
 
+    public final static String MONGODB = "mongodb";
+
     private BlackBoxFactory() {
         // No instance of this factory class
     }
@@ -53,9 +56,11 @@ public class BlackBoxFactory {
     public static BlackBox<?> getDatabase(String databaseType) throws IOException {
         switch (databaseType) {
             case HBASE:
-                return new HBaseBlackBoxImpl();
+                return new HBaseBlackBoxImpl<>();
             case CASSANDRA:
-                return new CassandraBlackBoxImpl();
+                return new CassandraBlackBoxImpl<>();
+            case MONGODB:
+                return new MongoBlackBoxImpl<>();
             default:
                 return null;
         }
@@ -77,6 +82,10 @@ public class BlackBoxFactory {
     public static BlackBox<?> getCassandraDatabase() {
         // TODO: customizable...configuration of the database
         return new CassandraBlackBoxImpl<>();
+    }
+
+    public static BlackBox<?> getMongoDatabase() {
+        return new MongoBlackBoxImpl<>();
     }
 
 }

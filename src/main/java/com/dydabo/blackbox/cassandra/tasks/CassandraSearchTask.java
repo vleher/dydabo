@@ -24,15 +24,16 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.cassandra.obj.CassandraTableRow;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
 import com.dydabo.blackbox.common.DyDaBoUtils;
+import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -94,14 +95,18 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
             return fullResult;
         } else {
             List<T> fullResult = new ArrayList<>();
-            int mid = rows.size() / 2;
-            CassandraSearchTask<T> fSearchJob = new CassandraSearchTask<>(getSession(), rows.subList(0, mid), maxResults);
-            CassandraSearchTask<T> sSearchJob = new CassandraSearchTask<>(getSession(), rows.subList(mid, rows.size()), maxResults);
-            fSearchJob.fork();
-            List<T> secondResults = sSearchJob.compute();
-            List<T> firstResults = fSearchJob.join();
-            fullResult.addAll(firstResults);
-            fullResult.addAll(secondResults);
+
+            // create a task for each element or row in the list
+            List<ForkJoinTask<List<T>>> taskList = new ArrayList();
+            for (T row : rows) {
+                ForkJoinTask<List<T>> fjTask = new CassandraSearchTask<>(getSession(), Arrays.asList(row), maxResults).fork();
+                taskList.add(fjTask);
+            }
+            // wait for all to join
+            for (ForkJoinTask<List<T>> forkJoinTask : taskList) {
+                fullResult.addAll(forkJoinTask.join());
+            }
+
             return fullResult;
         }
     }
@@ -109,19 +114,19 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
     protected List<T> search(T row) throws BlackBoxException {
         List<T> results = new ArrayList<>();
 
-        CassandraTableRow cTable = utils.convertRowToCTable(row);
+        GenericDBTableRow cTable = utils.convertRowToTableRow(row);
         Select selectStmt = QueryBuilder.select().from(utils.getTableName(row));
         selectStmt.enableTracing();
         selectStmt.allowFiltering();
 
         List<Clause> whereClauses = new ArrayList<>();
 
-        for (Map.Entry<String, CassandraTableRow.ColumnFamily> family : cTable.getColumnFamilies().entrySet()) {
+        for (Map.Entry<String, GenericDBTableRow.ColumnFamily> family : cTable.getColumnFamilies().entrySet()) {
             String familyName = family.getKey();
-            CassandraTableRow.ColumnFamily familyValue = family.getValue();
-            for (Map.Entry<String, CassandraTableRow.Column> cols : familyValue.getColumns().entrySet()) {
+            GenericDBTableRow.ColumnFamily familyValue = family.getValue();
+            for (Map.Entry<String, GenericDBTableRow.Column> cols : familyValue.getColumns().entrySet()) {
                 String colName = cols.getKey();
-                CassandraTableRow.Column colValue = cols.getValue();
+                GenericDBTableRow.Column colValue = cols.getValue();
 
                 if (colValue != null && colValue.getColumnValue() != null) {
                     final String colString = colValue.getColumnValueAsString();
@@ -148,7 +153,7 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
         ResultSet resultSet = getSession().execute(selectStmt);
         int count = 0;
         for (Row result : resultSet) {
-            CassandraTableRow ctr = new CassandraTableRow(result.getString("bbkey"));
+            GenericDBTableRow ctr = new GenericDBTableRow(result.getString("bbkey"));
 
             for (ColumnDefinitions.Definition def : result.getColumnDefinitions().asList()) {
                 final Object object = result.getObject(def.getName());

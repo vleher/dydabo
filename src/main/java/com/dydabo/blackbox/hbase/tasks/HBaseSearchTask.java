@@ -20,8 +20,8 @@ package com.dydabo.blackbox.hbase.tasks;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.common.DyDaBoUtils;
+import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.dydabo.blackbox.hbase.HBaseBlackBoxImpl;
-import com.dydabo.blackbox.hbase.obj.HBaseTableRow;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import com.google.gson.Gson;
 import java.io.IOException;
@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -106,14 +107,14 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
      *
      * @return
      */
-    protected boolean parseForFilters(HBaseTableRow thisTable, FilterList filterList) {
+    protected boolean parseForFilters(GenericDBTableRow thisTable, FilterList filterList) {
         boolean hasFilters = false;
-        for (Map.Entry<String, HBaseTableRow.ColumnFamily> colFamEntry : thisTable.getColumnFamilies().entrySet()) {
+        for (Map.Entry<String, GenericDBTableRow.ColumnFamily> colFamEntry : thisTable.getColumnFamilies().entrySet()) {
             String familyName = colFamEntry.getKey();
-            HBaseTableRow.ColumnFamily colFamily = colFamEntry.getValue();
-            for (Map.Entry<String, HBaseTableRow.Column> columnEntry : colFamily.getColumns().entrySet()) {
+            GenericDBTableRow.ColumnFamily colFamily = colFamEntry.getValue();
+            for (Map.Entry<String, GenericDBTableRow.Column> columnEntry : colFamily.getColumns().entrySet()) {
                 String colName = columnEntry.getKey();
-                HBaseTableRow.Column colValue = columnEntry.getValue();
+                GenericDBTableRow.Column colValue = columnEntry.getValue();
                 String regexValue = colValue.getColumnValueAsString();
                 regexValue = utils.sanitizeRegex(regexValue);
                 if (regexValue instanceof String && DyDaBoUtils.isValidRegex((String) regexValue)) {
@@ -153,14 +154,18 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
             return fullResult;
         } else {
             List<T> fullResult = new ArrayList<>();
-            int mid = rows.size() / 2;
-            HBaseSearchTask<T> fSearchJob = new HBaseSearchTask<>(getConnection(), rows.subList(0, mid), maxResults);
-            HBaseSearchTask<T> sSearchJob = new HBaseSearchTask<>(getConnection(), rows.subList(mid, rows.size()), maxResults);
-            fSearchJob.fork();
-            List<T> secondResults = sSearchJob.compute();
-            List<T> firstResults = fSearchJob.join();
-            fullResult.addAll(firstResults);
-            fullResult.addAll(secondResults);
+
+            // create a task for each element or row in the list
+            List<ForkJoinTask<List<T>>> taskList = new ArrayList();
+            for (T row : rows) {
+                ForkJoinTask<List<T>> fjTask = new HBaseSearchTask<>(getConnection(), Arrays.asList(row), maxResults).fork();
+                taskList.add(fjTask);
+            }
+            // wait for all to join
+            for (ForkJoinTask<List<T>> forkJoinTask : taskList) {
+                fullResult.addAll(forkJoinTask.join());
+            }
+
             return fullResult;
         }
     }
@@ -184,7 +189,7 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
                     scan.setMaxResultSize(maxResults);
                 }
                 // Get the filters : just simple regex filters for now
-                HBaseTableRow thisTable = utils.convertRowToHTable(row, true);
+                GenericDBTableRow thisTable = utils.convertRowToTableRow(row);
                 FilterList filterList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
                 boolean hasFilters = parseForFilters(thisTable, filterList);
                 if (hasFilters) {
@@ -195,7 +200,7 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
                 try (ResultScanner resultScanner = hTable.getScanner(scan)) {
                     int count = 0;
                     for (Result result : resultScanner) {
-                        HBaseTableRow resultTable = utils.parseResultToHTable(result, row);
+                        GenericDBTableRow resultTable = utils.parseResultToHTable(result, row);
 
                         T resultObject = new Gson().fromJson(resultTable.toJsonObject(), (Class<T>) row.getClass());
                         if (resultObject != null) {

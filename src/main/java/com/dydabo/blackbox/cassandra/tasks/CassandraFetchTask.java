@@ -23,13 +23,14 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.cassandra.obj.CassandraTableRow;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
+import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -45,9 +46,7 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
     private final T bean;
     private final boolean isPartialKeys;
     private final long maxResults;
-
     private final List<String> rowKeys;
-
     private final Session session;
     private final CassandraUtils<T> utils;
 
@@ -89,18 +88,22 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
                 fullResult.addAll(fetch(key));
             }
             return fullResult;
-        } else {
-            List<T> fullResult = new ArrayList<>();
-            int mid = rowKeys.size() / 2;
-            CassandraFetchTask<T> fSearchJob = new CassandraFetchTask<>(getSession(), rowKeys.subList(0, mid), bean, isPartialKeys, maxResults);
-            CassandraFetchTask<T> sSearchJob = new CassandraFetchTask<>(getSession(), rowKeys.subList(mid, rowKeys.size()), bean, isPartialKeys, maxResults);
-            fSearchJob.fork();
-            List<T> secondResults = sSearchJob.compute();
-            List<T> firstResults = fSearchJob.join();
-            fullResult.addAll(firstResults);
-            fullResult.addAll(secondResults);
-            return fullResult;
         }
+
+        List<T> fullResult = new ArrayList<>();
+
+        // create a task for each element or row in the list
+        List<ForkJoinTask<List<T>>> taskList = new ArrayList();
+        for (String rowKey : rowKeys) {
+            ForkJoinTask<List<T>> fjTask = new CassandraFetchTask<T>(getSession(), Arrays.asList(rowKey), bean, isPartialKeys, maxResults).fork();
+            taskList.add(fjTask);
+        }
+        // wait for all to join
+        for (ForkJoinTask<List<T>> forkJoinTask : taskList) {
+            fullResult.addAll(forkJoinTask.join());
+        }
+
+        return fullResult;
 
     }
 
@@ -115,7 +118,7 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
         ResultSet resultSet = getSession().execute(queryStmt);
         List<T> results = new ArrayList<>();
         for (Row result : resultSet) {
-            CassandraTableRow ctr = new CassandraTableRow(result.getString("bbkey"));
+            GenericDBTableRow ctr = new GenericDBTableRow(result.getString("bbkey"));
             logger.info("Result :" + result);
             for (ColumnDefinitions.Definition def : result.getColumnDefinitions().asList()) {
                 ctr.getDefaultFamily().addColumn(def.getName(), result.getObject(def.getName()));

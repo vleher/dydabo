@@ -19,10 +19,10 @@ package com.dydabo.blackbox.hbase.utils;
 
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.common.DBUtils;
 import com.dydabo.blackbox.common.DyDaBoUtils;
-import com.dydabo.blackbox.hbase.obj.HBaseTableRow;
+import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -50,7 +50,7 @@ import org.apache.hadoop.hbase.util.Bytes;
  * @author viswadas leher <vleher@gmail.com>
  * @param <T>
  */
-public class HBaseUtils<T extends BlackBoxable> {
+public class HBaseUtils<T extends BlackBoxable> extends DBUtils<T> {
 
     private static final Logger logger = Logger.getLogger(HBaseUtils.class.getName());
 
@@ -71,8 +71,8 @@ public class HBaseUtils<T extends BlackBoxable> {
             TableName tableName = getTableName(row);
 
             HTableDescriptor tableDescriptor = new HTableDescriptor(tableName);
-            HBaseTableRow hTable = convertRowToHTable(row, true);
-            for (HBaseTableRow.ColumnFamily value : hTable.getColumnFamilies().values()) {
+            GenericDBTableRow hTable = convertRowToTableRow(row);
+            for (GenericDBTableRow.ColumnFamily value : hTable.getColumnFamilies().values()) {
                 HColumnDescriptor dFamily = new HColumnDescriptor(value.getFamilyName());
                 tableDescriptor.addFamily(dFamily);
             }
@@ -109,39 +109,6 @@ public class HBaseUtils<T extends BlackBoxable> {
 
     /**
      *
-     * @param row
-     * @param includeObject
-     *
-     * @return
-     *
-     * @throws JsonSyntaxException
-     * @throws com.dydabo.blackbox.BlackBoxException
-     */
-    public HBaseTableRow convertRowToHTable(T row, boolean includeObject) throws JsonSyntaxException, BlackBoxException {
-
-        HBaseTableRow hbaseTable = new HBaseTableRow(row.getBBRowKey());
-        Map<String, Field> fields = DyDaBoUtils.getFieldFromType(row.getClass());
-        for (Map.Entry<String, Field> entry : fields.entrySet()) {
-            String key = entry.getKey();
-            Field field = entry.getValue();
-
-            try {
-                if (!field.isSynthetic()) {
-                    field.setAccessible(true);
-                    hbaseTable.getDefaultFamily().addColumn(key, field.get(row));
-                }
-            } catch (IllegalArgumentException ex) {
-                logger.log(Level.SEVERE, null, ex);
-            } catch (IllegalAccessException ex) {
-                logger.log(Level.SEVERE, null, ex);
-            }
-        }
-
-        return hbaseTable;
-    }
-
-    /**
-     *
      * @param row        the value of row
      * @param connection
      *
@@ -165,8 +132,8 @@ public class HBaseUtils<T extends BlackBoxable> {
 
             HTableDescriptor tableDescriptor = new HTableDescriptor(tableName);
 
-            HBaseTableRow hTable = convertRowToHTable(row, true);
-            for (HBaseTableRow.ColumnFamily value : hTable.getColumnFamilies().values()) {
+            GenericDBTableRow hTable = convertRowToTableRow(row);
+            for (GenericDBTableRow.ColumnFamily value : hTable.getColumnFamilies().values()) {
                 HColumnDescriptor dFamily = new HColumnDescriptor(value.getFamilyName());
                 tableDescriptor.addFamily(dFamily);
             }
@@ -208,7 +175,7 @@ public class HBaseUtils<T extends BlackBoxable> {
             String jsonString = new Gson().toJson((List) thisValue);
             byteArray = Bytes.toBytes((String) jsonString);
         } else if (thisValue instanceof Date) {
-            byteArray = Bytes.toBytes((String) thisValue.toString());
+            byteArray = Bytes.toBytes(((Date) thisValue).getTime());
         } else {
             logger.severe("Unknown Value :" + thisValue);
         }
@@ -249,8 +216,8 @@ public class HBaseUtils<T extends BlackBoxable> {
      *
      * @return
      */
-    public HBaseTableRow parseResultToHTable(Result result, T row) {
-        HBaseTableRow resultTable = new HBaseTableRow(Bytes.toString(result.getRow()));
+    public GenericDBTableRow parseResultToHTable(Result result, T row) {
+        GenericDBTableRow resultTable = new GenericDBTableRow(Bytes.toString(result.getRow()));
         NavigableMap<byte[], NavigableMap<byte[], byte[]>> map = result.getNoVersionMap();
         for (Map.Entry<byte[], NavigableMap<byte[], byte[]>> entry : map.entrySet()) {
             String familyName = Bytes.toString(entry.getKey());
@@ -280,6 +247,10 @@ public class HBaseUtils<T extends BlackBoxable> {
                     } else if (f.getGenericType().equals(BigDecimal.class)) {
                         BigDecimal colValue = Bytes.toBigDecimal(cols.getValue());
                         resultTable.getColumnFamily(familyName).addColumn(colName, colValue);
+                    } else if (f.getGenericType().equals(Date.class)) {
+                        long colValue = Bytes.toLong(cols.getValue());
+                        Date thisDate = new Date(colValue);
+                        resultTable.getColumnFamily(familyName).addColumn(colName, thisDate);
                     } else {
                         String colValue = Bytes.toString(cols.getValue());
                         resultTable.getColumnFamily(familyName).addColumn(colName, colValue);

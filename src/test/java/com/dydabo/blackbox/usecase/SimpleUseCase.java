@@ -46,8 +46,9 @@ public class SimpleUseCase {
 
     private static final Logger logger = Logger.getLogger(SimpleUseCase.class.getName());
 
-    private BlackBox cassandraInstance = null;
-    private BlackBox hbaseInstance = null;
+    private final BlackBox cassandraInstance;
+    private final BlackBox hbaseInstance;
+    private final BlackBox mongoInstance;
     private final DyDaBoTestUtils utils = new DyDaBoTestUtils();
     private final Random random = new Random();
 
@@ -58,6 +59,7 @@ public class SimpleUseCase {
     public SimpleUseCase() throws IOException {
         hbaseInstance = BlackBoxFactory.getDatabase(BlackBoxFactory.HBASE);
         cassandraInstance = BlackBoxFactory.getCassandraDatabase();
+        mongoInstance = BlackBoxFactory.getMongoDatabase();
     }
 
     /**
@@ -107,12 +109,18 @@ public class SimpleUseCase {
         success = cassandraInstance.update(userList);
         Assert.assertTrue(success);
 
+        success = mongoInstance.update(userList);
+        Assert.assertTrue(success);
+
         // Delete Users
         userList = utils.generateCustomers(testSize);
         success = hbaseInstance.delete(userList);
         Assert.assertTrue(success);
 
         success = cassandraInstance.delete(userList);
+        Assert.assertTrue(success);
+
+        success = mongoInstance.delete(userList);
         Assert.assertTrue(success);
     }
 

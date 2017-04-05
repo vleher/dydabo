@@ -20,7 +20,7 @@ package com.dydabo.blackbox.hbase.tasks;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.common.DyDaBoUtils;
-import com.dydabo.blackbox.hbase.obj.HBaseTableRow;
+import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import com.google.gson.Gson;
 import java.io.IOException;
@@ -83,7 +83,7 @@ public class HBaseFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
     public HBaseFetchTask(Connection connection, List<String> rowKeys, T row, boolean isPartialKeys, long maxResults) {
         this.connection = connection;
         this.rowKeys = rowKeys;
-        this.utils = new HBaseUtils<T>();
+        this.utils = new HBaseUtils<>();
         this.bean = row;
         this.isPartialKeys = isPartialKeys;
         this.maxResults = maxResults;
@@ -117,7 +117,7 @@ public class HBaseFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
                 Result[] results = hTable.get(getList);
                 for (Result result : results) {
                     if (result.listCells() != null) {
-                        HBaseTableRow resultTable = utils.parseResultToHTable(result, bean);
+                        GenericDBTableRow resultTable = utils.parseResultToHTable(result, bean);
 
                         T resultObject = new Gson().fromJson(resultTable.toJsonObject(), (Class<T>) bean.getClass());
                         if (resultObject != null) {
@@ -156,7 +156,7 @@ public class HBaseFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
                     try (ResultScanner resultScanner = hTable.getScanner(scan)) {
                         int count = 0;
                         for (Result result : resultScanner) {
-                            HBaseTableRow resultTable = utils.parseResultToHTable(result, bean);
+                            GenericDBTableRow resultTable = utils.parseResultToHTable(result, bean);
 
                             T resultObject = new Gson().fromJson(resultTable.toJsonObject(), (Class<T>) bean.getClass());
                             if (resultObject != null) {

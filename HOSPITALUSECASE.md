@@ -48,7 +48,8 @@ public class Patient implements BlackBoxable {
     private String fN = null; // first name
     private String lN = null; // last name
     private Date dob = null; // date of birth
-    private Map<String, Address> address = new HashMap<>(); // a map of addresses such as Home, Work etc
+    // a map of addresses such as Home, Work etc
+    private Map<String, Address> address = new HashMap<>(); 
     private List<String> em = new ArrayList<>(); // a list of email addresses
 
     public Patient() {
@@ -158,8 +159,8 @@ public class Claim implements BlackBoxable {
         this.cId = cId;
         this.pId = pId;
     }
-	.............
-	@Override
+    .............
+    @Override
     public String getBBRowKey() {
         return getcId();
     }    
@@ -187,8 +188,8 @@ public class ClaimCharges implements BlackBoxable {
     private Date ccDate = null; // claim date
     private TranType type = null; // transaction type
     private Double amount = 0.0;` // transaction amount
-	.......    
-	@Override
+    ....... 
+    @Override
     public String getBBRowKey() {
         return getCcId();
     }    
@@ -454,4 +455,5 @@ Depending on the type of queries that you would be executing most often, you can
 
 > **TIP**: Do as many fetch(...) calls as you can rather than search(...) calls.
 
+> **TIP**: Another way to look at it is to design your row keys such that you are much more likely to have the complete row keys in most scenarios rather than not.
 

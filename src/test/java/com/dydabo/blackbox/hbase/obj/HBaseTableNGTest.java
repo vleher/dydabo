@@ -1,11 +1,11 @@
-/*******************************************************************************
+/** *****************************************************************************
  * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *******************************************************************************/
+ ******************************************************************************
+ */
 package com.dydabo.blackbox.hbase.obj;
 
+import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import java.util.Map;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
@@ -34,13 +36,13 @@ public class HBaseTableNGTest {
      *
      */
     protected static final String KEY = "key";
-    private static HBaseTableRow instance;
+    private static GenericDBTableRow instance;
 
     /**
      *
      */
     public HBaseTableNGTest() {
-        this.instance = new HBaseTableRow(KEY);
+        this.instance = new GenericDBTableRow(KEY);
     }
 
     /**
@@ -50,7 +52,7 @@ public class HBaseTableNGTest {
     @BeforeClass
     public static void setUpClass() throws Exception {
         instance.createFamily("default");
-        HBaseTableRow.ColumnFamily fam = instance.getColumnFamilies().get("default");
+        GenericDBTableRow.ColumnFamily fam = instance.getColumnFamilies().get("default");
         fam.addColumn("col1", "colVal1");
     }
 
@@ -79,26 +81,26 @@ public class HBaseTableNGTest {
     }
 
     /**
-     * Test of getDefaultFamily method, of class HBaseTableRow.
+     * Test of getDefaultFamily method, of class GenericDBTableRow.
      */
     @Test
     public void testGetDefaultFamily() {
-        HBaseTableRow.ColumnFamily result = instance.getDefaultFamily();
+        GenericDBTableRow.ColumnFamily result = instance.getDefaultFamily();
         Assert.assertNotNull(result);
     }
 
     /**
-     * Test of createFamily method, of class HBaseTableRow.
+     * Test of createFamily method, of class GenericDBTableRow.
      */
     @Test
     public void testCreateFamily() {
         String familyName = "testFamily";
-        HBaseTableRow.ColumnFamily result = instance.createFamily(familyName);
+        GenericDBTableRow.ColumnFamily result = instance.createFamily(familyName);
         Assert.assertNotNull(result);
     }
 
     /**
-     * Test of getRowKey method, of class HBaseTableRow.
+     * Test of getRowKey method, of class GenericDBTableRow.
      */
     @Test
     public void testGetRowKey() {
@@ -108,7 +110,7 @@ public class HBaseTableNGTest {
     }
 
     /**
-     * Test of setRowKey method, of class HBaseTableRow.
+     * Test of setRowKey method, of class GenericDBTableRow.
      */
     @Test
     public void testSetRowKey() {
@@ -121,7 +123,7 @@ public class HBaseTableNGTest {
     }
 
     /**
-     * Test of getColumnFamilies method, of class HBaseTableRow.
+     * Test of getColumnFamilies method, of class GenericDBTableRow.
      */
     @Test
     public void testGetColumnFamilies() {
@@ -131,7 +133,7 @@ public class HBaseTableNGTest {
     }
 
     /**
-     * Test of toString method, of class HBaseTableRow.
+     * Test of toString method, of class GenericDBTableRow.
      */
     @Test
     public void testToString() {

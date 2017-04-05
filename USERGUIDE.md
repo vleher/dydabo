@@ -99,12 +99,12 @@ success = instanceOne.update(user);
 success = instanceOne.delete(user);
 
 // search/get for the rows where user name starts with "David" 
-User u = new User(null, "David.*");
-// this will return all users with the name David
+User u = new User(null, "^David.*");
+// this will return all users with the name starting with David
 List<User> searchResults = instanceOne.search(u);
 
 // As we have used the user name in the row key, we can also get the same information
-// by querying the row key, which will be faster than searching.
+// by querying the row key, which will be a bit faster than searching.
 List<User> allDavids = instanceOne.fetchByPartialKey(".*:David", new User());
 
 // If we know the userId and the username of the user, then you can use the row key 
@@ -118,7 +118,11 @@ rowKeys.add("5321:Tom");
 // this will return the users with the specified row keys
 List<User> rowList = instanceOne.fetch(rowKeys);
 ```
-> **TIP**: Use fetch(...) if you know the exact row key, which will be the fastest. Use fetchByPartialKey(...) if you know only part of the row key. Use search(...) if you don't know the key and want to do a column value match.
+> **TIP**: Use fetch(...) if you know the exact row key, which will always be the fastest. Use fetchByPartialKey(...) if you know only part of the row key. Use search(...) if you don't know the key and want to do a column value match.
+
+> **TIP**: Do as many fetch(...) calls as you can, rather than search(...) calls.
+
+> **TIP**: Another way to look at it is ...: design your row keys such that you are much more likely to have the complete row keys in most scenarios rather than not.
 
 ### Use Cases <a name="usecases"></a>
 

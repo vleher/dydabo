@@ -19,12 +19,14 @@ package com.dydabo.blackbox.hbase.tasks;
 
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.hbase.obj.HBaseTableRow;
+import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -88,17 +90,20 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
                 successFlag = successFlag && insert(t, checkExisting);
             }
             return successFlag;
-        } else {
-            Boolean successFlag = Boolean.TRUE;
-            int mid = rows.size() / 2;
-            HBaseInsertTask<T> fInsTask = new HBaseInsertTask<>(getConnection(), rows.subList(0, mid), checkExisting);
-            HBaseInsertTask<T> sInsTask = new HBaseInsertTask<>(getConnection(), rows.subList(mid, rows.size()), checkExisting);
-            fInsTask.fork();
-            Boolean secondFlag = sInsTask.compute();
-            Boolean firstFlag = fInsTask.join();
-            successFlag = successFlag && secondFlag && firstFlag;
-            return successFlag;
         }
+        Boolean successFlag = Boolean.TRUE;
+        // create a task for each element or row in the list
+        List<ForkJoinTask<Boolean>> taskList = new ArrayList();
+        for (T row : rows) {
+            ForkJoinTask<Boolean> fjTask = new HBaseInsertTask<>(getConnection(), Arrays.asList(row), checkExisting).fork();
+            taskList.add(fjTask);
+        }
+        // wait for all to join
+        for (ForkJoinTask<Boolean> forkJoinTask : taskList) {
+            successFlag = successFlag && forkJoinTask.join();
+        }
+
+        return successFlag;
     }
 
     /**
@@ -126,15 +131,15 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
                 }
 
                 // Find all the fields in the object
-                HBaseTableRow thisTable = utils.convertRowToHTable(row, true);
+                GenericDBTableRow thisTable = utils.convertRowToTableRow(row);
                 if (utils.isValidRowKey(row)) {
                     Put put = new Put(Bytes.toBytes(row.getBBRowKey()));
-                    for (Map.Entry<String, HBaseTableRow.ColumnFamily> entry : thisTable.getColumnFamilies().entrySet()) {
+                    for (Map.Entry<String, GenericDBTableRow.ColumnFamily> entry : thisTable.getColumnFamilies().entrySet()) {
                         String familyName = entry.getKey();
-                        HBaseTableRow.ColumnFamily colFamily = entry.getValue();
-                        for (Map.Entry<String, HBaseTableRow.Column> column : colFamily.getColumns().entrySet()) {
+                        GenericDBTableRow.ColumnFamily colFamily = entry.getValue();
+                        for (Map.Entry<String, GenericDBTableRow.Column> column : colFamily.getColumns().entrySet()) {
                             String colName = column.getKey();
-                            HBaseTableRow.Column colValue = column.getValue();
+                            GenericDBTableRow.Column colValue = column.getValue();
                             Object thisValue = colValue.getColumnValue();
                             byte[] byteArray = utils.getAsByteArray(thisValue);
 

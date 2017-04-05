@@ -23,9 +23,9 @@ import com.datastax.driver.core.querybuilder.Clause;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.cassandra.obj.CassandraTableRow;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
 import com.dydabo.blackbox.common.DyDaBoUtils;
+import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,18 +66,18 @@ public class CassandraRangeSearchTask<T extends BlackBoxable> extends RecursiveT
         Select queryStmt = QueryBuilder.select().from("bb", utils.getTableName(startRow));
         queryStmt.allowFiltering();
 
-        CassandraTableRow startTableRow = utils.convertRowToCTable(startRow);
-        CassandraTableRow endTableRow = utils.convertRowToCTable(endRow);
+        GenericDBTableRow startTableRow = utils.convertRowToTableRow(startRow);
+        GenericDBTableRow endTableRow = utils.convertRowToTableRow(endRow);
 
         List<Clause> whereClauses = new ArrayList<>();
 
-        for (Map.Entry<String, CassandraTableRow.ColumnFamily> fam : startTableRow.getColumnFamilies().entrySet()) {
+        for (Map.Entry<String, GenericDBTableRow.ColumnFamily> fam : startTableRow.getColumnFamilies().entrySet()) {
             String familyName = fam.getKey();
-            CassandraTableRow.ColumnFamily colFamily = fam.getValue();
+            GenericDBTableRow.ColumnFamily colFamily = fam.getValue();
 
-            for (Map.Entry<String, CassandraTableRow.Column> cols : colFamily.getColumns().entrySet()) {
+            for (Map.Entry<String, GenericDBTableRow.Column> cols : colFamily.getColumns().entrySet()) {
                 String colName = cols.getKey();
-                CassandraTableRow.Column column = cols.getValue();
+                GenericDBTableRow.Column column = cols.getValue();
 
                 if (column != null && column.getColumnValue() != null) {
                     final String colString = column.getColumnValueAsString();
@@ -95,13 +95,13 @@ public class CassandraRangeSearchTask<T extends BlackBoxable> extends RecursiveT
 
         }
 
-        for (Map.Entry<String, CassandraTableRow.ColumnFamily> fam : endTableRow.getColumnFamilies().entrySet()) {
+        for (Map.Entry<String, GenericDBTableRow.ColumnFamily> fam : endTableRow.getColumnFamilies().entrySet()) {
             String familyName = fam.getKey();
-            CassandraTableRow.ColumnFamily colFamily = fam.getValue();
+            GenericDBTableRow.ColumnFamily colFamily = fam.getValue();
 
-            for (Map.Entry<String, CassandraTableRow.Column> cols : colFamily.getColumns().entrySet()) {
+            for (Map.Entry<String, GenericDBTableRow.Column> cols : colFamily.getColumns().entrySet()) {
                 String colName = cols.getKey();
-                CassandraTableRow.Column column = cols.getValue();
+                GenericDBTableRow.Column column = cols.getValue();
 
                 if (column != null && column.getColumnValue() != null) {
                     final String colString = column.getColumnValueAsString();
@@ -123,7 +123,7 @@ public class CassandraRangeSearchTask<T extends BlackBoxable> extends RecursiveT
 
         ResultSet resultSet = getSession().execute(queryStmt);
         for (Row result : resultSet) {
-            CassandraTableRow ctr = new CassandraTableRow(result.getString("bbkey"));
+            GenericDBTableRow ctr = new GenericDBTableRow(result.getString("bbkey"));
             for (ColumnDefinitions.Definition def : result.getColumnDefinitions().asList()) {
                 ctr.getDefaultFamily().addColumn(def.getName(), result.getObject(def.getName()));
             }

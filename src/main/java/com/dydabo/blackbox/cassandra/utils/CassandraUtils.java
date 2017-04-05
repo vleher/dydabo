@@ -19,7 +19,7 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.TableMetadata;
 import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.cassandra.obj.CassandraTableRow;
+import com.dydabo.blackbox.common.DBUtils;
 import com.dydabo.blackbox.common.DyDaBoUtils;
 import com.dydabo.blackbox.db.CassandraConnectionManager;
 import java.lang.reflect.Field;
@@ -34,7 +34,7 @@ import java.util.logging.Logger;
  *
  * @author viswadas leher <vleher@gmail.com>
  */
-public class CassandraUtils<T extends BlackBoxable> {
+public class CassandraUtils<T extends BlackBoxable> extends DBUtils<T> {
 
     private final Logger logger = Logger.getLogger(CassandraUtils.class.getName());
 
@@ -64,29 +64,6 @@ public class CassandraUtils<T extends BlackBoxable> {
         return fullClassName;
     }
 
-    public CassandraTableRow convertRowToCTable(T row) {
-
-        CassandraTableRow cTable = new CassandraTableRow(row.getBBRowKey());
-        Map<String, Field> fields = DyDaBoUtils.getFieldFromType(row.getClass());
-        for (Map.Entry<String, Field> entry : fields.entrySet()) {
-            String key = entry.getKey();
-            Field field = entry.getValue();
-
-            try {
-                if (!field.isSynthetic()) {
-                    field.setAccessible(true);
-                    cTable.getDefaultFamily().addColumn(key, field.get(row));
-                }
-            } catch (IllegalArgumentException ex) {
-                Logger.getLogger(CassandraUtils.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (IllegalAccessException ex) {
-                Logger.getLogger(CassandraUtils.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-
-        return cTable;
-    }
-
     public boolean createTable(T row) {
         // create table
         TableMetadata table = CassandraConnectionManager.getCluster("myCluster", "bb").getMetadata().getKeyspace("bb").getTable(getTableName(row));
@@ -107,13 +84,13 @@ public class CassandraUtils<T extends BlackBoxable> {
                 }
             }
 
-//            CassandraTableRow cTable = convertRowToCTable(row);
-//            for (Map.Entry<String, CassandraTableRow.ColumnFamily> entry : cTable.getColumnFamilies().entrySet()) {
+//            GenericDBTableRow cTable = convertRowToTableRow(row);
+//            for (Map.Entry<String, GenericDBTableRow.ColumnFamily> entry : cTable.getColumnFamilies().entrySet()) {
 //                String familyName = entry.getKey();
-//                CassandraTableRow.ColumnFamily family = entry.getValue();
-//                for (Map.Entry<String, CassandraTableRow.Column> columns : family.getColumns().entrySet()) {
+//                GenericDBTableRow.ColumnFamily family = entry.getValue();
+//                for (Map.Entry<String, GenericDBTableRow.Column> columns : family.getColumns().entrySet()) {
 //                    String colName = columns.getKey();
-//                    CassandraTableRow.Column colValue = columns.getValue();
+//                    GenericDBTableRow.Column colValue = columns.getValue();
 //
 //                    String dbType = getDatabaseType(colValue.getColumnValue());
 //                    query += ", \"" + colName + "\" " + dbType;
