@@ -33,6 +33,7 @@ import java.util.logging.Logger;
 /**
  *
  * @author viswadas leher <vleher@gmail.com>
+ * @param <T>
  */
 public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boolean> {
 
@@ -44,7 +45,7 @@ public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<B
 
     /**
      *
-     * @param connection
+     * @param session
      * @param row
      */
     public CassandraDeleteTask(Session session, T row) {
@@ -53,7 +54,7 @@ public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<B
 
     /**
      *
-     * @param connection
+     * @param session
      * @param rows
      */
     public CassandraDeleteTask(Session session, List<T> rows) {
@@ -124,6 +125,10 @@ public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<B
         return true;
     }
 
+    /**
+     *
+     * @return
+     */
     public Session getSession() {
         return session;
     }

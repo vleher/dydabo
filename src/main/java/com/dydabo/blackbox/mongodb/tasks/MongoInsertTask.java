@@ -18,7 +18,7 @@ package com.dydabo.blackbox.mongodb.tasks;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.mongodb.utils.MongoUtils;
 import com.mongodb.async.SingleResultCallback;
-import com.mongodb.async.client.MongoCollection;
+import com.mongodb.client.MongoCollection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -38,6 +38,12 @@ public class MongoInsertTask<T extends BlackBoxable> {
     private final List<T> rows;
     private final MongoUtils<T> utils;
 
+    /**
+     *
+     * @param collection
+     * @param rows
+     * @param checkExisting
+     */
     public MongoInsertTask(MongoCollection collection, List<T> rows, boolean checkExisting) {
         this.collection = collection;
         this.rows = rows;
@@ -45,6 +51,10 @@ public class MongoInsertTask<T extends BlackBoxable> {
         this.utils = new MongoUtils<T>();
     }
 
+    /**
+     *
+     * @return
+     */
     public Boolean invoke() {
         List<Document> documents = new ArrayList<>();
         for (T row : rows) {
@@ -52,7 +62,7 @@ public class MongoInsertTask<T extends BlackBoxable> {
             documents.add(doc);
         }
 
-        collection.insertMany(documents, insertCallBack);
+        collection.insertMany(documents);
         // TODO: do a check existing before inserting...
 //        if (checkExisting) {
 //            collection.insertMany(documents, insertCallBack);

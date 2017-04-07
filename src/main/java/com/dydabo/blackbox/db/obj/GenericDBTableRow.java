@@ -133,7 +133,7 @@ public class GenericDBTableRow {
     }
 
     /**
-     *
+     * Collection of columns. This is the child of table rows and contains atleast one column family.
      */
     public class ColumnFamily {
 
@@ -241,7 +241,7 @@ public class GenericDBTableRow {
     }
 
     /**
-     *
+     * Columns inside a column family
      */
     public class Column {
 
@@ -301,7 +301,7 @@ public class GenericDBTableRow {
             if (DyDaBoUtils.isPrimitiveOrPrimitiveWrapperOrString(columnValue)) {
                 if (columnValue instanceof Number) {
                     DecimalFormat df = new DecimalFormat("#");
-                    df.setMaximumFractionDigits(10);
+                    df.setMaximumFractionDigits(18);
                     df.setMaximumIntegerDigits(64);
                     return df.format(columnValue);
                 } else {

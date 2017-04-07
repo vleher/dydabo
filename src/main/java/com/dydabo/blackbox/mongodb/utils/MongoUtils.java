@@ -22,11 +22,20 @@ import org.bson.Document;
 /**
  *
  * @author viswadas leher <vleher@gmail.com>
+ * @param <T>
  */
 public class MongoUtils<T extends BlackBoxable> extends DBUtils<T> {
 
+    /**
+     *
+     */
     public static final String PRIMARYKEY = "_id";
 
+    /**
+     *
+     * @param row
+     * @return
+     */
     public Document parseRowToDocument(T row) {
 
         Document doc = Document.parse(row.getBBJson());

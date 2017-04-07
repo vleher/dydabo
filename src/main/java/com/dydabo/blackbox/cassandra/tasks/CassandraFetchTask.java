@@ -38,6 +38,7 @@ import java.util.logging.Logger;
 /**
  *
  * @author viswadas leher <vleher@gmail.com>
+ * @param <T>
  */
 public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
 
@@ -72,6 +73,14 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
         this(session, rowKeys, row, isPartialKeys, -1);
     }
 
+    /**
+     *
+     * @param session
+     * @param rowKeys
+     * @param row
+     * @param isPartialKeys
+     * @param maxResults
+     */
     public CassandraFetchTask(Session session, List<String> rowKeys, T row, boolean isPartialKeys, long maxResults) {
         this.session = session;
         this.rowKeys = rowKeys;
@@ -81,6 +90,14 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
         this.maxResults = maxResults;
     }
 
+    /**
+     *
+     * @param rowKeys
+     *
+     * @return
+     *
+     * @throws BlackBoxException
+     */
     protected List<T> fetch(List<String> rowKeys) throws BlackBoxException {
         if (rowKeys.size() < 2) {
             List<T> fullResult = new ArrayList<>();
@@ -107,6 +124,14 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
 
     }
 
+    /**
+     *
+     * @param rowKey
+     *
+     * @return
+     *
+     * @throws BlackBoxException
+     */
     protected List<T> fetch(String rowKey) throws BlackBoxException {
         if (isPartialKeys) {
             return fetchByPartialKeys(rowKeys);
@@ -159,6 +184,10 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
         return Collections.<T>emptyList();
     }
 
+    /**
+     *
+     * @return
+     */
     public Session getSession() {
         return session;
     }

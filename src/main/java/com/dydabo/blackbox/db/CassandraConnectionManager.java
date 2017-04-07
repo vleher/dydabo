@@ -35,6 +35,12 @@ public class CassandraConnectionManager {
     }
 
     // TODO: clean this up
+    /**
+     *
+     * @param keyspace
+     *
+     * @return
+     */
     public static synchronized Session getSession(String keyspace) {
 
         if (sessionPool.get(keyspace) == null) {
@@ -59,6 +65,13 @@ public class CassandraConnectionManager {
         return sessionPool.get(keyspace);
     }
 
+    /**
+     *
+     * @param clusterName
+     * @param keyspace
+     *
+     * @return
+     */
     public static synchronized Cluster getCluster(String clusterName, String keyspace) {
         if (clusterPool.get("myCluster") == null) {
             Cluster cluster = Cluster.builder()

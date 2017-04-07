@@ -37,6 +37,7 @@ import java.util.logging.Logger;
 /**
  *
  * @author viswadas leher <vleher@gmail.com>
+ * @param <T>
  */
 public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<Boolean> {
 
@@ -80,6 +81,10 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
         return false;
     }
 
+    /**
+     *
+     * @return
+     */
     public Session getSession() {
         return session;
     }
@@ -118,6 +123,15 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
 
     }
 
+    /**
+     *
+     * @param row
+     * @param checkExisting
+     *
+     * @return
+     *
+     * @throws BlackBoxException
+     */
     protected Boolean insert(T row, boolean checkExisting) throws BlackBoxException {
         boolean successFlag = true;
 

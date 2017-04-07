@@ -36,8 +36,14 @@ public class BlackBoxFactory {
      */
     public final static String HBASE = "hbase";
 
+    /**
+     *
+     */
     public final static String CASSANDRA = "cassandra";
 
+    /**
+     *
+     */
     public final static String MONGODB = "mongodb";
 
     private BlackBoxFactory() {
@@ -79,11 +85,19 @@ public class BlackBoxFactory {
         return new HBaseBlackBoxImpl<>(config);
     }
 
+    /**
+     *
+     * @return
+     */
     public static BlackBox<?> getCassandraDatabase() {
         // TODO: customizable...configuration of the database
         return new CassandraBlackBoxImpl<>();
     }
 
+    /**
+     *
+     * @return
+     */
     public static BlackBox<?> getMongoDatabase() {
         return new MongoBlackBoxImpl<>();
     }

@@ -33,6 +33,7 @@ import java.util.logging.Logger;
 /**
  *
  * @author viswadas leher <vleher@gmail.com>
+ * @param <T>
  */
 public class CassandraUtils<T extends BlackBoxable> extends DBUtils<T> {
 
@@ -59,11 +60,23 @@ public class CassandraUtils<T extends BlackBoxable> extends DBUtils<T> {
         return "text";
     }
 
+    /**
+     *
+     * @param row
+     *
+     * @return
+     */
     public String getTableName(T row) {
         final String fullClassName = row.getClass().toString().substring(6).replaceAll("\\.", "");
         return fullClassName;
     }
 
+    /**
+     *
+     * @param row
+     *
+     * @return
+     */
     public boolean createTable(T row) {
         // create table
         TableMetadata table = CassandraConnectionManager.getCluster("myCluster", "bb").getMetadata().getKeyspace("bb").getTable(getTableName(row));
@@ -104,6 +117,13 @@ public class CassandraUtils<T extends BlackBoxable> extends DBUtils<T> {
         return true;
     }
 
+    /**
+     *
+     * @param columnName
+     * @param row
+     *
+     * @return
+     */
     public boolean createIndex(String columnName, T row) {
         String indexQuery = "create index if not exists on bb." + getTableName(row) + "(" + columnName + ");";
         ResultSet resultSet = CassandraConnectionManager.getSession("bb").execute(indexQuery);

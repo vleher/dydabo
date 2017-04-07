@@ -34,6 +34,7 @@ import java.util.concurrent.ForkJoinPool;
 /**
  *
  * @author viswadas leher <vleher@gmail.com>
+ * @param <T>
  */
 public class CassandraBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
 
@@ -161,6 +162,11 @@ public class CassandraBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T
         return update(Arrays.asList(newRow));
     }
 
+    /**
+     *
+     * @param rows
+     * @throws BlackBoxException
+     */
     protected void createTable(List<T> rows) throws BlackBoxException {
         for (T row : rows) {
             new CassandraUtils<T>().createTable(row);
@@ -168,6 +174,10 @@ public class CassandraBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T
 
     }
 
+    /**
+     *
+     * @return
+     */
     protected Session getSession() {
         return CassandraConnectionManager.getSession("bb");
     }

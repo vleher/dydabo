@@ -139,6 +139,9 @@ public class SimpleUseCase {
         success = cassandraInstance.update(userList);
         Assert.assertTrue(success);
 
+        success = mongoInstance.update(userList);
+        Assert.assertTrue(success);
+
         // Search
         List<BlackBoxable> hbaseList = new ArrayList();
         hbaseList.add(new Employee(null, "David"));
@@ -160,6 +163,17 @@ public class SimpleUseCase {
         cassList.add(new Customer(null, "Harry King"));
         searchResult = cassandraInstance.search(cassList);
         logger.info("CASS Search Result :" + searchResult.size());
+        for (BlackBoxable res : searchResult) {
+            if (res instanceof User) {
+                final String uName = ((User) res).getUserName();
+                if (uName == null || !uName.startsWith("Harry")) {
+                    Assert.fail(" Does not start with Harry " + res);
+                }
+            }
+        }
+
+        searchResult = mongoInstance.search(cassList);
+        logger.info("Mongo Search Result :" + searchResult.size());
         for (BlackBoxable res : searchResult) {
             if (res instanceof User) {
                 final String uName = ((User) res).getUserName();
@@ -242,14 +256,19 @@ public class SimpleUseCase {
         cust.setTaxRate(random.nextDouble() * 100);
         hbaseInstance.insert(cust);
         cassandraInstance.insert(cust);
+        mongoInstance.insert(cust);
+
         Customer cust1 = new Customer(new Random().nextInt(1000), "AQWERDSFSTOIOPIoioioiIIII222");
         cust1.setTaxRate(random.nextDouble() * 100);
         hbaseInstance.insert(cust1);
         cassandraInstance.insert(cust1);
+        mongoInstance.insert(cust1);
+
         Customer cust2 = new Customer(new Random().nextInt(1000), "AQWERDSFSTOIOPIoioioiIIII333");
         cust2.setTaxRate(random.nextDouble() * 100);
         hbaseInstance.insert(cust2);
         cassandraInstance.insert(cust2);
+        mongoInstance.insert(cust2);
 
         List<BlackBoxable> searchResult = hbaseInstance.search(cust);
         Assert.assertEquals(searchResult.size(), 1);
@@ -257,7 +276,13 @@ public class SimpleUseCase {
         searchResult = cassandraInstance.search(cust);
         Assert.assertEquals(searchResult.size(), 1);
 
+        searchResult = mongoInstance.search(cust);
+        Assert.assertEquals(searchResult.size(), 1);
+
         searchResult = hbaseInstance.fetch(Arrays.asList(cust.getBBRowKey(), cust1.getBBRowKey(), cust2.getBBRowKey()), cust);
+        Assert.assertEquals(searchResult.size(), 3);
+
+        searchResult = mongoInstance.fetch(Arrays.asList(cust.getBBRowKey(), cust1.getBBRowKey(), cust2.getBBRowKey()), cust);
         Assert.assertEquals(searchResult.size(), 3);
 
         searchResult = cassandraInstance.fetch(Arrays.asList(cust.getBBRowKey(), cust1.getBBRowKey(), cust2.getBBRowKey()), cust);
@@ -266,6 +291,45 @@ public class SimpleUseCase {
         // Try to clean up
         hbaseInstance.delete(Arrays.asList(cust, cust1, cust2));
         cassandraInstance.delete(Arrays.asList(cust, cust1, cust2));
+        mongoInstance.delete(Arrays.asList(cust, cust1, cust2));
     }
 
+    @Test
+    public void testDoubleSearch() throws BlackBoxException {
+        final String name = "ZZZZZZZZZZZZZZZZZ";
+        final int id = random.nextInt(1000);
+        final double taxRate = random.nextDouble() * 100;
+
+        Customer cust = new Customer(id, name);
+        cust.setTaxRate(taxRate);
+        hbaseInstance.insert(cust);
+        cassandraInstance.insert(cust);
+        mongoInstance.insert(cust);
+
+        Customer searchCust = new Customer(null, name);
+
+        List<Customer> searchResult = mongoInstance.search(searchCust);
+        Assert.assertTrue(!searchResult.isEmpty());
+        for (Customer customer : searchResult) {
+            Assert.assertTrue(customer.getUserName().equals(name), customer.getUserName());
+        }
+
+        searchCust = new Customer(id, null);
+
+        searchResult = mongoInstance.search(searchCust);
+        Assert.assertTrue(!searchResult.isEmpty());
+        for (Customer customer : searchResult) {
+            Assert.assertTrue(customer.getUserId().equals(id), customer.getUserId().toString());
+        }
+
+        searchCust = new Customer(null, name);
+        searchCust.setTaxRate(taxRate);
+
+        searchResult = mongoInstance.search(searchCust);
+        Assert.assertTrue(!searchResult.isEmpty());
+        for (Customer customer : searchResult) {
+            Assert.assertTrue(customer.getTaxRate().equals(taxRate), customer.getTaxRate().toString());
+        }
+
+    }
 }

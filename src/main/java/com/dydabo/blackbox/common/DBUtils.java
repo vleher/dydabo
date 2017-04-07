@@ -26,9 +26,15 @@ import java.util.logging.Logger;
 /**
  *
  * @author viswadas leher <vleher@gmail.com>
+ * @param <T>
  */
 public abstract class DBUtils<T extends BlackBoxable> {
 
+    /**
+     *
+     * @param row
+     * @return
+     */
     public GenericDBTableRow convertRowToTableRow(T row) {
         GenericDBTableRow cTable = new GenericDBTableRow(row.getBBRowKey());
         Map<String, Field> fields = DyDaBoUtils.getFieldFromType(row.getClass());

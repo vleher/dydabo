@@ -60,6 +60,7 @@ public class HBaseRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
      * @param connection
      * @param startRow
      * @param endRow
+     * @param maxResults
      */
     public HBaseRangeSearchTask(Connection connection, T startRow, T endRow, long maxResults) {
         this.connection = connection;

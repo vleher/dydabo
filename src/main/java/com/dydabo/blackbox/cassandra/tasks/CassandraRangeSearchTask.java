@@ -36,6 +36,7 @@ import java.util.logging.Logger;
 /**
  *
  * @author viswadas leher <vleher@gmail.com>
+ * @param <T>
  */
 public class CassandraRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
 
@@ -51,6 +52,7 @@ public class CassandraRangeSearchTask<T extends BlackBoxable> extends RecursiveT
      * @param session
      * @param startRow
      * @param endRow
+     * @param maxResults
      */
     public CassandraRangeSearchTask(Session session, T startRow, T endRow, long maxResults) {
         this.session = session;
@@ -144,6 +146,10 @@ public class CassandraRangeSearchTask<T extends BlackBoxable> extends RecursiveT
         return results;
     }
 
+    /**
+     *
+     * @return
+     */
     public Session getSession() {
         return session;
     }

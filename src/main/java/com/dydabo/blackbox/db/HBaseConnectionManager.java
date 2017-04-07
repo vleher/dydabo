@@ -74,6 +74,9 @@ public class HBaseConnectionManager {
         return thisConnection;
     }
 
+    /**
+     * Close all open connections. This can be called by the client to do a graceful shutdown.
+     */
     public static synchronized void closeAllConnections() {
         for (Map.Entry<Integer, Connection> connEntry : connectionPool.entrySet()) {
             Connection connection = connEntry.getValue();

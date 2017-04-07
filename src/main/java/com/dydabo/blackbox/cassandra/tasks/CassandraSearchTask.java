@@ -41,6 +41,7 @@ import java.util.logging.Logger;
 /**
  *
  * @author viswadas leher <vleher@gmail.com>
+ * @param <T>
  */
 public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
 
@@ -74,6 +75,10 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
         this.maxResults = maxResults;
     }
 
+    /**
+     *
+     * @return
+     */
     public Session getSession() {
         return session;
     }
@@ -111,6 +116,14 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
         }
     }
 
+    /**
+     *
+     * @param row
+     *
+     * @return
+     *
+     * @throws BlackBoxException
+     */
     protected List<T> search(T row) throws BlackBoxException {
         List<T> results = new ArrayList<>();
 

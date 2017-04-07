@@ -16,9 +16,9 @@
 package com.dydabo.blackbox.db;
 
 import com.dydabo.blackbox.common.DyDaBoUtils;
-import com.mongodb.async.client.MongoClient;
-import com.mongodb.async.client.MongoClients;
-import com.mongodb.async.client.MongoCollection;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
+import com.mongodb.client.MongoCollection;
 import org.bson.Document;
 
 /**
@@ -30,13 +30,20 @@ public class MongoDBConnectionManager {
     private static Object lockObj = new Object();
     private static MongoClient mongoClient = null;
 
+    /**
+     *
+     * @param connString
+     * @param database
+     * @param collection
+     * @return
+     */
     public static MongoCollection<Document> getMongoDBCollection(String connString, String database, String collection) {
         if (mongoClient == null) {
             if (DyDaBoUtils.isBlankOrNull(connString)) {
-                connString = "mongodb://localhost";
+                connString = "mongodb://localhost:27017";
             }
             synchronized (lockObj) {
-                mongoClient = MongoClients.create(connString);
+                mongoClient = new MongoClient(new MongoClientURI(connString));
             }
         }
         return mongoClient.getDatabase(database).getCollection(collection);

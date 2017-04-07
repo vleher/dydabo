@@ -80,6 +80,14 @@ public class HBaseFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
         this(connection, rowKeys, row, isPartialKeys, -1);
     }
 
+    /**
+     *
+     * @param connection
+     * @param rowKeys
+     * @param row
+     * @param isPartialKeys
+     * @param maxResults
+     */
     public HBaseFetchTask(Connection connection, List<String> rowKeys, T row, boolean isPartialKeys, long maxResults) {
         this.connection = connection;
         this.rowKeys = rowKeys;

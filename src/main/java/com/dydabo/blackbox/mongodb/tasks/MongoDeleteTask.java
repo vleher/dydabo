@@ -18,7 +18,7 @@ package com.dydabo.blackbox.mongodb.tasks;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.mongodb.utils.MongoUtils;
 import com.mongodb.async.SingleResultCallback;
-import com.mongodb.async.client.MongoCollection;
+import com.mongodb.client.MongoCollection;
 import com.mongodb.client.result.DeleteResult;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,6 +33,7 @@ import static com.mongodb.client.model.Filters.eq;
 /**
  *
  * @author viswadas leher <vleher@gmail.com>
+ * @param <T>
  */
 public class MongoDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boolean> {
 
@@ -42,6 +43,11 @@ public class MongoDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
     private final List<T> rows;
     private final MongoUtils<T> utils;
 
+    /**
+     *
+     * @param collection
+     * @param rows
+     */
     public MongoDeleteTask(MongoCollection<Document> collection, List<T> rows) {
         this.collection = collection;
         this.rows = rows;
@@ -54,9 +60,11 @@ public class MongoDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
 
         // Stop case
         if (rows.size() < 2) {
+            boolean successFlag = Boolean.TRUE;
             for (T row : rows) {
-                return delete(row);
+                successFlag = successFlag && delete(row);
             }
+            return successFlag;
         }
 
         List<ForkJoinTask<Boolean>> taskList = new ArrayList();
@@ -65,19 +73,25 @@ public class MongoDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
             taskList.add(subTask);
         }
 
-        boolean successFlag = true;
+        boolean successFlag = Boolean.TRUE;
         for (ForkJoinTask<Boolean> fjTask : taskList) {
             successFlag = fjTask.join() && successFlag;
         }
         return successFlag;
     }
 
+    /**
+     *
+     * @param row
+     *
+     * @return
+     */
     public Boolean delete(T row) {
 
         Document doc = utils.parseRowToDocument(row);
-        collection.deleteOne(eq(MongoUtils.PRIMARYKEY, doc.get(MongoUtils.PRIMARYKEY)), callback);
+        DeleteResult delResult = collection.deleteOne(eq(MongoUtils.PRIMARYKEY, doc.get(MongoUtils.PRIMARYKEY)));
 
-        return true;
+        return delResult.wasAcknowledged();
     }
 
     private SingleResultCallback callback = (SingleResultCallback<DeleteResult>) (DeleteResult t, Throwable thrwbl) -> {
