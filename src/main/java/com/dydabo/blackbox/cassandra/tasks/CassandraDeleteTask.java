@@ -21,6 +21,7 @@ import com.datastax.driver.core.querybuilder.Delete;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.cassandra.utils.CassandraConstants;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,9 +32,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * Delete rows from Cassandra
  *
  * @author viswadas leher <vleher@gmail.com>
- * @param <T>
+ * @param <T> the object (row) being processed
  */
 public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boolean> {
 
@@ -44,18 +46,20 @@ public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<B
     private final CassandraUtils<T> utils;
 
     /**
+     * Constructor
      *
-     * @param session
-     * @param row
+     * @param session a session instance for db connection
+     * @param row     row instance to be deleted
      */
     public CassandraDeleteTask(Session session, T row) {
         this(session, Arrays.asList(row));
     }
 
     /**
+     * Constructor
      *
-     * @param session
-     * @param rows
+     * @param session a session instance for db connection
+     * @param rows    list of rows to be deleted
      */
     public CassandraDeleteTask(Session session, List<T> rows) {
         this.session = session;
@@ -74,14 +78,16 @@ public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<B
     }
 
     /**
+     * Delete multiple rows from the database concurrently.
      *
-     * @param rows
+     * @param rows rows to be deleted
      *
-     * @return
+     * @return true if all operations were successful
      *
      * @throws BlackBoxException
      */
     protected Boolean delete(List<T> rows) throws BlackBoxException {
+        // one row is the recursion base line
         if (rows.size() < 2) {
             Boolean successFlag = true;
             for (T t : rows) {
@@ -101,27 +107,29 @@ public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<B
         for (ForkJoinTask<Boolean> forkJoinTask : taskList) {
             successFlag = successFlag && forkJoinTask.join();
         }
-
+        // return the overall status
         return successFlag;
     }
 
     /**
+     * Delete a single row from the database
      *
-     * @param row
+     * @param row the row to be deleted
      *
-     * @return
+     * @return true if the delete was successful
      *
      * @throws BlackBoxException
      */
     protected Boolean delete(T row) throws BlackBoxException {
+        // Create a delete statement with the row key
+        Delete delStmt = QueryBuilder.delete().from(CassandraConstants.CASSANDRA_DEFAULT_KEYSPACE, utils.getTableName(row));
+        delStmt.where(QueryBuilder.eq(CassandraConstants.CASSANDRA_DEFAULT_ROWKEY, row.getBBRowKey()));
 
-        Delete delStmt = QueryBuilder.delete().from("bb", utils.getTableName(row));
-        delStmt.where(QueryBuilder.eq("\"bbkey\"", row.getBBRowKey()));
-
-        Session session = getSession();
-
-        ResultSet resultSet = session.execute(delStmt);
-        //TODO: verify results
+        ResultSet resultSet = getSession().execute(delStmt);
+        // verify that we have a delete
+        if (resultSet.one() == null) {
+            return false;
+        }
         return true;
     }
 

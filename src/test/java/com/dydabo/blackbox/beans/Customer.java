@@ -55,7 +55,7 @@ public class Customer extends User implements BlackBoxable {
         emailAddresses.add(getUserId() + "@gmail.com");
         emailAddresses.add(getUserName() + "@msn.com");
 
-        address.put("Home", new Address(new Random().nextInt(10000) + " home ave", "egan", "mn", "us"));
+        address.put("Home", new Address(new Random().nextInt(10000) + " home ave", "eagan", "mn", "us"));
         address.put("Work", new Address(new Random().nextInt(10000) + " work st", "minneapolis", "mn", "us"));
         address.put("Other", new Address(new Random().nextInt(10000) + " other blvd", "other", "ca", "us"));
 

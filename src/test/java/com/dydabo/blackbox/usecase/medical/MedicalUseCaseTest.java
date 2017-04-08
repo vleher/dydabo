@@ -165,6 +165,10 @@ public class MedicalUseCaseTest {
         Assert.assertTrue(cpList1.size() > 0);
     }
 
+    /**
+     *
+     * @throws BlackBoxException
+     */
     @Test
     public void testFetchQueryPerformance() throws BlackBoxException {
         // get some data that exists
@@ -449,6 +453,10 @@ public class MedicalUseCaseTest {
         }
     }
 
+    /**
+     *
+     * @throws BlackBoxException
+     */
     @Test
     public void testAllClaimsForPatient() throws BlackBoxException {
         // Get a random patient id
@@ -464,6 +472,10 @@ public class MedicalUseCaseTest {
         }
     }
 
+    /**
+     *
+     * @throws BlackBoxException
+     */
     @Test
     public void testGetEncounterByPatient() throws BlackBoxException {
         Encounter pe = new Encounter();
@@ -520,6 +532,10 @@ public class MedicalUseCaseTest {
 
     }
 
+    /**
+     *
+     * @throws BlackBoxException
+     */
     @Test
     public void testRangeSearch() throws BlackBoxException {
         final double minVal = random.nextDouble() * 100;

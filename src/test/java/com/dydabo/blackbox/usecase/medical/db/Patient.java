@@ -160,10 +160,18 @@ public class Patient implements BlackBoxable {
         this.address = address;
     }
 
+    /**
+     *
+     * @return
+     */
     public PhoneNumber getpPh() {
         return pPh;
     }
 
+    /**
+     *
+     * @param pPh
+     */
     public void setpPh(PhoneNumber pPh) {
         this.pPh = pPh;
     }

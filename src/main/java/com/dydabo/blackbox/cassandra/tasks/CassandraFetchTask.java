@@ -23,6 +23,7 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.cassandra.utils.CassandraConstants;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.google.gson.Gson;
@@ -34,6 +35,7 @@ import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -133,34 +135,41 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
      * @throws BlackBoxException
      */
     protected List<T> fetch(String rowKey) throws BlackBoxException {
-        if (isPartialKeys) {
-            return fetchByPartialKeys(rowKeys);
-        }
+//        if (isPartialKeys) {
+//            return fetchByPartialKeys(rowKey);
+//        }
 
         Select queryStmt = QueryBuilder.select().from(utils.getTableName(bean)).allowFiltering();
-        queryStmt.where(QueryBuilder.eq("\"bbkey\"", rowKey));
+        if (!isPartialKeys) {
+            queryStmt.where(QueryBuilder.eq(CassandraConstants.CASSANDRA_DEFAULT_ROWKEY, rowKey));
+        }
 
         ResultSet resultSet = getSession().execute(queryStmt);
         List<T> results = new ArrayList<>();
         for (Row result : resultSet) {
-            GenericDBTableRow ctr = new GenericDBTableRow(result.getString("bbkey"));
-            logger.info("Result :" + result);
-            for (ColumnDefinitions.Definition def : result.getColumnDefinitions().asList()) {
-                ctr.getDefaultFamily().addColumn(def.getName(), result.getObject(def.getName()));
+            final String currRowKey = result.getString(CassandraConstants.CASSANDRA_DEFAULT_ROWKEY);
+            boolean isResult = true;
+            if (isPartialKeys) {
+                if (Pattern.matches(rowKey, currRowKey)) {
+                    isResult = true;
+                } else {
+                    isResult = false;
+                }
+            }
+            if (isResult) {
+                GenericDBTableRow ctr = new GenericDBTableRow(currRowKey);
+                for (ColumnDefinitions.Definition def : result.getColumnDefinitions().asList()) {
+                    ctr.getDefaultFamily().addColumn(def.getName(), result.getObject(def.getName()));
+                }
+
+                T resultObject = new Gson().fromJson(ctr.toJsonObject(), (Class<T>) bean.getClass());
+
+                if (resultObject != null) {
+                    results.add(resultObject);
+                }
             }
 
-            //resultTable = utils.parseResultToHTable(result, row);
-            T resultObject = new Gson().fromJson(ctr.toJsonObject(), (Class<T>) bean.getClass());
-            logger.info("Cass Table:" + ctr);
-            logger.info("Cass json:" + ctr.toJsonObject().toString());
-            logger.info("Cass Object:" + resultObject);
-            int count = 0;
-            if (resultObject != null) {
-                results.add(resultObject);
-                count++;
-            }
-
-            if (maxResults > 0 && count >= maxResults) {
+            if (maxResults > 0 && results.size() >= maxResults) {
                 break;
             }
 
@@ -168,8 +177,10 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
         return results;
     }
 
-    private List<T> fetchByPartialKeys(List<String> rowKeys) {
+    private List<T> fetchByPartialKeys(String rowKey) {
         List<T> results = new ArrayList<>();
+        Select queryStmt = QueryBuilder.select().from(utils.getTableName(bean)).allowFiltering();
+        queryStmt.where(QueryBuilder.like(CassandraConstants.CASSANDRA_DEFAULT_ROWKEY, rowKey));
 
         return results;
     }

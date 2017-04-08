@@ -47,7 +47,7 @@ public class MongoBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
 
     @Override
     public List<T> fetch(List<String> rowKeys, T bean) throws BlackBoxException {
-        MongoFetchTask<T> task = new MongoFetchTask<>(getCollection(), rowKeys, bean);
+        MongoFetchTask<T> task = new MongoFetchTask<>(getCollection(), rowKeys, bean, false, -1);
         return task.invoke();
     }
 
@@ -58,22 +58,23 @@ public class MongoBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
 
     @Override
     public List<T> fetchByPartialKey(List<String> rowKeys, T bean) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return fetchByPartialKey(rowKeys, bean, -1);
     }
 
     @Override
     public List<T> fetchByPartialKey(List<String> rowKeys, T bean, long maxResults) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        MongoFetchTask<T> task = new MongoFetchTask<>(getCollection(), rowKeys, bean, true, maxResults);
+        return task.invoke();
     }
 
     @Override
     public List<T> fetchByPartialKey(String rowKey, T bean) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return fetchByPartialKey(Arrays.asList(rowKey), bean, -1);
     }
 
     @Override
     public List<T> fetchByPartialKey(String rowKey, T bean, long maxResults) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return fetchByPartialKey(Arrays.asList(rowKey), bean, maxResults);
     }
 
     @Override

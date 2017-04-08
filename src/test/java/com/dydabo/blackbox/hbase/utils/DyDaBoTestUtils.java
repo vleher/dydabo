@@ -90,6 +90,13 @@ public class DyDaBoTestUtils {
         return userList;
     }
 
+    /**
+     *
+     * @param count
+     *
+     * @throws BlackBoxException
+     * @throws IOException
+     */
     public void generateEncounters(int count) throws BlackBoxException, IOException {
         Patient p = new Patient();
         BlackBox hbaseBlackBox = BlackBoxFactory.getDatabase(BlackBoxFactory.HBASE);
@@ -156,6 +163,13 @@ public class DyDaBoTestUtils {
         hbaseBlackBox.update(encounters);
     }
 
+    /**
+     *
+     * @param count
+     *
+     * @throws BlackBoxException
+     * @throws IOException
+     */
     public void generatePatients(int count) throws BlackBoxException, IOException {
         int knownPatientId = 123456;
         List<Patient> patientList = new ArrayList<>();

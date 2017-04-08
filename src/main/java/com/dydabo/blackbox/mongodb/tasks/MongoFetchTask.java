@@ -29,6 +29,7 @@ import java.util.logging.Logger;
 import org.bson.Document;
 
 import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.regex;
 
 /**
  *
@@ -39,6 +40,8 @@ public class MongoFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
 
     private static final Logger logger = Logger.getLogger(MongoFetchTask.class.getName());
     private final MongoCollection<Document> collection;
+    private final boolean isPartialKey;
+    private final long maxResults;
     private final T row;
     private final List<String> rowKeys;
     private final MongoUtils<T> utils;
@@ -49,11 +52,13 @@ public class MongoFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
      * @param rowKeys
      * @param row
      */
-    public MongoFetchTask(MongoCollection<Document> collection, List<String> rowKeys, T row) {
+    public MongoFetchTask(MongoCollection<Document> collection, List<String> rowKeys, T row, boolean isPartialKey, long maxResults) {
         this.collection = collection;
         this.rowKeys = rowKeys;
         this.row = row;
         this.utils = new MongoUtils<T>();
+        this.isPartialKey = isPartialKey;
+        this.maxResults = maxResults;
     }
 
     @Override
@@ -74,7 +79,7 @@ public class MongoFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
 
         List<ForkJoinTask<List<T>>> taskList = new ArrayList<>();
         for (String rowKey : rowKeys) {
-            ForkJoinTask<List<T>> fjTask = new MongoFetchTask<T>(collection, Arrays.asList(rowKey), row).fork();
+            ForkJoinTask<List<T>> fjTask = new MongoFetchTask<T>(collection, Arrays.asList(rowKey), row, isPartialKey, maxResults).fork();
             taskList.add(fjTask);
         }
 
@@ -88,7 +93,13 @@ public class MongoFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
     private List<T> fetch(String rowKey) {
         List<T> results = new ArrayList<>();
 
-        FindIterable<Document> docIter = collection.find(eq(MongoUtils.PRIMARYKEY, rowKey));
+        FindIterable<Document> docIter = null;
+
+        if (isPartialKey) {
+            docIter = collection.find(regex(MongoUtils.PRIMARYKEY, rowKey));
+        } else {
+            docIter = collection.find(eq(MongoUtils.PRIMARYKEY, rowKey));
+        }
 
         for (Document doc : docIter) {
             T resultObject = new Gson().fromJson(doc.toJson(), (Class<T>) row.getClass());

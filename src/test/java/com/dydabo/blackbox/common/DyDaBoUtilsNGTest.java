@@ -151,6 +151,9 @@ public class DyDaBoUtilsNGTest {
         Assert.assertFalse(DyDaBoUtils.isPrimitiveOrPrimitiveWrapperOrString(new Patient()));
     }
 
+    /**
+     *
+     */
     @Test
     public void testGetFieldFromType() {
         Customer cust = new Customer(null, null);

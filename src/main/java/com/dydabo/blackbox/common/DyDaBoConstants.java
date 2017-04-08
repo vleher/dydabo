@@ -13,34 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dydabo.blackbox.mongodb.utils;
-
-import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.common.DBUtils;
-import org.bson.Document;
+package com.dydabo.blackbox.common;
 
 /**
  *
  * @author viswadas leher <vleher@gmail.com>
- * @param <T>
  */
-public class MongoUtils<T extends BlackBoxable> extends DBUtils<T> {
+public class DyDaBoConstants {
 
-    /**
-     *
-     */
-    public static final String PRIMARYKEY = "_id";
-
-    /**
-     *
-     * @param row
-     *
-     * @return
-     */
-    public Document parseRowToDocument(T row) {
-        Document doc = Document.parse(row.getBBJson());
-        // make sure we have an id
-        doc.append("_id", row.getBBRowKey());
-        return doc;
-    }
 }

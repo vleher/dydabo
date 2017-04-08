@@ -60,8 +60,8 @@ public class CassandraBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T
     public List<T> fetch(List<String> rowKeys, T bean) throws BlackBoxException {
         createTable(Arrays.asList(bean));
         ForkJoinPool fjPool = ForkJoinPool.commonPool();
-        CassandraFetchTask<T> searchTask = new CassandraFetchTask<>(getSession(), rowKeys, bean, false, -1);
-        return fjPool.invoke(searchTask);
+        CassandraFetchTask<T> fetchTask = new CassandraFetchTask<>(getSession(), rowKeys, bean, false, -1);
+        return fjPool.invoke(fetchTask);
     }
 
     @Override
@@ -71,22 +71,26 @@ public class CassandraBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T
 
     @Override
     public List<T> fetchByPartialKey(List<String> rowKeys, T bean) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return fetchByPartialKey(rowKeys, bean, -1);
     }
 
     @Override
     public List<T> fetchByPartialKey(List<String> rowKeys, T bean, long maxResults) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        // TODO: really inefficient full table scan
+        createTable(Arrays.asList(bean));
+        ForkJoinPool fjPool = ForkJoinPool.commonPool();
+        CassandraFetchTask<T> fetchTask = new CassandraFetchTask<>(getSession(), rowKeys, bean, true, maxResults);
+        return fjPool.invoke(fetchTask);
     }
 
     @Override
     public List<T> fetchByPartialKey(String rowKey, T bean) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return fetchByPartialKey(Arrays.asList(rowKey), bean, -1);
     }
 
     @Override
     public List<T> fetchByPartialKey(String rowKey, T bean, long maxResults) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return fetchByPartialKey(Arrays.asList(rowKey), bean, maxResults);
     }
 
     @Override
@@ -165,6 +169,7 @@ public class CassandraBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T
     /**
      *
      * @param rows
+     *
      * @throws BlackBoxException
      */
     protected void createTable(List<T> rows) throws BlackBoxException {

@@ -17,7 +17,6 @@ package com.dydabo.blackbox.mongodb.tasks;
 
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.mongodb.utils.MongoUtils;
-import com.mongodb.async.SingleResultCallback;
 import com.mongodb.client.MongoCollection;
 import java.util.ArrayList;
 import java.util.List;
@@ -75,10 +74,4 @@ public class MongoInsertTask<T extends BlackBoxable> {
         return true;
     }
 
-    private SingleResultCallback insertCallBack = (SingleResultCallback<Void>) (Void t, Throwable thrwbl) -> {
-        if (thrwbl != null) {
-            // ignore for now  TODO: handle this gracefully
-            logger.severe(thrwbl.getMessage());
-        }
-    };
 }

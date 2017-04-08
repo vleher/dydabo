@@ -26,21 +26,40 @@ import org.testng.annotations.BeforeMethod;
  */
 public class CassandraBlackBoxImplNGTest {
 
+    /**
+     *
+     */
     public CassandraBlackBoxImplNGTest() {
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @BeforeClass
     public static void setUpClass() throws Exception {
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @AfterClass
     public static void tearDownClass() throws Exception {
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @BeforeMethod
     public void setUpMethod() throws Exception {
     }
 
+    /**
+     *
+     * @throws Exception
+     */
     @AfterMethod
     public void tearDownMethod() throws Exception {
     }

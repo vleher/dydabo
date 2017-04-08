@@ -100,9 +100,10 @@ public class SimpleUseCase {
      */
     @Test
     public void testUseCaseOne() throws BlackBoxException {
-        int testSize = 1;
-        // Update 10 new Users
+        int testSize = 3;
+        // Update new Users
         List<Customer> userList = utils.generateCustomers(testSize);
+
         boolean success = hbaseInstance.update(userList);
         Assert.assertTrue(success);
 
@@ -131,7 +132,7 @@ public class SimpleUseCase {
     @Test
     public void testUseCaseTwo() throws BlackBoxException {
         int testSize = 1;
-        // Update 100 new Users
+        // Update new Users
         List<Employee> userList = utils.generateEmployees(testSize);
         boolean success = hbaseInstance.update(userList);
         Assert.assertTrue(success);
@@ -294,6 +295,40 @@ public class SimpleUseCase {
         mongoInstance.delete(Arrays.asList(cust, cust1, cust2));
     }
 
+    @Test
+    public void testFetchPartial() throws BlackBoxException {
+        final Employee employee = new Employee(null, null);
+        // Update new Users
+        List<Employee> userList = hbaseInstance.search(employee);
+
+        // select random key
+        String key = userList.get(random.nextInt(99) % userList.size()).getBBRowKey();
+
+        String keyQuery1 = key.substring(0, key.length() / 2) + ".*";
+
+        List<Employee> hbaseEmps = hbaseInstance.fetchByPartialKey(keyQuery1, employee);
+        Assert.assertTrue(hbaseEmps.size() > 0);
+        for (Employee emp : hbaseEmps) {
+            Assert.assertTrue(emp.getBBRowKey().startsWith(key), emp.toString());
+        }
+
+        List<Employee> cassEmps = cassandraInstance.fetchByPartialKey(keyQuery1, employee);
+        Assert.assertTrue(cassEmps.size() > 0);
+        for (Employee emp : cassEmps) {
+            Assert.assertTrue(emp.getBBRowKey().startsWith(key), emp.toString());
+        }
+
+        List<Employee> mongoEmps = mongoInstance.fetchByPartialKey(keyQuery1, employee);
+        Assert.assertTrue(mongoEmps.size() > 0);
+        for (Employee emp : mongoEmps) {
+            Assert.assertTrue(emp.getBBRowKey().startsWith(key), emp.toString());
+        }
+    }
+
+    /**
+     *
+     * @throws BlackBoxException
+     */
     @Test
     public void testDoubleSearch() throws BlackBoxException {
         final String name = "ZZZZZZZZZZZZZZZZZ";

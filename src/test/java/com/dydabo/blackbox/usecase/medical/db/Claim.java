@@ -36,6 +36,7 @@ public class Claim implements BlackBoxable {
     /**
      *
      * @param cId
+     * @param pId
      */
     public Claim(String cId, String pId) {
         this.cId = cId;
