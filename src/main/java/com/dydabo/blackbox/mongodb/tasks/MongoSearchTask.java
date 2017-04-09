@@ -69,7 +69,8 @@ public class MongoSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
     /**
      *
      * @param tableRow the value of tableRow
-     * @return 
+     *
+     * @return
      */
     protected List<Bson> parseFilters(GenericDBTableRow tableRow) {
         List<Bson> filterList = new ArrayList<>();
@@ -122,14 +123,11 @@ public class MongoSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
     private List<T> search(T row) {
         List<T> results = new ArrayList<>();
 
-        Block<Document> addToResultBlock = new Block<Document>() {
-            @Override
-            public void apply(Document doc) {
-                logger.info("Mongo Search Result :" + doc.toJson());
-                T resultObject = new Gson().fromJson(doc.toJson(), (Class<T>) row.getClass());
-                if (resultObject != null) {
-                    results.add(resultObject);
-                }
+        Block<Document> addToResultBlock = (Document doc) -> {
+            logger.info("Mongo Search Result :" + doc.toJson());
+            T resultObject = new Gson().fromJson(doc.toJson(), (Class<T>) row.getClass());
+            if (resultObject != null) {
+                results.add(resultObject);
             }
         };
 
