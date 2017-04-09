@@ -177,14 +177,6 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
         return results;
     }
 
-    private List<T> fetchByPartialKeys(String rowKey) {
-        List<T> results = new ArrayList<>();
-        Select queryStmt = QueryBuilder.select().from(utils.getTableName(bean)).allowFiltering();
-        queryStmt.where(QueryBuilder.like(CassandraConstants.CASSANDRA_DEFAULT_ROWKEY, rowKey));
-
-        return results;
-    }
-
     @Override
     protected List<T> compute() {
         try {

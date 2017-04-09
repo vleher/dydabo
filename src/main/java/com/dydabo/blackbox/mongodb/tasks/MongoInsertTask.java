@@ -18,17 +18,23 @@ package com.dydabo.blackbox.mongodb.tasks;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.mongodb.utils.MongoUtils;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.UpdateOptions;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.RecursiveTask;
 import java.util.logging.Logger;
 import org.bson.Document;
+
+import static com.mongodb.client.model.Filters.eq;
 
 /**
  *
  * @author viswadas leher <vleher@gmail.com>
  * @param <T>
  */
-public class MongoInsertTask<T extends BlackBoxable> {
+public class MongoInsertTask<T extends BlackBoxable> extends RecursiveTask<Boolean> {
 
     private static final Logger logger = Logger.getLogger(MongoInsertTask.class.getName());
 
@@ -36,6 +42,10 @@ public class MongoInsertTask<T extends BlackBoxable> {
     private final MongoCollection collection;
     private final List<T> rows;
     private final MongoUtils<T> utils;
+
+    public MongoInsertTask(MongoCollection collection, T row, boolean checkExisting) {
+        this(collection, Arrays.asList(row), checkExisting);
+    }
 
     /**
      *
@@ -50,27 +60,47 @@ public class MongoInsertTask<T extends BlackBoxable> {
         this.utils = new MongoUtils<T>();
     }
 
-    /**
-     *
-     * @return
-     */
-    public Boolean invoke() {
-        List<Document> documents = new ArrayList<>();
-        for (T row : rows) {
-            Document doc = utils.parseRowToDocument(row);
-            documents.add(doc);
+    @Override
+    protected Boolean compute() {
+        if (checkExisting) {
+            List<Document> documents = new ArrayList<>();
+            for (T row : rows) {
+                Document doc = utils.parseRowToDocument(row);
+                documents.add(doc);
+            }
+            // this inserts the document if there are none with a matching id
+            collection.insertMany(documents);
+        } else {
+            if (rows.size() < 2) {
+                Boolean successFlag = true;
+                for (T row : rows) {
+                    successFlag = successFlag && upsertDocument(utils.parseRowToDocument(row));
+                }
+                return successFlag;
+            }
+            // replace the existing document with this one, or insert a new one
+            List<ForkJoinTask<Boolean>> taskList = new ArrayList<>();
+            for (T row : rows) {
+                ForkJoinTask<Boolean> fjTask = new MongoInsertTask<>(getCollection(), row, checkExisting).fork();
+                taskList.add(fjTask);
+            }
+            boolean successFlag = Boolean.TRUE;
+            for (ForkJoinTask<Boolean> fjTask : taskList) {
+                successFlag = fjTask.join() && successFlag;
+            }
+            return successFlag;
         }
 
-        collection.insertMany(documents);
-        // TODO: do a check existing before inserting...
-//        if (checkExisting) {
-//            collection.insertMany(documents, insertCallBack);
-//        } else {
-//            for (Document document : documents) {
-//                // TODO: should we do this recusrively/concurrently?
-//                collection.replaceOne(eq(MongoUtils.PRIMARYKEY, document.get(MongoUtils.PRIMARYKEY)), document, insertCallBack);
-//            }
-//        }
+        return true;
+    }
+
+    public MongoCollection getCollection() {
+        return collection;
+    }
+
+    private Boolean upsertDocument(Document doc) {
+        UpdateOptions uo = new UpdateOptions().upsert(true);
+        getCollection().replaceOne(eq("_id", doc.get("_id")), doc, uo);
         return true;
     }
 

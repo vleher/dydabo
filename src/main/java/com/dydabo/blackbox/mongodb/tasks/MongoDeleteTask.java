@@ -17,7 +17,6 @@ package com.dydabo.blackbox.mongodb.tasks;
 
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.mongodb.utils.MongoUtils;
-import com.mongodb.async.SingleResultCallback;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.result.DeleteResult;
 import java.util.ArrayList;
@@ -93,11 +92,5 @@ public class MongoDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
 
         return delResult.wasAcknowledged();
     }
-
-    private SingleResultCallback callback = (SingleResultCallback<DeleteResult>) (DeleteResult t, Throwable thrwbl) -> {
-        if (thrwbl != null) {
-            logger.severe(thrwbl.getMessage());
-        }
-    };
 
 }

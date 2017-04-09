@@ -135,7 +135,6 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
         List<Clause> whereClauses = new ArrayList<>();
 
         for (Map.Entry<String, GenericDBTableRow.ColumnFamily> family : cTable.getColumnFamilies().entrySet()) {
-            String familyName = family.getKey();
             GenericDBTableRow.ColumnFamily familyValue = family.getValue();
             for (Map.Entry<String, GenericDBTableRow.Column> cols : familyValue.getColumns().entrySet()) {
                 String colName = cols.getKey();
@@ -175,7 +174,6 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
                 }
             }
 
-            //resultTable = utils.parseResultToHTable(result, row);
             T resultObject = new Gson().fromJson(ctr.toJsonObject(), (Class<T>) row.getClass());
             if (resultObject != null) {
                 results.add(resultObject);

@@ -15,7 +15,6 @@
  */
 package com.dydabo.blackbox.cassandra.utils;
 
-import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.TableMetadata;
 import com.dydabo.blackbox.BlackBoxable;
@@ -126,7 +125,8 @@ public class CassandraUtils<T extends BlackBoxable> extends DBUtils<T> {
      */
     public boolean createIndex(String columnName, T row) {
         String indexQuery = "create index if not exists on bb." + getTableName(row) + "(" + columnName + ");";
-        ResultSet resultSet = CassandraConnectionManager.getSession("bb").execute(indexQuery);
+        // create the index
+        CassandraConnectionManager.getSession("bb").execute(indexQuery);
         TableMetadata table = CassandraConnectionManager.getCluster("myCluster", "bb").getMetadata().getKeyspace("bb").getTable(getTableName(row));
         int count = 0;
         // TODO: clean this up

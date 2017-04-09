@@ -15,7 +15,6 @@
  */
 package com.dydabo.blackbox.cassandra.tasks;
 
-import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
@@ -161,8 +160,8 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
         }
 
         Session session = CassandraConnectionManager.getSession("bb");
-        ResultSet resultSet = session.execute(insStmt);
-        // TODO: verify result set
+        // execute query, might throw exception
+        session.execute(insStmt);
 
         return successFlag;
     }

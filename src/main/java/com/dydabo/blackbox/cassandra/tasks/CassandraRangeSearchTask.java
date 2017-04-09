@@ -72,52 +72,10 @@ public class CassandraRangeSearchTask<T extends BlackBoxable> extends RecursiveT
         GenericDBTableRow endTableRow = utils.convertRowToTableRow(endRow);
 
         List<Clause> whereClauses = new ArrayList<>();
-
-        for (Map.Entry<String, GenericDBTableRow.ColumnFamily> fam : startTableRow.getColumnFamilies().entrySet()) {
-            String familyName = fam.getKey();
-            GenericDBTableRow.ColumnFamily colFamily = fam.getValue();
-
-            for (Map.Entry<String, GenericDBTableRow.Column> cols : colFamily.getColumns().entrySet()) {
-                String colName = cols.getKey();
-                GenericDBTableRow.Column column = cols.getValue();
-
-                if (column != null && column.getColumnValue() != null) {
-                    final String colString = column.getColumnValueAsString();
-                    if (DyDaBoUtils.isValidRegex(colString)) {
-                        utils.createIndex("\"" + colName + "\"", startRow);
-                        if (DyDaBoUtils.isNumber(column.getColumnValue())) {
-                            whereClauses.add(QueryBuilder.gte("\"" + colName + "\"", column.getColumnValue()));
-                        } else {
-                            whereClauses.add(QueryBuilder.gte("\"" + colName + "\"", colString));
-                        }
-                    }
-                }
-
-            }
-
-        }
-
-        for (Map.Entry<String, GenericDBTableRow.ColumnFamily> fam : endTableRow.getColumnFamilies().entrySet()) {
-            String familyName = fam.getKey();
-            GenericDBTableRow.ColumnFamily colFamily = fam.getValue();
-
-            for (Map.Entry<String, GenericDBTableRow.Column> cols : colFamily.getColumns().entrySet()) {
-                String colName = cols.getKey();
-                GenericDBTableRow.Column column = cols.getValue();
-
-                if (column != null && column.getColumnValue() != null) {
-                    final String colString = column.getColumnValueAsString();
-                    if (DyDaBoUtils.isValidRegex(colString)) {
-                        utils.createIndex("\"" + colName + "\"", startRow);
-                        if (DyDaBoUtils.isNumber(column.getColumnValue())) {
-                            whereClauses.add(QueryBuilder.lt("\"" + colName + "\"", column.getColumnValue()));
-                        } else {
-                            whereClauses.add(QueryBuilder.lt("\"" + colName + "\"", colString));
-                        }
-                    }
-                }
-            }
-        }
+        // parse the start row for where clauses
+        parseClausesStart(startTableRow, whereClauses);
+        // parse the end row for where clauses
+        parseClausesEnd(endTableRow, whereClauses);
 
         for (Clause whereClause : whereClauses) {
             queryStmt.where().and(whereClause);
@@ -130,7 +88,6 @@ public class CassandraRangeSearchTask<T extends BlackBoxable> extends RecursiveT
                 ctr.getDefaultFamily().addColumn(def.getName(), result.getObject(def.getName()));
             }
 
-            //resultTable = utils.parseResultToHTable(result, row);
             T resultObject = new Gson().fromJson(ctr.toJsonObject(), (Class<T>) startRow.getClass());
             if (resultObject != null) {
                 if (maxResults < 0) {
@@ -152,6 +109,54 @@ public class CassandraRangeSearchTask<T extends BlackBoxable> extends RecursiveT
      */
     public Session getSession() {
         return session;
+    }
+
+    protected void parseClausesEnd(GenericDBTableRow endTableRow, List<Clause> whereClauses) {
+        for (Map.Entry<String, GenericDBTableRow.ColumnFamily> fam : endTableRow.getColumnFamilies().entrySet()) {
+            GenericDBTableRow.ColumnFamily colFamily = fam.getValue();
+
+            for (Map.Entry<String, GenericDBTableRow.Column> cols : colFamily.getColumns().entrySet()) {
+                String colName = cols.getKey();
+                GenericDBTableRow.Column column = cols.getValue();
+
+                if (column != null && column.getColumnValue() != null) {
+                    final String colString = column.getColumnValueAsString();
+                    if (DyDaBoUtils.isValidRegex(colString)) {
+                        utils.createIndex("\"" + colName + "\"", startRow);
+                        if (DyDaBoUtils.isNumber(column.getColumnValue())) {
+                            whereClauses.add(QueryBuilder.lt("\"" + colName + "\"", column.getColumnValue()));
+                        } else {
+                            whereClauses.add(QueryBuilder.lt("\"" + colName + "\"", colString));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    protected void parseClausesStart(GenericDBTableRow startTableRow, List<Clause> whereClauses) {
+        for (Map.Entry<String, GenericDBTableRow.ColumnFamily> fam : startTableRow.getColumnFamilies().entrySet()) {
+            GenericDBTableRow.ColumnFamily colFamily = fam.getValue();
+
+            for (Map.Entry<String, GenericDBTableRow.Column> cols : colFamily.getColumns().entrySet()) {
+                String colName = cols.getKey();
+                GenericDBTableRow.Column column = cols.getValue();
+
+                if (column != null && column.getColumnValue() != null) {
+                    final String colString = column.getColumnValueAsString();
+                    if (DyDaBoUtils.isValidRegex(colString)) {
+                        utils.createIndex("\"" + colName + "\"", startRow);
+                        if (DyDaBoUtils.isNumber(column.getColumnValue())) {
+                            whereClauses.add(QueryBuilder.gte("\"" + colName + "\"", column.getColumnValue()));
+                        } else {
+                            whereClauses.add(QueryBuilder.gte("\"" + colName + "\"", colString));
+                        }
+                    }
+                }
+
+            }
+
+        }
     }
 
 }
