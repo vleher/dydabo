@@ -3,5 +3,5 @@ jdk:
     - oraclejdk8
 os:
     - linux
-install: true
+install: false
      
