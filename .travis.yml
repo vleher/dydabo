@@ -4,7 +4,4 @@ jdk:
 os:
     - linux
 install:
-  - |
-    if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
-      # https://github.com/travis-ci/travis-ci/issues/6307#issuecomment-233315824
-    fi
+    - 
