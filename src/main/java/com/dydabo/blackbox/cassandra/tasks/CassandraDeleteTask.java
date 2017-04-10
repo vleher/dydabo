@@ -15,7 +15,6 @@
  */
 package com.dydabo.blackbox.cassandra.tasks;
 
-import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.Delete;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
@@ -125,11 +124,8 @@ public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<B
         Delete delStmt = QueryBuilder.delete().from(CassandraConstants.CASSANDRA_DEFAULT_KEYSPACE, utils.getTableName(row));
         delStmt.where(QueryBuilder.eq(CassandraConstants.CASSANDRA_DEFAULT_ROWKEY, row.getBBRowKey()));
 
-        ResultSet resultSet = getSession().execute(delStmt);
-        // verify that we have a delete
-        if (resultSet.one() == null) {
-            return false;
-        }
+        getSession().execute(delStmt);
+
         return true;
     }
 

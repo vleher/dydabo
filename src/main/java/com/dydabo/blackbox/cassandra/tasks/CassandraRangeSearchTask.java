@@ -80,7 +80,7 @@ public class CassandraRangeSearchTask<T extends BlackBoxable> extends RecursiveT
         for (Clause whereClause : whereClauses) {
             queryStmt.where().and(whereClause);
         }
-
+        logger.info("Range Search :" + queryStmt);
         ResultSet resultSet = getSession().execute(queryStmt);
         for (Row result : resultSet) {
             GenericDBTableRow ctr = new GenericDBTableRow(result.getString("bbkey"));

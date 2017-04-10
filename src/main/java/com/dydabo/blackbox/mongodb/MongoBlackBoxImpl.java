@@ -22,6 +22,7 @@ import com.dydabo.blackbox.db.MongoDBConnectionManager;
 import com.dydabo.blackbox.mongodb.tasks.MongoDeleteTask;
 import com.dydabo.blackbox.mongodb.tasks.MongoFetchTask;
 import com.dydabo.blackbox.mongodb.tasks.MongoInsertTask;
+import com.dydabo.blackbox.mongodb.tasks.MongoRangeSearchTask;
 import com.dydabo.blackbox.mongodb.tasks.MongoSearchTask;
 import com.mongodb.client.MongoCollection;
 import java.util.Arrays;
@@ -111,12 +112,14 @@ public class MongoBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
 
     @Override
     public List<T> search(T startRow, T endRow) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return search(startRow, endRow, -1);
     }
 
     @Override
     public List<T> search(T startRow, T endRow, long maxResults) throws BlackBoxException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        MongoRangeSearchTask<T> task = new MongoRangeSearchTask<T>(getCollection(), startRow, endRow, maxResults);
+        return task.invoke();
+
     }
 
     @Override

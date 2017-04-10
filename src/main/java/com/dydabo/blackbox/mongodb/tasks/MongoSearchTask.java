@@ -34,6 +34,7 @@ import org.bson.conversions.Bson;
 
 import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.regex;
 
 /**
  *
@@ -85,7 +86,7 @@ public class MongoSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
                         if (DyDaBoUtils.isNumber(colValue)) {
                             filterList.add(eq(colName, colValue.getColumnValue()));
                         } else {
-                            filterList.add(eq(colName, colString));
+                            filterList.add(regex(colName, colString));
                         }
                     }
                 }

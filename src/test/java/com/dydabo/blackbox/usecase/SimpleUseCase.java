@@ -94,6 +94,50 @@ public class SimpleUseCase {
     public void tearDownMethod() throws Exception {
     }
 
+    @Test
+    protected void testTaxRates() throws BlackBoxException {
+        int testSize = 2;
+        List<Customer> userList = utils.generateCustomers(testSize);
+        hbaseInstance.update(userList);
+        cassandraInstance.update(userList);
+        mongoInstance.update(userList);
+        // Search tax rates
+        Double tRate = userList.get(random.nextInt(99) % userList.size()).getTaxRate();
+        Double minTaxRate = tRate * 0.5;
+        Double maxTaxRate = tRate + minTaxRate;
+        Customer startCustomer = new Customer(null, null);
+        startCustomer.setTaxRate(minTaxRate);
+        Customer endCustomer = new Customer(null, null);
+        endCustomer.setTaxRate(maxTaxRate);
+
+        List<Customer> taxRateCust = hbaseInstance.search(startCustomer, endCustomer);
+        Assert.assertTrue(taxRateCust.size() > 0);
+        for (Customer customer : taxRateCust) {
+            if (customer.getTaxRate() != null) {
+                Assert.assertTrue(customer.getTaxRate() >= minTaxRate);
+                Assert.assertTrue(customer.getTaxRate() < maxTaxRate);
+            }
+        }
+
+        taxRateCust = cassandraInstance.search(startCustomer, endCustomer);
+        Assert.assertTrue(taxRateCust.size() > 0);
+        for (Customer customer : taxRateCust) {
+            if (customer.getTaxRate() != null) {
+                Assert.assertTrue(customer.getTaxRate() >= minTaxRate);
+                Assert.assertTrue(customer.getTaxRate() < maxTaxRate);
+            }
+        }
+
+        taxRateCust = mongoInstance.search(startCustomer, endCustomer);
+        Assert.assertTrue(taxRateCust.size() > 0);
+        for (Customer customer : taxRateCust) {
+            if (customer.getTaxRate() != null) {
+                Assert.assertTrue(customer.getTaxRate() >= minTaxRate);
+                Assert.assertTrue(customer.getTaxRate() < maxTaxRate);
+            }
+        }
+    }
+
     /**
      *
      * @throws BlackBoxException
@@ -143,98 +187,95 @@ public class SimpleUseCase {
         success = mongoInstance.update(userList);
         Assert.assertTrue(success);
 
+        // select random key
+        String userName = userList.get(random.nextInt(99) % userList.size()).getUserName();
+
         // Search
         List<BlackBoxable> hbaseList = new ArrayList();
-        hbaseList.add(new Employee(null, "David"));
-        hbaseList.add(new Customer(null, "David"));
+        hbaseList.add(new Employee(null, userName));
+        hbaseList.add(new Customer(null, userName));
 
         List<BlackBoxable> searchResult = hbaseInstance.search(hbaseList);
         logger.info("HBASE Search Result :" + searchResult.size());
+        Assert.assertTrue(searchResult.size() > 0);
         for (BlackBoxable res : searchResult) {
             if (res instanceof User) {
                 final String uName = ((User) res).getUserName();
-                if (uName == null || !uName.contains("David")) {
-                    Assert.fail(" Does not contain David " + res);
+                if (uName == null || !uName.contains(userName)) {
+                    Assert.fail(" Does not contain  " + userName + " :" + res);
                 }
             }
         }
 
         List<BlackBoxable> cassList = new ArrayList();
-        cassList.add(new Employee(null, "Harry King"));
-        cassList.add(new Customer(null, "Harry King"));
+        cassList.add(new Employee(null, userName));
+        cassList.add(new Customer(null, userName));
         searchResult = cassandraInstance.search(cassList);
         logger.info("CASS Search Result :" + searchResult.size());
+        Assert.assertTrue(searchResult.size() > 0);
         for (BlackBoxable res : searchResult) {
             if (res instanceof User) {
                 final String uName = ((User) res).getUserName();
-                if (uName == null || !uName.startsWith("Harry")) {
-                    Assert.fail(" Does not start with Harry " + res);
+                if (uName == null || !uName.startsWith(userName)) {
+                    Assert.fail(" Does not start with " + userName + res);
                 }
             }
         }
 
         searchResult = mongoInstance.search(cassList);
         logger.info("Mongo Search Result :" + searchResult.size());
+        Assert.assertTrue(searchResult.size() > 0);
         for (BlackBoxable res : searchResult) {
             if (res instanceof User) {
                 final String uName = ((User) res).getUserName();
-                if (uName == null || !uName.startsWith("Harry")) {
-                    Assert.fail(" Does not start with Harry " + res);
+                if (uName == null || !uName.startsWith(userName)) {
+                    Assert.fail(" Does not start with " + userName + res);
                 }
             }
         }
 
         // Search
         hbaseList = new ArrayList();
-        hbaseList.add(new Employee(null, "^Dav.*"));
-        hbaseList.add(new Customer(null, "^Dav.*"));
+        final String userPrefix = userName.substring(0, 3);
+        hbaseList.add(new Employee(null, "^" + userPrefix + ".*"));
+        hbaseList.add(new Customer(null, "^" + userPrefix + ".*"));
 
         searchResult = hbaseInstance.search(hbaseList);
         logger.info("HBASE Search Result :" + searchResult.size());
+        Assert.assertTrue(searchResult.size() > 0);
         for (BlackBoxable res : searchResult) {
             if (res instanceof User) {
                 final String uName = ((User) res).getUserName();
-                if (uName == null || !uName.startsWith("Dav")) {
-                    Assert.fail(" Does not start with Dav " + res);
+                if (uName == null || !uName.startsWith(userPrefix)) {
+                    Assert.fail(" Does not start with  " + userPrefix + " :" + res);
                 }
             }
         }
 
         cassList = new ArrayList();
-        cassList.add(new Employee(null, "Harry.*"));
-        cassList.add(new Customer(null, "Harry.*"));
+        cassList.add(new Employee(null, userPrefix + ".*"));
+        cassList.add(new Customer(null, userPrefix + ".*"));
         searchResult = cassandraInstance.search(cassList);
         logger.info("CASS Search Result :" + searchResult.size());
+        Assert.assertTrue(searchResult.size() > 0);
         for (BlackBoxable res : searchResult) {
             if (res instanceof User) {
                 final String uName = ((User) res).getUserName();
-                if (uName == null || !uName.startsWith("Harry")) {
-                    Assert.fail(" Does not start with Harry " + res);
+                if (uName == null || !uName.startsWith(userPrefix)) {
+                    Assert.fail(" Does not start with  " + userPrefix + " :" + res);
                 }
             }
         }
 
-        // Search tax rates
-        Double minTaxRate = random.nextDouble() * 10;
-        Double maxTaxRate = random.nextDouble() * 100 + minTaxRate;
-        Customer startCustomer = new Customer(null, null);
-        startCustomer.setTaxRate(minTaxRate);
-        Customer endCustomer = new Customer(null, null);
-        endCustomer.setTaxRate(maxTaxRate);
-
-        List<Customer> taxRateCust = hbaseInstance.search(startCustomer, endCustomer);
-        for (Customer customer : taxRateCust) {
-            if (customer.getTaxRate() != null) {
-                Assert.assertTrue(customer.getTaxRate() >= minTaxRate);
-                Assert.assertTrue(customer.getTaxRate() < maxTaxRate);
-            }
-        }
-
-        taxRateCust = cassandraInstance.search(startCustomer, endCustomer);
-        for (Customer customer : taxRateCust) {
-            if (customer.getTaxRate() != null) {
-                Assert.assertTrue(customer.getTaxRate() >= minTaxRate);
-                Assert.assertTrue(customer.getTaxRate() < maxTaxRate);
+        searchResult = mongoInstance.search(cassList);
+        logger.info("Mongo Search Result :" + searchResult.size());
+        Assert.assertTrue(searchResult.size() > 0);
+        for (BlackBoxable res : searchResult) {
+            if (res instanceof User) {
+                final String uName = ((User) res).getUserName();
+                if (uName == null || !uName.startsWith(userPrefix)) {
+                    Assert.fail(" Does not start with  " + userPrefix + " :" + res);
+                }
             }
         }
 
@@ -243,6 +284,8 @@ public class SimpleUseCase {
         success = hbaseInstance.delete(userList);
         Assert.assertTrue(success);
         success = cassandraInstance.delete(userList);
+        Assert.assertTrue(success);
+        success = mongoInstance.delete(userList);
         Assert.assertTrue(success);
     }
 
@@ -298,7 +341,6 @@ public class SimpleUseCase {
     @Test
     public void testFetchPartial() throws BlackBoxException {
         final Employee employee = new Employee(null, null);
-        // Update new Users
         List<Employee> userList = hbaseInstance.search(employee);
 
         // select random key

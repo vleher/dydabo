@@ -141,7 +141,7 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
                 GenericDBTableRow.Column colValue = cols.getValue();
 
                 if (colValue != null && colValue.getColumnValue() != null) {
-                    final String colString = colValue.getColumnValueAsString();
+                    String colString = colValue.getColumnValueAsString();
                     if (DyDaBoUtils.isValidRegex(colString)) {
                         utils.createIndex("\"" + colName + "\"", row);
                         if (DyDaBoUtils.isNumber(colValue.getColumnValue())) {
@@ -161,9 +161,8 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
         if (maxResults > 0) {
             selectStmt.limit((int) maxResults);
         }
-
+        logger.info("Search: " + selectStmt);
         ResultSet resultSet = getSession().execute(selectStmt);
-        int count = 0;
         for (Row result : resultSet) {
             GenericDBTableRow ctr = new GenericDBTableRow(result.getString("bbkey"));
 
@@ -177,10 +176,9 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
             T resultObject = new Gson().fromJson(ctr.toJsonObject(), (Class<T>) row.getClass());
             if (resultObject != null) {
                 results.add(resultObject);
-                count++;
             }
 
-            if (maxResults > 0 && count >= maxResults) {
+            if (maxResults > 0 && results.size() >= maxResults) {
                 break;
             }
 

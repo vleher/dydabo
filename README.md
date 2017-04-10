@@ -41,7 +41,7 @@ The eventual goal of the library can be summed up as below:
 **Who should not use this?** 
 
 * Developers or Users who love to configure everything using XML files and/or annotations.
-*  
+* Companies with lots of resources and tons of data. You should ideally be writing customized libraries that works best for your problem/use case.
 
 There will be several limitations to the library when compared to the vanilla database driver functionality. Refer to the limitations section below.
 
@@ -53,7 +53,11 @@ There will be several limitations to the library when compared to the vanilla da
 
 ### Supported Databases
 
-Currently, HBase (and Hadoop) is the database of choice and the only one that is supported. Other NoSql databases are being worked on.
+Support for the following databases:
+
+* Apache HBase/Hadoop
+* Apache Cassandra
+* MongoDB
 
 
 ### Status of the Project
@@ -71,6 +75,9 @@ There are still several features that needs to be implemented, and the interface
 
  * Google Gson 
  * Hbase java driver
+
+### Build Status
+[![Build Status](https://travis-ci.org/vleher/dydabo.svg?branch=master)](https://travis-ci.org/vleher/dydabo)
  
 ### License
 
