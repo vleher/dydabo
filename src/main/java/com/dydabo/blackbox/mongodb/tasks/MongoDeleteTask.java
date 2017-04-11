@@ -66,7 +66,7 @@ public class MongoDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
             return successFlag;
         }
 
-        List<ForkJoinTask<Boolean>> taskList = new ArrayList();
+        List<ForkJoinTask<Boolean>> taskList = new ArrayList<ForkJoinTask<Boolean>>();
         for (T row : rows) {
             ForkJoinTask<Boolean> subTask = new MongoDeleteTask<>(collection, Arrays.asList(row)).fork();
             taskList.add(subTask);

@@ -1,19 +1,16 @@
 /*
- * Copyright 2017 viswadas leher <vleher@gmail.com>.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright 2017 viswadas leher <vleher@gmail.com>. Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+ * this file except in compliance with the License. You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under the License.
  */
 package com.dydabo.blackbox.mongodb;
+
+import java.util.Arrays;
+import java.util.List;
+
+import org.bson.Document;
 
 import com.dydabo.blackbox.BlackBox;
 import com.dydabo.blackbox.BlackBoxException;
@@ -25,8 +22,6 @@ import com.dydabo.blackbox.mongodb.tasks.MongoInsertTask;
 import com.dydabo.blackbox.mongodb.tasks.MongoRangeSearchTask;
 import com.dydabo.blackbox.mongodb.tasks.MongoSearchTask;
 import com.mongodb.client.MongoCollection;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  *
@@ -137,7 +132,7 @@ public class MongoBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
      *
      * @return
      */
-    public MongoCollection getCollection() {
+    public MongoCollection<Document> getCollection() {
         // TODO: make this configurable
         return MongoDBConnectionManager.getMongoDBCollection(null, "dydabo", "dydabo");
     }

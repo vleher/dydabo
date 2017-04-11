@@ -14,3 +14,10 @@ hs_err_pid*
 .git
 nb-configuration.xml
 target/
+.classpath
+.project
+.settings/
+test-output/
+todo.txt
+usecaseone.txt
+

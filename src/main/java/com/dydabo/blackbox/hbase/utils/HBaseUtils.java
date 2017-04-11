@@ -1,28 +1,19 @@
-/** *****************************************************************************
- * Copyright 2017 viswadas leher <vleher@gmail.com>.
+/**
+ * ***************************************************************************** Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS"
+ * BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
  *
  ******************************************************************************
  */
 package com.dydabo.blackbox.hbase.utils;
 
-import com.dydabo.blackbox.BlackBoxException;
-import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.common.DBUtils;
-import com.dydabo.blackbox.common.DyDaBoUtils;
-import com.dydabo.blackbox.db.obj.GenericDBTableRow;
-import com.google.gson.Gson;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -34,6 +25,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
@@ -43,6 +35,13 @@ import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.util.Bytes;
+
+import com.dydabo.blackbox.BlackBoxException;
+import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.common.DBUtils;
+import com.dydabo.blackbox.common.DyDaBoUtils;
+import com.dydabo.blackbox.db.obj.GenericDBTableRow;
+import com.google.gson.Gson;
 
 /**
  * Hbase specific utility methods
@@ -54,7 +53,7 @@ public class HBaseUtils<T extends BlackBoxable> extends DBUtils<T> {
 
     private static final Logger logger = Logger.getLogger(HBaseUtils.class.getName());
 
-    private static SortedSet tableCache = new TreeSet();
+    private static SortedSet<TableName> tableCache = new TreeSet<>();
 
     /**
      *
@@ -86,7 +85,7 @@ public class HBaseUtils<T extends BlackBoxable> extends DBUtils<T> {
      *
      * Checks if the specified row already exists in the table
      *
-     * @param row    the value of row
+     * @param row the value of row
      * @param hTable the value of hTable
      *
      * @return the boolean
@@ -109,7 +108,7 @@ public class HBaseUtils<T extends BlackBoxable> extends DBUtils<T> {
 
     /**
      *
-     * @param row        the value of row
+     * @param row the value of row
      * @param connection
      *
      * @return the boolean
@@ -169,11 +168,11 @@ public class HBaseUtils<T extends BlackBoxable> extends DBUtils<T> {
         } else if (thisValue instanceof String) {
             byteArray = Bytes.toBytes((String) thisValue);
         } else if (thisValue instanceof Map) {
-            String jsonString = new Gson().toJson((Map) thisValue);
-            byteArray = Bytes.toBytes((String) jsonString);
+            String jsonString = new Gson().toJson(thisValue);
+            byteArray = Bytes.toBytes(jsonString);
         } else if (thisValue instanceof List) {
-            String jsonString = new Gson().toJson((List) thisValue);
-            byteArray = Bytes.toBytes((String) jsonString);
+            String jsonString = new Gson().toJson(thisValue);
+            byteArray = Bytes.toBytes(jsonString);
         } else if (thisValue instanceof Date) {
             byteArray = Bytes.toBytes(((Date) thisValue).getTime());
         } else {
