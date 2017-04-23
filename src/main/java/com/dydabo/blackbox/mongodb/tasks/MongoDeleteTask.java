@@ -19,13 +19,14 @@ import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.mongodb.utils.MongoUtils;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.result.DeleteResult;
+import org.bson.Document;
+
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Logger;
-import org.bson.Document;
 
 import static com.mongodb.client.model.Filters.eq;
 
@@ -68,7 +69,7 @@ public class MongoDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
 
         List<ForkJoinTask<Boolean>> taskList = new ArrayList<ForkJoinTask<Boolean>>();
         for (T row : rows) {
-            ForkJoinTask<Boolean> subTask = new MongoDeleteTask<>(collection, Arrays.asList(row)).fork();
+            ForkJoinTask<Boolean> subTask = new MongoDeleteTask<>(collection, Collections.singletonList(row)).fork();
             taskList.add(subTask);
         }
 

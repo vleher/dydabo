@@ -24,19 +24,15 @@ import com.dydabo.blackbox.beans.Employee;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.dydabo.blackbox.hbase.HBaseBlackBoxImpl;
 import com.google.gson.JsonSyntaxException;
-import java.io.IOException;
-import java.util.Arrays;
 import org.apache.hadoop.hbase.DoNotRetryIOException;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Table;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
+
+import java.io.IOException;
+import java.util.Collections;
 
 import static org.testng.Assert.assertEquals;
 
@@ -166,13 +162,13 @@ public class HBaseUtilsNGTest {
             Table hTable = admin.getConnection().getTable(instance.getTableName(row));
             if (hTable != null) {
                 if (expResult) {
-                    hBaseJsonImpl.update(Arrays.asList(row));
+                    hBaseJsonImpl.update(Collections.singletonList(row));
                 }
 
                 boolean result = instance.checkIfRowExists(row, hTable);
                 assertEquals(result, expResult);
 
-                hBaseJsonImpl.delete(Arrays.asList(row));
+                hBaseJsonImpl.delete(Collections.singletonList(row));
             }
         } catch (DoNotRetryIOException ex) {
             //ignore

@@ -14,16 +14,10 @@
  */
 package com.dydabo.blackbox.hbase.tasks;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.RecursiveTask;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
+import com.dydabo.blackbox.BlackBoxException;
+import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.db.obj.GenericDBTableRow;
+import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Put;
@@ -31,10 +25,12 @@ import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.regionserver.NoSuchColumnFamilyException;
 import org.apache.hadoop.hbase.util.Bytes;
 
-import com.dydabo.blackbox.BlackBoxException;
-import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.db.obj.GenericDBTableRow;
-import com.dydabo.blackbox.hbase.utils.HBaseUtils;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.RecursiveTask;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -48,7 +44,7 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
     private final Connection connection;
     private final HBaseUtils<T> utils;
     private final boolean checkExisting;
-    private List<T> rows;
+    private final List<T> rows;
 
     /**
      *
@@ -57,7 +53,7 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
      * @param checkExisting
      */
     public HBaseInsertTask(Connection connection, T row, boolean checkExisting) {
-        this(connection, Arrays.asList(row), checkExisting);
+        this(connection, Collections.singletonList(row), checkExisting);
     }
 
     /**
@@ -94,7 +90,7 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
         // create a task for each element or row in the list
         List<ForkJoinTask<Boolean>> taskList = new ArrayList<>();
         for (T row : rows) {
-            ForkJoinTask<Boolean> fjTask = new HBaseInsertTask<>(getConnection(), Arrays.asList(row), checkExisting).fork();
+            ForkJoinTask<Boolean> fjTask = new HBaseInsertTask<>(getConnection(), Collections.singletonList(row), checkExisting).fork();
             taskList.add(fjTask);
         }
         // wait for all to join

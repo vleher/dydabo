@@ -7,16 +7,6 @@
  */
 package com.dydabo.blackbox.cassandra.tasks;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.RecursiveTask;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Pattern;
-
 import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
@@ -29,6 +19,15 @@ import com.dydabo.blackbox.cassandra.utils.CassandraConstants;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.google.gson.Gson;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.RecursiveTask;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -53,8 +52,8 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
      * @param row
      * @param isPartialKeys
      */
-    public CassandraFetchTask(Session session, String rowKey, T row, boolean isPartialKeys) {
-        this(session, Arrays.asList(rowKey), row, isPartialKeys);
+    private CassandraFetchTask(Session session, String rowKey, T row, boolean isPartialKeys) {
+        this(session, Collections.singletonList(rowKey), row, isPartialKeys);
     }
 
     /**
@@ -64,7 +63,7 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
      * @param row
      * @param isPartialKeys
      */
-    public CassandraFetchTask(Session session, List<String> rowKeys, T row, boolean isPartialKeys) {
+    private CassandraFetchTask(Session session, List<String> rowKeys, T row, boolean isPartialKeys) {
         this(session, rowKeys, row, isPartialKeys, -1);
     }
 
@@ -93,7 +92,7 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
      *
      * @throws BlackBoxException
      */
-    protected List<T> fetch(List<String> rowKeys) throws BlackBoxException {
+    private List<T> fetch(List<String> rowKeys) throws BlackBoxException {
         if (rowKeys.size() < 2) {
             List<T> fullResult = new ArrayList<>();
             for (String key : rowKeys) {
@@ -107,7 +106,7 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
         // create a task for each element or row in the list
         List<ForkJoinTask<List<T>>> taskList = new ArrayList<>();
         for (String rowKey : rowKeys) {
-            ForkJoinTask<List<T>> fjTask = new CassandraFetchTask<T>(getSession(), Arrays.asList(rowKey), bean, isPartialKeys,
+            ForkJoinTask<List<T>> fjTask = new CassandraFetchTask<T>(getSession(), Collections.singletonList(rowKey), bean, isPartialKeys,
                             maxResults).fork();
             taskList.add(fjTask);
         }
@@ -128,7 +127,7 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
      *
      * @throws BlackBoxException
      */
-    protected List<T> fetch(String rowKey) throws BlackBoxException {
+    private List<T> fetch(String rowKey) throws BlackBoxException {
         // if (isPartialKeys) {
         // return fetchByPartialKeys(rowKey);
         // }
@@ -144,11 +143,7 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
             final String currRowKey = result.getString(CassandraConstants.CASSANDRA_DEFAULT_ROWKEY);
             boolean isResult = true;
             if (isPartialKeys) {
-                if (Pattern.matches(rowKey, currRowKey)) {
-                    isResult = true;
-                } else {
-                    isResult = false;
-                }
+                isResult = Pattern.matches(rowKey, currRowKey);
             }
             if (isResult) {
                 GenericDBTableRow ctr = new GenericDBTableRow(currRowKey);
@@ -178,14 +173,14 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
         } catch (BlackBoxException ex) {
             logger.log(Level.SEVERE, null, ex);
         }
-        return Collections.<T> emptyList();
+        return Collections.emptyList();
     }
 
     /**
      *
      * @return
      */
-    public Session getSession() {
+    private Session getSession() {
         return session;
     }
 

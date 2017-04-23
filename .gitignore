@@ -21,3 +21,6 @@ test-output/
 todo.txt
 usecaseone.txt
 
+.eclipse-pmd
+.idea/
+*.iml

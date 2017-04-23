@@ -22,19 +22,18 @@ import com.dydabo.blackbox.mongodb.utils.MongoUtils;
 import com.google.gson.Gson;
 import com.mongodb.Block;
 import com.mongodb.client.MongoCollection;
+import org.bson.Document;
+import org.bson.conversions.Bson;
+
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Logger;
-import org.bson.Document;
-import org.bson.conversions.Bson;
 
-import static com.mongodb.client.model.Filters.and;
-import static com.mongodb.client.model.Filters.eq;
-import static com.mongodb.client.model.Filters.regex;
+import static com.mongodb.client.model.Filters.*;
 
 /**
  *
@@ -109,7 +108,7 @@ public class MongoSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
         // create a task for each row
         List<ForkJoinTask<List<T>>> taskList = new ArrayList<>();
         for (T row : rows) {
-            ForkJoinTask<List<T>> fjTask = new MongoSearchTask<T>(collection, Arrays.asList(row), maxResult).fork();
+            ForkJoinTask<List<T>> fjTask = new MongoSearchTask<T>(collection, Collections.singletonList(row), maxResult).fork();
             taskList.add(fjTask);
         }
 

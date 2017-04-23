@@ -23,25 +23,20 @@ import com.dydabo.blackbox.common.DyDaBoUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import com.google.gson.Gson;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.RecursiveTask;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.apache.hadoop.hbase.client.Admin;
-import org.apache.hadoop.hbase.client.Connection;
-import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.Result;
-import org.apache.hadoop.hbase.client.ResultScanner;
-import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.filter.CompareFilter;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.RegexStringComparator;
 import org.apache.hadoop.hbase.filter.RowFilter;
 import org.apache.hadoop.hbase.util.Bytes;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.RecursiveTask;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -52,11 +47,11 @@ public class HBaseFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
 
     private final Connection connection;
     private final Logger logger = Logger.getLogger(HBaseFetchTask.class.getName());
-    private long maxResults;
+    private final long maxResults;
     private final HBaseUtils<T> utils;
-    private List<String> rowKeys;
+    private final List<String> rowKeys;
     private T bean = null;
-    private boolean isPartialKeys;
+    private final boolean isPartialKeys;
 
     /**
      *
@@ -66,7 +61,7 @@ public class HBaseFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
      * @param isPartialKeys
      */
     public HBaseFetchTask(Connection connection, String rowKey, T row, boolean isPartialKeys) {
-        this(connection, Arrays.asList(rowKey), row, isPartialKeys);
+        this(connection, Collections.singletonList(rowKey), row, isPartialKeys);
     }
 
     /**

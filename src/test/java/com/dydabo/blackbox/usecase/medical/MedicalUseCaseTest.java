@@ -21,23 +21,13 @@ import com.dydabo.blackbox.BlackBox;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxFactory;
 import com.dydabo.blackbox.hbase.utils.DyDaBoTestUtils;
-import com.dydabo.blackbox.usecase.medical.db.Claim;
-import com.dydabo.blackbox.usecase.medical.db.ClaimCharges;
-import com.dydabo.blackbox.usecase.medical.db.Encounter;
-import com.dydabo.blackbox.usecase.medical.db.Medication;
-import com.dydabo.blackbox.usecase.medical.db.Patient;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
-import java.util.logging.Logger;
+import com.dydabo.blackbox.usecase.medical.db.*;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.logging.Logger;
 
 /**
  *
@@ -52,7 +42,7 @@ public class MedicalUseCaseTest {
     /**
      *
      */
-    public static List<String> Diagnosis = Arrays.asList("Diabetes", "High Blood Pressure", "Low Blood Pressure", "Polio", "Fever",
+    public static final List<String> Diagnosis = Arrays.asList("Diabetes", "High Blood Pressure", "Low Blood Pressure", "Polio", "Fever",
             "Common Cold", "Allergy");
 
     /**
@@ -70,11 +60,11 @@ public class MedicalUseCaseTest {
     /**
      *
      */
-    public static List<String> Meds = Arrays.asList("Acetylmethadol", "Benzethidine", "Difenoxin", "Furethidine", "Phenoperidine");
+    public static final List<String> Meds = Arrays.asList("Acetylmethadol", "Benzethidine", "Difenoxin", "Furethidine", "Phenoperidine");
 
-    int knownPatientId = 123456;
-    Random random = new Random();
-    DyDaBoTestUtils testUtils = new DyDaBoTestUtils();
+    final int knownPatientId = 123456;
+    final Random random = new Random();
+    final DyDaBoTestUtils testUtils = new DyDaBoTestUtils();
 
     /**
      *
@@ -130,7 +120,7 @@ public class MedicalUseCaseTest {
     public void testAllPatientEncounters() throws BlackBoxException {
         // All Encounters
         Encounter pe = new Encounter();
-        List<Encounter> peL1 = hbaseBlackBox.search(Arrays.asList(pe));
+        List<Encounter> peL1 = hbaseBlackBox.search(Collections.singletonList(pe));
         Assert.assertTrue(peL1.size() > 0, "" + peL1.size());
 
         List<Encounter> peL2 = hbaseBlackBox.search(pe, 7);
@@ -139,7 +129,7 @@ public class MedicalUseCaseTest {
         List<Encounter> peL3 = hbaseBlackBox.search(pe, 23);
         Assert.assertTrue(peL3.size() <= 23, "" + peL3.size());
 
-        List<Encounter> cpeL1 = cassBlackBox.search(Arrays.asList(pe));
+        List<Encounter> cpeL1 = cassBlackBox.search(Collections.singletonList(pe));
         Assert.assertTrue(cpeL1.size() > 0, "" + cpeL1.size());
 
         List<Encounter> cpeL2 = cassBlackBox.search(pe, 7);
@@ -158,10 +148,10 @@ public class MedicalUseCaseTest {
     public void testAllPatients() throws BlackBoxException {
         // All Patients
         Patient p = new Patient();
-        List<Patient> pList1 = hbaseBlackBox.search(Arrays.asList(p));
+        List<Patient> pList1 = hbaseBlackBox.search(Collections.singletonList(p));
         Assert.assertTrue(pList1.size() > 0);
 
-        List<Patient> cpList1 = cassBlackBox.search(Arrays.asList(p));
+        List<Patient> cpList1 = cassBlackBox.search(Collections.singletonList(p));
         Assert.assertTrue(cpList1.size() > 0);
     }
 
@@ -203,19 +193,19 @@ public class MedicalUseCaseTest {
         // All Patients with a specific first name (column value search)
         Patient p = new Patient();
         p.setfN("Tina");
-        List<Patient> pList3 = hbaseBlackBox.search(Arrays.asList(p));
+        List<Patient> pList3 = hbaseBlackBox.search(Collections.singletonList(p));
         for (Patient pat : pList3) {
             Assert.assertEquals(pat.getfN(), "Tina");
         }
 
-        List<Patient> cpList3 = cassBlackBox.search(Arrays.asList(p));
+        List<Patient> cpList3 = cassBlackBox.search(Collections.singletonList(p));
         for (Patient pat : cpList3) {
             Assert.assertEquals(pat.getfN(), "Tina");
         }
 
         // All Patients with specific first name (row key search)
         String fNameKey = ".*:Cyndi:.*";
-        List<Patient> pList4 = hbaseBlackBox.fetchByPartialKey(Arrays.asList(fNameKey), p);
+        List<Patient> pList4 = hbaseBlackBox.fetchByPartialKey(Collections.singletonList(fNameKey), p);
         for (Patient pat : pList4) {
             Assert.assertEquals(pat.getfN(), "Cyndi");
         }
@@ -230,7 +220,7 @@ public class MedicalUseCaseTest {
     public void testPatientEncountersById() throws BlackBoxException {
         Encounter pe = new Encounter();
         // All encounters by patient Id (row key)
-        List<String> query = Arrays.asList(knownPatientId + "P:.*");
+        List<String> query = Collections.singletonList(knownPatientId + "P:.*");
         List<Encounter> peL2 = hbaseBlackBox.fetchByPartialKey(query, pe);
         for (Encounter penc : peL2) {
             Assert.assertEquals(penc.getpId(), knownPatientId + "P");
@@ -479,7 +469,7 @@ public class MedicalUseCaseTest {
     @Test
     public void testGetEncounterByPatient() throws BlackBoxException {
         Encounter pe = new Encounter();
-        List<Encounter> peL1 = hbaseBlackBox.search(Arrays.asList(pe));
+        List<Encounter> peL1 = hbaseBlackBox.search(Collections.singletonList(pe));
         int randId = random.nextInt(100000000) % peL1.size();
 
         String patientId = peL1.get(randId).getpId();

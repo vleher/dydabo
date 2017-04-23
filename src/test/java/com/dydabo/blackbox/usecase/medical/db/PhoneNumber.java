@@ -40,11 +40,7 @@ class PhoneNumber {
         if (phoneNumber == null) {
             return false;
         }
-        if (phoneNumber.trim().length() != 10) {
-            return false;
-        }
-
-        return true;
+        return phoneNumber.trim().length() == 10;
     }
 
     public String getPh() {

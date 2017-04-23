@@ -7,16 +7,6 @@
  */
 package com.dydabo.blackbox.cassandra.tasks;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.RecursiveTask;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
@@ -30,6 +20,12 @@ import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
 import com.dydabo.blackbox.common.DyDaBoUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.google.gson.Gson;
+
+import java.util.*;
+import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.RecursiveTask;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -52,7 +48,7 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
      * @param maxResults
      */
     public CassandraSearchTask(Session session, T row, long maxResults) {
-        this(session, Arrays.asList(row), maxResults);
+        this(session, Collections.singletonList(row), maxResults);
     }
 
     /**
@@ -97,7 +93,7 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
             // create a task for each element or row in the list
             List<ForkJoinTask<List<T>>> taskList = new ArrayList<>();
             for (T row : rows) {
-                ForkJoinTask<List<T>> fjTask = new CassandraSearchTask<>(getSession(), Arrays.asList(row), maxResults).fork();
+                ForkJoinTask<List<T>> fjTask = new CassandraSearchTask<>(getSession(), Collections.singletonList(row), maxResults).fork();
                 taskList.add(fjTask);
             }
             // wait for all to join
@@ -186,7 +182,7 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
         } catch (BlackBoxException ex) {
             logger.log(Level.SEVERE, null, ex);
         }
-        return Collections.<T> emptyList();
+        return Collections.emptyList();
     }
 
 }

@@ -14,24 +14,23 @@
  */
 package com.dydabo.blackbox.hbase.tasks;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.RecursiveTask;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
+import com.dydabo.blackbox.BlackBoxException;
+import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.util.Bytes;
 
-import com.dydabo.blackbox.BlackBoxException;
-import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.hbase.utils.HBaseUtils;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.RecursiveTask;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -43,7 +42,7 @@ public class HBaseDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
     private final Connection connection;
     private final Logger logger = Logger.getLogger(HBaseDeleteTask.class.getName());
     private final HBaseUtils<T> utils;
-    private List<T> rows;
+    private final List<T> rows;
 
     /**
      *
@@ -51,7 +50,7 @@ public class HBaseDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
      * @param row
      */
     public HBaseDeleteTask(Connection connection, T row) {
-        this(connection, Arrays.asList(row));
+        this(connection, Collections.singletonList(row));
     }
 
     /**
@@ -96,7 +95,7 @@ public class HBaseDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
         // create a task for each element or row in the list
         List<ForkJoinTask<Boolean>> taskList = new ArrayList<>();
         for (T row : rows) {
-            ForkJoinTask<Boolean> fjTask = new HBaseDeleteTask<>(getConnection(), Arrays.asList(row)).fork();
+            ForkJoinTask<Boolean> fjTask = new HBaseDeleteTask<>(getConnection(), Collections.singletonList(row)).fork();
             taskList.add(fjTask);
         }
         // wait for all to join

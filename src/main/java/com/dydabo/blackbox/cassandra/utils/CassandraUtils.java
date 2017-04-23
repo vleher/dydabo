@@ -7,6 +7,13 @@
  */
 package com.dydabo.blackbox.cassandra.utils;
 
+import com.datastax.driver.core.Session;
+import com.datastax.driver.core.TableMetadata;
+import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.common.DBUtils;
+import com.dydabo.blackbox.common.DyDaBoUtils;
+import com.dydabo.blackbox.db.CassandraConnectionManager;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.List;
@@ -14,13 +21,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.TableMetadata;
-import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.common.DBUtils;
-import com.dydabo.blackbox.common.DyDaBoUtils;
-import com.dydabo.blackbox.db.CassandraConnectionManager;
 
 /**
  *
@@ -59,8 +59,7 @@ public class CassandraUtils<T extends BlackBoxable> extends DBUtils<T> {
      * @return
      */
     public String getTableName(T row) {
-        final String fullClassName = row.getClass().toString().substring(6).replaceAll("\\.", "");
-        return fullClassName;
+        return row.getClass().toString().substring(6).replaceAll("\\.", "");
     }
 
     /**

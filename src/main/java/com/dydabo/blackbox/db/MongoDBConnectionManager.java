@@ -27,7 +27,7 @@ import org.bson.Document;
  */
 public class MongoDBConnectionManager {
 
-    private static Object lockObj = new Object();
+    private static final Object lockObj = new Object();
     private static MongoClient mongoClient = null;
 
     /**

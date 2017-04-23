@@ -28,8 +28,8 @@ import java.util.logging.Logger;
 public class CassandraConnectionManager {
 
     private static final Logger logger = Logger.getLogger(CassandraConnectionManager.class.getName());
-    private static Map<String, Session> sessionPool = new HashMap<>();
-    private static Map<String, Cluster> clusterPool = new HashMap<>();
+    private static final Map<String, Session> sessionPool = new HashMap<>();
+    private static final Map<String, Cluster> clusterPool = new HashMap<>();
 
     private CassandraConnectionManager() {
     }

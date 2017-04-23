@@ -14,29 +14,6 @@
  */
 package com.dydabo.blackbox.hbase.tasks;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.RecursiveTask;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.apache.hadoop.hbase.client.Admin;
-import org.apache.hadoop.hbase.client.Connection;
-import org.apache.hadoop.hbase.client.Result;
-import org.apache.hadoop.hbase.client.ResultScanner;
-import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.client.Table;
-import org.apache.hadoop.hbase.filter.BinaryComparator;
-import org.apache.hadoop.hbase.filter.CompareFilter;
-import org.apache.hadoop.hbase.filter.FilterList;
-import org.apache.hadoop.hbase.filter.RegexStringComparator;
-import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
-import org.apache.hadoop.hbase.util.Bytes;
-
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.common.DyDaBoUtils;
@@ -44,6 +21,16 @@ import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.dydabo.blackbox.hbase.HBaseBlackBoxImpl;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import com.google.gson.Gson;
+import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.filter.*;
+import org.apache.hadoop.hbase.util.Bytes;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.RecursiveTask;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -54,7 +41,7 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
 
     private final Connection connection;
     private final Logger logger = Logger.getLogger(HBaseBlackBoxImpl.class.getName());
-    private List<T> rows;
+    private final List<T> rows;
     private final HBaseUtils<T> utils;
     private final long maxResults;
 
@@ -65,7 +52,7 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
      * @param maxResults
      */
     public HBaseSearchTask(Connection connection, T row, long maxResults) {
-        this(connection, Arrays.asList(row), maxResults);
+        this(connection, Collections.singletonList(row), maxResults);
     }
 
     /**
@@ -157,7 +144,7 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
             // create a task for each element or row in the list
             List<ForkJoinTask<List<T>>> taskList = new ArrayList<>();
             for (T row : rows) {
-                ForkJoinTask<List<T>> fjTask = new HBaseSearchTask<>(getConnection(), Arrays.asList(row), maxResults).fork();
+                ForkJoinTask<List<T>> fjTask = new HBaseSearchTask<>(getConnection(), Collections.singletonList(row), maxResults).fork();
                 taskList.add(fjTask);
             }
             // wait for all to join

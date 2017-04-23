@@ -97,11 +97,7 @@ public class DyDaBoUtils {
             return false;
         }
 
-        if (EMPTY_MAP.equals(regexValue)) {
-            return false;
-        }
-
-        return true;
+        return !EMPTY_MAP.equals(regexValue);
     }
 
     /**

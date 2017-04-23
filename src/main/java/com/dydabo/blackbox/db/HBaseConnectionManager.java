@@ -17,15 +17,16 @@
  */
 package com.dydabo.blackbox.db;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.client.Connection;
-import org.apache.hadoop.hbase.client.ConnectionFactory;
 
 /**
  *
@@ -33,10 +34,10 @@ import org.apache.hadoop.hbase.client.ConnectionFactory;
  */
 public class HBaseConnectionManager {
 
-    private static Object lockObject = new Object();
+    private static final Object lockObject = new Object();
 
-    private static Configuration defaultConfig = HBaseConfiguration.create();
-    private static Map<Integer, Connection> connectionPool = new HashMap<>();
+    private static final Configuration defaultConfig = HBaseConfiguration.create();
+    private static final Map<Integer, Connection> connectionPool = new HashMap<>();
     private static final Logger logger = Logger.getLogger(HBaseConnectionManager.class.getName());
 
     private HBaseConnectionManager() {

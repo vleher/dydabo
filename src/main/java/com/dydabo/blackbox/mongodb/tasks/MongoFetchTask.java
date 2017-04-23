@@ -20,13 +20,14 @@ import com.dydabo.blackbox.mongodb.utils.MongoUtils;
 import com.google.gson.Gson;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
+import org.bson.Document;
+
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Logger;
-import org.bson.Document;
 
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.regex;
@@ -79,7 +80,7 @@ public class MongoFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
 
         List<ForkJoinTask<List<T>>> taskList = new ArrayList<>();
         for (String rowKey : rowKeys) {
-            ForkJoinTask<List<T>> fjTask = new MongoFetchTask<T>(collection, Arrays.asList(rowKey), row, isPartialKey, maxResults).fork();
+            ForkJoinTask<List<T>> fjTask = new MongoFetchTask<T>(collection, Collections.singletonList(rowKey), row, isPartialKey, maxResults).fork();
             taskList.add(fjTask);
         }
 

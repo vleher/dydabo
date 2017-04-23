@@ -21,23 +21,19 @@ import com.dydabo.blackbox.BlackBox;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.db.HBaseConnectionManager;
-import com.dydabo.blackbox.hbase.tasks.HBaseDeleteTask;
-import com.dydabo.blackbox.hbase.tasks.HBaseFetchTask;
-import com.dydabo.blackbox.hbase.tasks.HBaseInsertTask;
-import com.dydabo.blackbox.hbase.tasks.HBaseRangeSearchTask;
-import com.dydabo.blackbox.hbase.tasks.HBaseSearchTask;
+import com.dydabo.blackbox.hbase.tasks.*;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.client.Connection;
+
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.client.Connection;
 
 /**
  *
@@ -102,7 +98,7 @@ public class HBaseBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
 
     @Override
     public boolean delete(T row) throws BlackBoxException {
-        return delete(Arrays.asList(row));
+        return delete(Collections.singletonList(row));
     }
 
     @Override
@@ -119,7 +115,7 @@ public class HBaseBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
 
     @Override
     public List<T> fetch(String rowKey, T bean) throws BlackBoxException {
-        return fetch(Arrays.asList(rowKey), bean);
+        return fetch(Collections.singletonList(rowKey), bean);
     }
 
     @Override
@@ -129,7 +125,7 @@ public class HBaseBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
 
     @Override
     public List<T> fetchByPartialKey(String rowKey, T bean) throws BlackBoxException {
-        return fetchByPartialKey(Arrays.asList(rowKey), bean, -1);
+        return fetchByPartialKey(Collections.singletonList(rowKey), bean, -1);
     }
 
     @Override
@@ -146,7 +142,7 @@ public class HBaseBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
 
     @Override
     public List<T> fetchByPartialKey(String rowKey, T bean, long maxResults) throws BlackBoxException {
-        return fetchByPartialKey(Arrays.asList(rowKey), bean, maxResults);
+        return fetchByPartialKey(Collections.singletonList(rowKey), bean, maxResults);
     }
 
     /**
@@ -176,7 +172,7 @@ public class HBaseBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
 
     @Override
     public boolean insert(T row) throws BlackBoxException {
-        return insert(Arrays.asList(row));
+        return insert(Collections.singletonList(row));
     }
 
     @Override
@@ -191,7 +187,7 @@ public class HBaseBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
 
     @Override
     public List<T> search(T row) throws BlackBoxException {
-        return search(Arrays.asList(row));
+        return search(Collections.singletonList(row));
     }
 
     @Override
@@ -204,17 +200,17 @@ public class HBaseBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
         } catch (IOException ex) {
             logger.log(Level.SEVERE, null, ex);
         }
-        return Collections.<T>emptyList();
+        return Collections.emptyList();
     }
 
     @Override
     public List<T> search(T row, long maxResults) throws BlackBoxException {
-        return search(Arrays.asList(row), maxResults);
+        return search(Collections.singletonList(row), maxResults);
     }
 
     @Override
     public List<T> search(T startRow, T endRow, long maxResults) throws BlackBoxException {
-        createTable(Arrays.asList(startRow));
+        createTable(Collections.singletonList(startRow));
         if (startRow.getClass().equals(endRow.getClass())) {
             ForkJoinPool fjPool = ForkJoinPool.commonPool();
             try {
@@ -224,7 +220,7 @@ public class HBaseBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
                 logger.log(Level.SEVERE, null, ex);
             }
         }
-        return Collections.<T>emptyList();
+        return Collections.emptyList();
     }
 
     @Override
@@ -245,7 +241,7 @@ public class HBaseBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
 
     @Override
     public boolean update(T newRow) throws BlackBoxException {
-        return update(Arrays.asList(newRow));
+        return update(Collections.singletonList(newRow));
     }
 
 }

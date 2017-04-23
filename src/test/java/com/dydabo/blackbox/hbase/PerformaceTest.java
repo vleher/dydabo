@@ -22,18 +22,15 @@ import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxFactory;
 import com.dydabo.blackbox.beans.Customer;
 import com.dydabo.blackbox.hbase.utils.DyDaBoTestUtils;
+import org.testng.Assert;
+import org.testng.annotations.*;
+
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
 
 /**
  *
@@ -63,7 +60,7 @@ public class PerformaceTest {
             final int testSize = 10;
             // Delete all rows in table
             Customer c = new Customer(null, null);
-            List<Customer> allUsers = instance.search(Arrays.asList(c));
+            List<Customer> allUsers = instance.search(Collections.singletonList(c));
             if (allUsers.size() > 0) {
                 instance.delete(allUsers);
             }

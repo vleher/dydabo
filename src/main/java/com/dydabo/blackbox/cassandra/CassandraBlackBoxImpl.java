@@ -7,22 +7,17 @@
  */
 package com.dydabo.blackbox.cassandra;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ForkJoinPool;
-
 import com.datastax.driver.core.Session;
 import com.dydabo.blackbox.BlackBox;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.cassandra.tasks.CassandraDeleteTask;
-import com.dydabo.blackbox.cassandra.tasks.CassandraFetchTask;
-import com.dydabo.blackbox.cassandra.tasks.CassandraInsertTask;
-import com.dydabo.blackbox.cassandra.tasks.CassandraRangeSearchTask;
-import com.dydabo.blackbox.cassandra.tasks.CassandraSearchTask;
+import com.dydabo.blackbox.cassandra.tasks.*;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
 import com.dydabo.blackbox.db.CassandraConnectionManager;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ForkJoinPool;
 
 /**
  *
@@ -46,12 +41,12 @@ public class CassandraBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T
 
     @Override
     public boolean delete(T row) throws BlackBoxException {
-        return delete(Arrays.asList(row));
+        return delete(Collections.singletonList(row));
     }
 
     @Override
     public List<T> fetch(List<String> rowKeys, T bean) throws BlackBoxException {
-        createTable(Arrays.asList(bean));
+        createTable(Collections.singletonList(bean));
         ForkJoinPool fjPool = ForkJoinPool.commonPool();
         CassandraFetchTask<T> fetchTask = new CassandraFetchTask<>(getSession(), rowKeys, bean, false, -1);
         return fjPool.invoke(fetchTask);
@@ -59,7 +54,7 @@ public class CassandraBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T
 
     @Override
     public List<T> fetch(String rowKey, T bean) throws BlackBoxException {
-        return fetch(Arrays.asList(rowKey), bean);
+        return fetch(Collections.singletonList(rowKey), bean);
     }
 
     @Override
@@ -70,7 +65,7 @@ public class CassandraBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T
     @Override
     public List<T> fetchByPartialKey(List<String> rowKeys, T bean, long maxResults) throws BlackBoxException {
         // TODO: really inefficient full table scan
-        createTable(Arrays.asList(bean));
+        createTable(Collections.singletonList(bean));
         ForkJoinPool fjPool = ForkJoinPool.commonPool();
         CassandraFetchTask<T> fetchTask = new CassandraFetchTask<>(getSession(), rowKeys, bean, true, maxResults);
         return fjPool.invoke(fetchTask);
@@ -78,12 +73,12 @@ public class CassandraBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T
 
     @Override
     public List<T> fetchByPartialKey(String rowKey, T bean) throws BlackBoxException {
-        return fetchByPartialKey(Arrays.asList(rowKey), bean, -1);
+        return fetchByPartialKey(Collections.singletonList(rowKey), bean, -1);
     }
 
     @Override
     public List<T> fetchByPartialKey(String rowKey, T bean, long maxResults) throws BlackBoxException {
-        return fetchByPartialKey(Arrays.asList(rowKey), bean, maxResults);
+        return fetchByPartialKey(Collections.singletonList(rowKey), bean, maxResults);
     }
 
     @Override
@@ -100,7 +95,7 @@ public class CassandraBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T
 
     @Override
     public boolean insert(T row) throws BlackBoxException {
-        return insert(Arrays.asList(row));
+        return insert(Collections.singletonList(row));
     }
 
     @Override
@@ -118,12 +113,12 @@ public class CassandraBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T
 
     @Override
     public List<T> search(T row) throws BlackBoxException {
-        return search(Arrays.asList(row));
+        return search(Collections.singletonList(row));
     }
 
     @Override
     public List<T> search(T row, long maxResults) throws BlackBoxException {
-        return search(Arrays.asList(row), maxResults);
+        return search(Collections.singletonList(row), maxResults);
     }
 
     @Override
@@ -133,13 +128,13 @@ public class CassandraBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T
 
     @Override
     public List<T> search(T startRow, T endRow, long maxResults) throws BlackBoxException {
-        createTable(Arrays.asList(startRow));
+        createTable(Collections.singletonList(startRow));
         if (startRow.getClass().equals(endRow.getClass())) {
             ForkJoinPool fjPool = ForkJoinPool.commonPool();
             CassandraRangeSearchTask<T> searchTask = new CassandraRangeSearchTask<>(getSession(), startRow, endRow, maxResults);
             return fjPool.invoke(searchTask);
         }
-        return Collections.<T> emptyList();
+        return Collections.emptyList();
     }
 
     @Override
@@ -156,7 +151,7 @@ public class CassandraBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T
 
     @Override
     public boolean update(T newRow) throws BlackBoxException {
-        return update(Arrays.asList(newRow));
+        return update(Collections.singletonList(newRow));
     }
 
     /**
@@ -165,7 +160,7 @@ public class CassandraBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T
      *
      * @throws BlackBoxException
      */
-    protected void createTable(List<T> rows) throws BlackBoxException {
+    private void createTable(List<T> rows) throws BlackBoxException {
         for (T row : rows) {
             new CassandraUtils<T>().createTable(row);
         }
@@ -176,7 +171,7 @@ public class CassandraBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T
      *
      * @return
      */
-    protected Session getSession() {
+    private Session getSession() {
         return CassandraConnectionManager.getSession("bb");
     }
 }

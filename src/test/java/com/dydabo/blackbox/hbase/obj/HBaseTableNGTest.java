@@ -14,17 +14,12 @@
  */
 package com.dydabo.blackbox.hbase.obj;
 
-import java.util.Map;
-
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow.ColumnFamily;
+import org.testng.Assert;
+import org.testng.annotations.*;
+
+import java.util.Map;
 
 /**
  *
@@ -42,7 +37,7 @@ public class HBaseTableNGTest {
      *
      */
     public HBaseTableNGTest() {
-        this.instance = new GenericDBTableRow(KEY);
+        instance = new GenericDBTableRow(KEY);
     }
 
     /**
@@ -104,9 +99,8 @@ public class HBaseTableNGTest {
      */
     @Test
     public void testGetRowKey() {
-        String expResult = KEY;
         String result = instance.getRowKey();
-        Assert.assertEquals(result, expResult);
+        Assert.assertEquals(result, KEY);
     }
 
     /**

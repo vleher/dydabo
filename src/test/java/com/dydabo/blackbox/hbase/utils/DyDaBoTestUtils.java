@@ -14,25 +14,16 @@
  */
 package com.dydabo.blackbox.hbase.utils;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
-
 import com.dydabo.blackbox.BlackBox;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxFactory;
 import com.dydabo.blackbox.beans.Customer;
 import com.dydabo.blackbox.beans.Employee;
 import com.dydabo.blackbox.usecase.medical.MedicalUseCaseTest;
-import com.dydabo.blackbox.usecase.medical.db.Claim;
-import com.dydabo.blackbox.usecase.medical.db.ClaimCharges;
-import com.dydabo.blackbox.usecase.medical.db.ClaimDetails;
-import com.dydabo.blackbox.usecase.medical.db.Diagnosis;
-import com.dydabo.blackbox.usecase.medical.db.Encounter;
-import com.dydabo.blackbox.usecase.medical.db.Medication;
-import com.dydabo.blackbox.usecase.medical.db.Patient;
+import com.dydabo.blackbox.usecase.medical.db.*;
+
+import java.io.IOException;
+import java.util.*;
 
 /**
  *
@@ -43,13 +34,13 @@ public class DyDaBoTestUtils {
     /**
      *
      */
-    public List<String> FirstNames = Arrays.asList("David", "Peter", "Tom", "Dick", "Harry", "John", "Bill", "Adele", "Britney",
+    public final List<String> FirstNames = Arrays.asList("David", "Peter", "Tom", "Dick", "Harry", "John", "Bill", "Adele", "Britney",
                     "Mariah");
 
     /**
      *
      */
-    public List<String> LastNames = Arrays.asList("Johnson", "Becker", "Smith", "Gates", "King", "Spears", "Perry", "Carey",
+    public final List<String> LastNames = Arrays.asList("Johnson", "Becker", "Smith", "Gates", "King", "Spears", "Perry", "Carey",
                     "Gomez", "Lopez");
 
     /**
@@ -102,7 +93,7 @@ public class DyDaBoTestUtils {
         BlackBox hbaseBlackBox = BlackBoxFactory.getDatabase(BlackBoxFactory.HBASE);
         BlackBox cassBlackBox = BlackBoxFactory.getDatabase(BlackBoxFactory.CASSANDRA);
         Random random = new Random();
-        List<Patient> pList = hbaseBlackBox.search(Arrays.asList(p));
+        List<Patient> pList = hbaseBlackBox.search(Collections.singletonList(p));
         List<Encounter> encounters = new ArrayList<>();
         for (int j = 0; j < count; j++) {
             int id = random.nextInt();
@@ -120,7 +111,6 @@ public class DyDaBoTestUtils {
                 if (hbaseBlackBox.update(diagnosis)) {
                     enc.addDiagnosis(diagnosis);
                 }
-                ;
 
             }
             // Add random Medications
@@ -193,7 +183,7 @@ public class DyDaBoTestUtils {
         Patient p = new Patient(knownPatientId + "P", FirstNames.get(Math.abs(knownPatientId % FirstNames.size())),
                         LastNames.get(Math.abs(knownPatientId % LastNames.size())));
         p.initData();
-        hbaseBlackBox.update(Arrays.asList(p));
+        hbaseBlackBox.update(Collections.singletonList(p));
         cassBlackBox.update(p);
     }
 

@@ -7,15 +7,6 @@
  */
 package com.dydabo.blackbox.cassandra.tasks;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.RecursiveTask;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
@@ -25,6 +16,12 @@ import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
 import com.dydabo.blackbox.common.DyDaBoUtils;
 import com.dydabo.blackbox.db.CassandraConnectionManager;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
+
+import java.util.*;
+import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.RecursiveTask;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -46,8 +43,8 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
      * @param row
      * @param checkExisting
      */
-    public CassandraInsertTask(Session session, T row, boolean checkExisting) {
-        this(session, Arrays.asList(row), checkExisting);
+    private CassandraInsertTask(Session session, T row, boolean checkExisting) {
+        this(session, Collections.singletonList(row), checkExisting);
     }
 
     /**
@@ -77,7 +74,7 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
      *
      * @return
      */
-    public Session getSession() {
+    private Session getSession() {
         return session;
     }
 
@@ -90,7 +87,7 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
      *
      * @throws BlackBoxException
      */
-    protected Boolean insert(List<T> rows, boolean checkExisting) throws BlackBoxException {
+    private Boolean insert(List<T> rows, boolean checkExisting) throws BlackBoxException {
         if (rows.size() < 2) {
             Boolean successFlag = Boolean.TRUE;
             for (T t : rows) {
@@ -103,7 +100,7 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
         // create a task for each element or row in the list
         List<ForkJoinTask<Boolean>> taskList = new ArrayList<>();
         for (T row : rows) {
-            ForkJoinTask<Boolean> fjTask = new CassandraInsertTask<>(getSession(), Arrays.asList(row), checkExisting).fork();
+            ForkJoinTask<Boolean> fjTask = new CassandraInsertTask<>(getSession(), Collections.singletonList(row), checkExisting).fork();
             taskList.add(fjTask);
         }
         // wait for all to join
@@ -124,7 +121,7 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
      *
      * @throws BlackBoxException
      */
-    protected Boolean insert(T row, boolean checkExisting) throws BlackBoxException {
+    private Boolean insert(T row, boolean checkExisting) throws BlackBoxException {
         boolean successFlag = true;
 
         Insert insStmt = QueryBuilder.insertInto("bb", utils.getTableName(row));

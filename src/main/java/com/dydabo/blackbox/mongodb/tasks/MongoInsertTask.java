@@ -19,13 +19,14 @@ import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.mongodb.utils.MongoUtils;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.UpdateOptions;
+import org.bson.Document;
+
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Logger;
-import org.bson.Document;
 
 import static com.mongodb.client.model.Filters.eq;
 
@@ -44,7 +45,7 @@ public class MongoInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
     private final MongoUtils<T> utils;
 
     public MongoInsertTask(MongoCollection collection, T row, boolean checkExisting) {
-        this(collection, Arrays.asList(row), checkExisting);
+        this(collection, Collections.singletonList(row), checkExisting);
     }
 
     /**

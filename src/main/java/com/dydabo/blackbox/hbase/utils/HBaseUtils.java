@@ -14,34 +14,24 @@
  */
 package com.dydabo.blackbox.hbase.utils;
 
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.apache.hadoop.hbase.HColumnDescriptor;
-import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Admin;
-import org.apache.hadoop.hbase.client.Connection;
-import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.Result;
-import org.apache.hadoop.hbase.client.Table;
-import org.apache.hadoop.hbase.util.Bytes;
-
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.common.DBUtils;
 import com.dydabo.blackbox.common.DyDaBoUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.google.gson.Gson;
+import org.apache.hadoop.hbase.HColumnDescriptor;
+import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.util.Bytes;
+
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Hbase specific utility methods
@@ -53,7 +43,7 @@ public class HBaseUtils<T extends BlackBoxable> extends DBUtils<T> {
 
     private static final Logger logger = Logger.getLogger(HBaseUtils.class.getName());
 
-    private static SortedSet<TableName> tableCache = new TreeSet<>();
+    private static final SortedSet<TableName> tableCache = new TreeSet<>();
 
     /**
      *
@@ -99,11 +89,7 @@ public class HBaseUtils<T extends BlackBoxable> extends DBUtils<T> {
         }
         Get get = new Get(Bytes.toBytes(row.getBBRowKey()));
         Result result = hTable.get(get);
-        if (result.isEmpty()) {
-            return false;
-        } else {
-            return true;
-        }
+        return !result.isEmpty();
     }
 
     /**
@@ -202,10 +188,7 @@ public class HBaseUtils<T extends BlackBoxable> extends DBUtils<T> {
         if (row == null) {
             return false;
         }
-        if (DyDaBoUtils.isBlankOrNull(row.getBBRowKey())) {
-            return false;
-        }
-        return true;
+        return !DyDaBoUtils.isBlankOrNull(row.getBBRowKey());
     }
 
     /**

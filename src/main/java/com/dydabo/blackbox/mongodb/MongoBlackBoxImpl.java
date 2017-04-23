@@ -7,21 +7,16 @@
  */
 package com.dydabo.blackbox.mongodb;
 
-import java.util.Arrays;
-import java.util.List;
-
-import org.bson.Document;
-
 import com.dydabo.blackbox.BlackBox;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.db.MongoDBConnectionManager;
-import com.dydabo.blackbox.mongodb.tasks.MongoDeleteTask;
-import com.dydabo.blackbox.mongodb.tasks.MongoFetchTask;
-import com.dydabo.blackbox.mongodb.tasks.MongoInsertTask;
-import com.dydabo.blackbox.mongodb.tasks.MongoRangeSearchTask;
-import com.dydabo.blackbox.mongodb.tasks.MongoSearchTask;
+import com.dydabo.blackbox.mongodb.tasks.*;
 import com.mongodb.client.MongoCollection;
+import org.bson.Document;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  *
@@ -38,7 +33,7 @@ public class MongoBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
 
     @Override
     public boolean delete(T row) throws BlackBoxException {
-        return delete(Arrays.asList(row));
+        return delete(Collections.singletonList(row));
     }
 
     @Override
@@ -49,7 +44,7 @@ public class MongoBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
 
     @Override
     public List<T> fetch(String rowKey, T bean) throws BlackBoxException {
-        return fetch(Arrays.asList(rowKey), bean);
+        return fetch(Collections.singletonList(rowKey), bean);
     }
 
     @Override
@@ -65,12 +60,12 @@ public class MongoBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
 
     @Override
     public List<T> fetchByPartialKey(String rowKey, T bean) throws BlackBoxException {
-        return fetchByPartialKey(Arrays.asList(rowKey), bean, -1);
+        return fetchByPartialKey(Collections.singletonList(rowKey), bean, -1);
     }
 
     @Override
     public List<T> fetchByPartialKey(String rowKey, T bean, long maxResults) throws BlackBoxException {
-        return fetchByPartialKey(Arrays.asList(rowKey), bean, maxResults);
+        return fetchByPartialKey(Collections.singletonList(rowKey), bean, maxResults);
     }
 
     @Override
@@ -81,7 +76,7 @@ public class MongoBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
 
     @Override
     public boolean insert(T row) throws BlackBoxException {
-        return insert(Arrays.asList(row));
+        return insert(Collections.singletonList(row));
     }
 
     @Override
@@ -97,12 +92,12 @@ public class MongoBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
 
     @Override
     public List<T> search(T row) throws BlackBoxException {
-        return search(Arrays.asList(row), -1);
+        return search(Collections.singletonList(row), -1);
     }
 
     @Override
     public List<T> search(T row, long maxResults) throws BlackBoxException {
-        return search(Arrays.asList(row), maxResults);
+        return search(Collections.singletonList(row), maxResults);
     }
 
     @Override
@@ -125,7 +120,7 @@ public class MongoBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
 
     @Override
     public boolean update(T newRow) throws BlackBoxException {
-        return update(Arrays.asList(newRow));
+        return update(Collections.singletonList(newRow));
     }
 
     /**

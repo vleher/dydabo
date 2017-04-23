@@ -21,6 +21,10 @@ import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.filter.*;
+import org.apache.hadoop.hbase.util.Bytes;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,18 +32,6 @@ import java.util.Map;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.hadoop.hbase.client.Admin;
-import org.apache.hadoop.hbase.client.Connection;
-import org.apache.hadoop.hbase.client.Result;
-import org.apache.hadoop.hbase.client.ResultScanner;
-import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.client.Table;
-import org.apache.hadoop.hbase.filter.BinaryComparator;
-import org.apache.hadoop.hbase.filter.CompareFilter;
-import org.apache.hadoop.hbase.filter.FilterList;
-import org.apache.hadoop.hbase.filter.RegexStringComparator;
-import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
-import org.apache.hadoop.hbase.util.Bytes;
 
 /**
  *
@@ -49,10 +41,10 @@ import org.apache.hadoop.hbase.util.Bytes;
 public class HBaseRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
 
     private final Connection connection;
-    private T endRow;
+    private final T endRow;
     private final Logger logger = Logger.getLogger(HBaseRangeSearchTask.class.getName());
     private final long maxResults;
-    private T startRow;
+    private final T startRow;
     private final HBaseUtils<T> utils;
 
     /**
@@ -167,17 +159,17 @@ public class HBaseRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
                     // Rgeular expression filter
                     String regexValue = column.getColumnValueAsString();
                     regexValue = utils.sanitizeRegex(regexValue);
-                    if (regexValue instanceof String && DyDaBoUtils.isValidRegex((String) regexValue)) {
+                    if (regexValue instanceof String && DyDaBoUtils.isValidRegex(regexValue)) {
 
-                        RegexStringComparator regexComp = new RegexStringComparator((String) regexValue);
+                        RegexStringComparator regexComp = new RegexStringComparator(regexValue);
                         SingleColumnValueFilter startFilter = new SingleColumnValueFilter(Bytes.toBytes(familyName),
                                 Bytes.toBytes(colName), CompareFilter.CompareOp.GREATER_OR_EQUAL, regexComp);
                         GenericDBTableRow.Column endValue = endTable.getColumnFamily(familyName).getColumn(colName);
                         if (endValue != null) {
                             String endRegexValue = endValue.getColumnValueAsString();
                             endRegexValue = utils.sanitizeRegex(endRegexValue);
-                            if (endRegexValue instanceof String && DyDaBoUtils.isValidRegex((String) endRegexValue)) {
-                                RegexStringComparator endRegexComp = new RegexStringComparator((String) endRegexValue);
+                            if (endRegexValue instanceof String && DyDaBoUtils.isValidRegex(endRegexValue)) {
+                                RegexStringComparator endRegexComp = new RegexStringComparator(endRegexValue);
                                 SingleColumnValueFilter endFilter = new SingleColumnValueFilter(Bytes.toBytes(familyName),
                                         Bytes.toBytes(colName), CompareFilter.CompareOp.LESS, endRegexComp);
                                 filterList.addFilter(endFilter);

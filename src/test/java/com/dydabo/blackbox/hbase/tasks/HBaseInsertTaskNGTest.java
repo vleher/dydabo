@@ -22,17 +22,13 @@ import com.dydabo.blackbox.beans.Customer;
 import com.dydabo.blackbox.beans.Employee;
 import com.dydabo.blackbox.hbase.HBaseBlackBoxImpl;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
+import org.apache.hadoop.hbase.client.Connection;
+import org.testng.Assert;
+import org.testng.annotations.*;
+
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Random;
-import org.apache.hadoop.hbase.client.Connection;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
 
 /**
  *
@@ -41,7 +37,7 @@ import org.testng.annotations.Test;
 public class HBaseInsertTaskNGTest {
 
     private final Connection connection;
-    private Random random = new Random();
+    private final Random random = new Random();
 
     /**
      *
@@ -125,7 +121,7 @@ public class HBaseInsertTaskNGTest {
      */
     @Test
     public void testGetConnection() {
-        HBaseInsertTask instance = new HBaseInsertTask(connection, Collections.emptyList(), true);;
+        HBaseInsertTask instance = new HBaseInsertTask(connection, Collections.emptyList(), true);
         Connection result = instance.getConnection();
         Assert.assertNotNull(result);
     }
