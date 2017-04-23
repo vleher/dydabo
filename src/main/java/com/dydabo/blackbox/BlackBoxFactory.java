@@ -14,13 +14,12 @@
  */
 package com.dydabo.blackbox;
 
-import java.io.IOException;
-
-import org.apache.hadoop.conf.Configuration;
-
 import com.dydabo.blackbox.cassandra.CassandraBlackBoxImpl;
 import com.dydabo.blackbox.hbase.HBaseBlackBoxImpl;
 import com.dydabo.blackbox.mongodb.MongoBlackBoxImpl;
+import org.apache.hadoop.conf.Configuration;
+
+import java.io.IOException;
 
 /**
  * Get an instance to to generic interface that allows you to interact with the backend database
@@ -35,12 +34,12 @@ public class BlackBoxFactory {
     public final static String HBASE = "hbase";
 
     /**
-     *
+     * Constant specifying the Cassandra database
      */
     public final static String CASSANDRA = "cassandra";
 
     /**
-     *
+     * Constant specifying the MongoDB database
      */
     public final static String MONGODB = "mongodb";
 
@@ -97,6 +96,7 @@ public class BlackBoxFactory {
      * @return
      */
     public static BlackBox<BlackBoxable> getMongoDatabase() {
+        // TODO: configurable database
         return new MongoBlackBoxImpl<>();
     }
 
