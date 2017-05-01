@@ -1,9 +1,18 @@
 /*
- * Copyright 2017 viswadas leher <vleher@gmail.com>. Licensed under the Apache License, Version 2.0 (the "License"); you may not use
- * this file except in compliance with the License. You may obtain a copy of the License at
- * http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under
- * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under the License.
+ * Copyright 2017 viswadas leher <vleher@gmail.com>.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 package com.dydabo.blackbox.cassandra.tasks;
 
@@ -21,16 +30,18 @@ import com.dydabo.blackbox.common.DyDaBoUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.google.gson.Gson;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
- * @author viswadas leher <vleher@gmail.com>
  * @param <T>
+ * @author viswadas leher <vleher@gmail.com>
  */
 public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
 
@@ -42,7 +53,6 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
     private final CassandraUtils<T> utils;
 
     /**
-     *
      * @param session
      * @param row
      * @param maxResults
@@ -52,7 +62,6 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
     }
 
     /**
-     *
      * @param session
      * @param rows
      * @param maxResults
@@ -65,7 +74,6 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
     }
 
     /**
-     *
      * @return
      */
     public Session getSession() {
@@ -73,11 +81,8 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
     }
 
     /**
-     *
      * @param rows
-     *
      * @return
-     *
      * @throws BlackBoxException
      */
     protected List<T> search(List<T> rows) throws BlackBoxException {
@@ -106,11 +111,8 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
     }
 
     /**
-     *
      * @param row
-     *
      * @return
-     *
      * @throws BlackBoxException
      */
     protected List<T> search(T row) throws BlackBoxException {

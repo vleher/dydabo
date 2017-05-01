@@ -1,16 +1,18 @@
-/**
- * ***************************************************************************** Copyright 2017 viswadas leher <vleher@gmail.com>.
+/*
+ * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS"
- * BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language
- * governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
- ******************************************************************************
  */
 package com.dydabo.blackbox.hbase.utils;
 
@@ -26,7 +28,6 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- *
  * @author viswadas leher <vleher@gmail.com>
  */
 public class DyDaBoTestUtils {
@@ -35,18 +36,16 @@ public class DyDaBoTestUtils {
      *
      */
     public final List<String> FirstNames = Arrays.asList("David", "Peter", "Tom", "Dick", "Harry", "John", "Bill", "Adele", "Britney",
-                    "Mariah");
+            "Mariah");
 
     /**
      *
      */
     public final List<String> LastNames = Arrays.asList("Johnson", "Becker", "Smith", "Gates", "King", "Spears", "Perry", "Carey",
-                    "Gomez", "Lopez");
+            "Gomez", "Lopez");
 
     /**
-     *
      * @param maxNumber
-     *
      * @return
      */
     public List<Customer> generateCustomers(int maxNumber) {
@@ -55,7 +54,7 @@ public class DyDaBoTestUtils {
         for (int i = 0; i < maxNumber; i++) {
             int id = Math.abs(random.nextInt());
             final Customer customer = new Customer(id, FirstNames.get(Math.abs(id % FirstNames.size())) + " "
-                            + LastNames.get(Math.abs(id % LastNames.size())));
+                    + LastNames.get(Math.abs(id % LastNames.size())));
             customer.setTaxRate(random.nextDouble() * 100);
             customer.initData();
             custList.add(customer);
@@ -64,9 +63,7 @@ public class DyDaBoTestUtils {
     }
 
     /**
-     *
      * @param maxNumber
-     *
      * @return
      */
     public List<Employee> generateEmployees(int maxNumber) {
@@ -75,16 +72,14 @@ public class DyDaBoTestUtils {
         for (int i = 0; i < maxNumber; i++) {
             int id = Math.abs(random.nextInt());
             final Employee employee = new Employee(id, FirstNames.get(Math.abs(id % FirstNames.size())) + " "
-                            + LastNames.get(Math.abs(id % LastNames.size())));
+                    + LastNames.get(Math.abs(id % LastNames.size())));
             userList.add(employee);
         }
         return userList;
     }
 
     /**
-     *
      * @param count
-     *
      * @throws BlackBoxException
      * @throws IOException
      */
@@ -106,7 +101,7 @@ public class DyDaBoTestUtils {
             int dCount = random.nextInt(2) + 1;
             for (int i = 0; i < dCount; i++) {
                 final Diagnosis diagnosis = new Diagnosis(
-                                MedicalUseCaseTest.Diagnosis.get(random.nextInt(10000) % MedicalUseCaseTest.Diagnosis.size()));
+                        MedicalUseCaseTest.Diagnosis.get(random.nextInt(10000) % MedicalUseCaseTest.Diagnosis.size()));
                 cassBlackBox.update(diagnosis);
                 if (hbaseBlackBox.update(diagnosis)) {
                     enc.addDiagnosis(diagnosis);
@@ -117,7 +112,7 @@ public class DyDaBoTestUtils {
             dCount = random.nextInt(2) + 1;
             for (int i = 0; i < dCount; i++) {
                 final Medication medication = new Medication(
-                                MedicalUseCaseTest.Meds.get(random.nextInt(10000) % MedicalUseCaseTest.Meds.size()));
+                        MedicalUseCaseTest.Meds.get(random.nextInt(10000) % MedicalUseCaseTest.Meds.size()));
                 medication.setmDose(random.nextInt(8));
                 cassBlackBox.update(medication);
                 if (hbaseBlackBox.update(medication)) {
@@ -157,9 +152,7 @@ public class DyDaBoTestUtils {
     }
 
     /**
-     *
      * @param count
-     *
      * @throws BlackBoxException
      * @throws IOException
      */
@@ -172,7 +165,7 @@ public class DyDaBoTestUtils {
         for (int i = 0; i < count; i++) {
             int id = random.nextInt();
             Patient patient = new Patient(id + "P", FirstNames.get(Math.abs(id % FirstNames.size())),
-                            LastNames.get(Math.abs(random.nextInt() % LastNames.size())));
+                    LastNames.get(Math.abs(random.nextInt() % LastNames.size())));
             patient.initData();
             patientList.add(patient);
         }
@@ -181,7 +174,7 @@ public class DyDaBoTestUtils {
         cassBlackBox.update(patientList);
         // Create some patients with specific ids so that we can query them
         Patient p = new Patient(knownPatientId + "P", FirstNames.get(Math.abs(knownPatientId % FirstNames.size())),
-                        LastNames.get(Math.abs(knownPatientId % LastNames.size())));
+                LastNames.get(Math.abs(knownPatientId % LastNames.size())));
         p.initData();
         hbaseBlackBox.update(Collections.singletonList(p));
         cassBlackBox.update(p);

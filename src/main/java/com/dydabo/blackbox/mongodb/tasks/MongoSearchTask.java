@@ -5,13 +5,14 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 package com.dydabo.blackbox.mongodb.tasks;
 
@@ -36,9 +37,8 @@ import java.util.logging.Logger;
 import static com.mongodb.client.model.Filters.*;
 
 /**
- *
- * @author viswadas leher <vleher@gmail.com>
  * @param <T>
+ * @author viswadas leher <vleher@gmail.com>
  */
 public class MongoSearchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
 
@@ -49,7 +49,6 @@ public class MongoSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
     private final MongoUtils<T> utils;
 
     /**
-     *
      * @param collection
      * @param rows
      * @param maxResult
@@ -67,9 +66,7 @@ public class MongoSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
     }
 
     /**
-     *
      * @param tableRow the value of tableRow
-     *
      * @return
      */
     protected List<Bson> parseFilters(GenericDBTableRow tableRow) {

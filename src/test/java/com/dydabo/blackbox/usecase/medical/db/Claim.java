@@ -1,11 +1,11 @@
-/** *****************************************************************************
+/*
  * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,17 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- ******************************************************************************
  */
 package com.dydabo.blackbox.usecase.medical.db;
 
 import com.dydabo.blackbox.BlackBoxable;
 import com.google.gson.Gson;
+
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- *
  * @author viswadas leher <vleher@gmail.com>
  */
 public class Claim implements BlackBoxable {
@@ -34,7 +33,6 @@ public class Claim implements BlackBoxable {
     private List<ClaimCharges> cCharges = new LinkedList<>();
 
     /**
-     *
      * @param cId
      * @param pId
      */
@@ -44,7 +42,6 @@ public class Claim implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public String getcId() {
@@ -52,7 +49,6 @@ public class Claim implements BlackBoxable {
     }
 
     /**
-     *
      * @param cId
      */
     public void setcId(String cId) {
@@ -60,7 +56,6 @@ public class Claim implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public List<ClaimDetails> getcDets() {
@@ -68,7 +63,6 @@ public class Claim implements BlackBoxable {
     }
 
     /**
-     *
      * @param cDets
      */
     public void setcDets(List<ClaimDetails> cDets) {
@@ -76,7 +70,6 @@ public class Claim implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public List<ClaimCharges> getcCharges() {
@@ -84,7 +77,6 @@ public class Claim implements BlackBoxable {
     }
 
     /**
-     *
      * @param cCharges
      */
     public void setcCharges(List<ClaimCharges> cCharges) {
@@ -97,7 +89,6 @@ public class Claim implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     @Override
@@ -106,7 +97,6 @@ public class Claim implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public String getpId() {
@@ -114,7 +104,6 @@ public class Claim implements BlackBoxable {
     }
 
     /**
-     *
      * @param pId
      */
     public void setpId(String pId) {

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *******************************************************************************/
+ */
 package com.dydabo.blackbox.hbase.tasks;
 
 import com.dydabo.blackbox.BlackBoxException;
@@ -31,7 +31,6 @@ import java.util.Collections;
 import java.util.Random;
 
 /**
- *
  * @author viswadas leher <vleher@gmail.com>
  */
 public class HBaseInsertTaskNGTest {
@@ -40,7 +39,6 @@ public class HBaseInsertTaskNGTest {
     private final Random random = new Random();
 
     /**
-     *
      * @throws IOException
      * @throws BlackBoxException
      */
@@ -51,7 +49,6 @@ public class HBaseInsertTaskNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @BeforeClass
@@ -60,7 +57,6 @@ public class HBaseInsertTaskNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @AfterClass
@@ -68,7 +64,6 @@ public class HBaseInsertTaskNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @BeforeMethod
@@ -76,7 +71,6 @@ public class HBaseInsertTaskNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @AfterMethod
@@ -88,7 +82,6 @@ public class HBaseInsertTaskNGTest {
      *
      * @param row
      * @param expResult
-     *
      * @throws java.lang.Exception
      */
     @Test(dataProvider = "insertData")
@@ -100,7 +93,6 @@ public class HBaseInsertTaskNGTest {
     }
 
     /**
-     *
      * @return
      */
     @DataProvider(name = "insertData")
@@ -112,7 +104,7 @@ public class HBaseInsertTaskNGTest {
         Customer custThree = new Customer(random.nextInt(10000), "Test One");
         custThree.initData();
         return new Object[][]{
-            {custOne, true}
+                {custOne, true}
         };
     }
 

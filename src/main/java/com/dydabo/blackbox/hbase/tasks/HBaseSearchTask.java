@@ -1,16 +1,18 @@
-/**
- * ***************************************************************************** Copyright 2017 viswadas leher <vleher@gmail.com>.
+/*
+ * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS"
- * BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language
- * governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
- ******************************************************************************
  */
 package com.dydabo.blackbox.hbase.tasks;
 
@@ -26,16 +28,18 @@ import org.apache.hadoop.hbase.filter.*;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
- * @author viswadas leher <vleher@gmail.com>
  * @param <T>
+ * @author viswadas leher <vleher@gmail.com>
  */
 public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
 
@@ -46,7 +50,6 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
     private final long maxResults;
 
     /**
-     *
      * @param connection
      * @param row
      * @param maxResults
@@ -56,7 +59,6 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
     }
 
     /**
-     *
      * @param connection
      * @param rows
      * @param maxResults
@@ -79,7 +81,6 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
     }
 
     /**
-     *
      * @return
      */
     public Connection getConnection() {
@@ -87,10 +88,8 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
     }
 
     /**
-     *
      * @param thisTable
      * @param filterList
-     *
      * @return
      */
     protected boolean parseForFilters(GenericDBTableRow thisTable, FilterList filterList) {
@@ -107,13 +106,13 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
                     if (DyDaBoUtils.isNumber(colValue.getColumnValue())) {
                         BinaryComparator regexComp = new BinaryComparator(utils.getAsByteArray(colValue.getColumnValue()));
                         SingleColumnValueFilter scvf = new SingleColumnValueFilter(Bytes.toBytes(familyName),
-                                        Bytes.toBytes(colName), CompareFilter.CompareOp.EQUAL, regexComp);
+                                Bytes.toBytes(colName), CompareFilter.CompareOp.EQUAL, regexComp);
                         filterList.addFilter(scvf);
                         hasFilters = true;
                     } else {
                         RegexStringComparator regexComp = new RegexStringComparator(regexValue);
                         SingleColumnValueFilter scvf = new SingleColumnValueFilter(Bytes.toBytes(familyName),
-                                        Bytes.toBytes(colName), CompareFilter.CompareOp.EQUAL, regexComp);
+                                Bytes.toBytes(colName), CompareFilter.CompareOp.EQUAL, regexComp);
                         filterList.addFilter(scvf);
                         hasFilters = true;
                     }
@@ -124,11 +123,8 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
     }
 
     /**
-     *
      * @param rows
-     *
      * @return
-     *
      * @throws BlackBoxException
      */
     protected List<T> search(List<T> rows) throws BlackBoxException {
@@ -157,11 +153,8 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
     }
 
     /**
-     *
      * @param row
-     *
      * @return
-     *
      * @throws BlackBoxException
      */
     protected List<T> search(T row) throws BlackBoxException {

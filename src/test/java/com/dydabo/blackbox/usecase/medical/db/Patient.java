@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,20 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *******************************************************************************/
+ */
 package com.dydabo.blackbox.usecase.medical.db;
 
 import com.dydabo.blackbox.BlackBoxable;
 import com.google.gson.Gson;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+
+import java.util.*;
 
 /**
- *
  * @author viswadas leher <vleher@gmail.com>
  */
 public class Patient implements BlackBoxable {
@@ -46,7 +41,6 @@ public class Patient implements BlackBoxable {
     }
 
     /**
-     *
      * @param id
      * @param firstName
      * @param lastName
@@ -81,7 +75,6 @@ public class Patient implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public String getpId() {
@@ -89,7 +82,6 @@ public class Patient implements BlackBoxable {
     }
 
     /**
-     *
      * @param pId
      */
     public void setpId(String pId) {
@@ -97,7 +89,6 @@ public class Patient implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public String getfN() {
@@ -105,7 +96,6 @@ public class Patient implements BlackBoxable {
     }
 
     /**
-     *
      * @param fN
      */
     public void setfN(String fN) {
@@ -113,7 +103,6 @@ public class Patient implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public String getlN() {
@@ -121,7 +110,6 @@ public class Patient implements BlackBoxable {
     }
 
     /**
-     *
      * @param lN
      */
     public void setlN(String lN) {
@@ -129,7 +117,6 @@ public class Patient implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public Date getDob() {
@@ -137,7 +124,6 @@ public class Patient implements BlackBoxable {
     }
 
     /**
-     *
      * @param dob
      */
     public void setDob(Date dob) {
@@ -145,7 +131,6 @@ public class Patient implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public Map<String, Address> getAddress() {
@@ -153,7 +138,6 @@ public class Patient implements BlackBoxable {
     }
 
     /**
-     *
      * @param address
      */
     public void setAddress(Map<String, Address> address) {
@@ -161,7 +145,6 @@ public class Patient implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public PhoneNumber getpPh() {
@@ -169,7 +152,6 @@ public class Patient implements BlackBoxable {
     }
 
     /**
-     *
      * @param pPh
      */
     public void setpPh(PhoneNumber pPh) {
@@ -182,7 +164,6 @@ public class Patient implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     @Override

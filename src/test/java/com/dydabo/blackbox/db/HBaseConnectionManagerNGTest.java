@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,24 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *******************************************************************************/
+ */
 package com.dydabo.blackbox.db;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.Connection;
 import org.junit.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 
 /**
- *
  * @author viswadas leher <vleher@gmail.com>
  */
 public class HBaseConnectionManagerNGTest {
@@ -42,7 +38,6 @@ public class HBaseConnectionManagerNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @BeforeClass
@@ -50,7 +45,6 @@ public class HBaseConnectionManagerNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @AfterClass
@@ -58,7 +52,6 @@ public class HBaseConnectionManagerNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @BeforeMethod
@@ -66,7 +59,6 @@ public class HBaseConnectionManagerNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @AfterMethod
@@ -75,6 +67,7 @@ public class HBaseConnectionManagerNGTest {
 
     /**
      * Test of getConnection method, of class HBaseConnectionManager.
+     *
      * @throws java.lang.Exception
      */
     @Test
@@ -92,6 +85,7 @@ public class HBaseConnectionManagerNGTest {
 
     /**
      * Test of getConnection method, of class HBaseConnectionManager.
+     *
      * @throws java.lang.Exception
      */
     @Test
@@ -102,7 +96,6 @@ public class HBaseConnectionManagerNGTest {
     }
 
     /**
-     *
      * @throws NoSuchMethodException
      * @throws IllegalAccessException
      * @throws InvocationTargetException

@@ -1,9 +1,18 @@
 /*
- * Copyright 2017 viswadas leher <vleher@gmail.com>. Licensed under the Apache License, Version 2.0 (the "License"); you may not use
- * this file except in compliance with the License. You may obtain a copy of the License at
- * http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under
- * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under the License.
+ * Copyright 2017 viswadas leher <vleher@gmail.com>.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 package com.dydabo.blackbox.cassandra.tasks;
 
@@ -30,9 +39,8 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
- *
- * @author viswadas leher <vleher@gmail.com>
  * @param <T>
+ * @author viswadas leher <vleher@gmail.com>
  */
 public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
 
@@ -46,7 +54,6 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
     private final CassandraUtils<T> utils;
 
     /**
-     *
      * @param session
      * @param rowKey
      * @param row
@@ -57,7 +64,6 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
     }
 
     /**
-     *
      * @param session
      * @param rowKeys
      * @param row
@@ -68,7 +74,6 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
     }
 
     /**
-     *
      * @param session
      * @param rowKeys
      * @param row
@@ -85,11 +90,8 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
     }
 
     /**
-     *
      * @param rowKeys
-     *
      * @return
-     *
      * @throws BlackBoxException
      */
     private List<T> fetch(List<String> rowKeys) throws BlackBoxException {
@@ -107,7 +109,7 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
         List<ForkJoinTask<List<T>>> taskList = new ArrayList<>();
         for (String rowKey : rowKeys) {
             ForkJoinTask<List<T>> fjTask = new CassandraFetchTask<T>(getSession(), Collections.singletonList(rowKey), bean, isPartialKeys,
-                            maxResults).fork();
+                    maxResults).fork();
             taskList.add(fjTask);
         }
         // wait for all to join
@@ -120,11 +122,8 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
     }
 
     /**
-     *
      * @param rowKey
-     *
      * @return
-     *
      * @throws BlackBoxException
      */
     private List<T> fetch(String rowKey) throws BlackBoxException {
@@ -177,7 +176,6 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
     }
 
     /**
-     *
      * @return
      */
     private Session getSession() {

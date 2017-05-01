@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *******************************************************************************/
+ */
 package com.dydabo.blackbox.usecase.medical.db;
 
 import com.dydabo.blackbox.BlackBoxable;
 import com.google.gson.Gson;
 
 /**
- *
  * @author viswadas leher <vleher@gmail.com>
  */
 public class Diagnosis implements BlackBoxable {
@@ -29,7 +28,6 @@ public class Diagnosis implements BlackBoxable {
     private String dNotes = null;
 
     /**
-     *
      * @param dId
      */
     public Diagnosis(String dId) {
@@ -37,7 +35,6 @@ public class Diagnosis implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public String getdId() {
@@ -45,7 +42,6 @@ public class Diagnosis implements BlackBoxable {
     }
 
     /**
-     *
      * @param dId
      */
     public void setdId(String dId) {
@@ -53,7 +49,6 @@ public class Diagnosis implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public String getdNotes() {
@@ -61,7 +56,6 @@ public class Diagnosis implements BlackBoxable {
     }
 
     /**
-     *
      * @param dNotes
      */
     public void setdNotes(String dNotes) {
@@ -74,7 +68,6 @@ public class Diagnosis implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     @Override

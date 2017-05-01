@@ -1,11 +1,11 @@
-/** *****************************************************************************
+/*
  * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- ******************************************************************************
  */
 package com.dydabo.blackbox.db.obj;
 
@@ -22,12 +21,12 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- *
  * @author viswadas leher <vleher@gmail.com>
  */
 public class GenericDBTableRow {
@@ -42,7 +41,6 @@ public class GenericDBTableRow {
     private Map<String, ColumnFamily> columnFamilies = null;
 
     /**
-     *
      * @param rowKey
      */
     public GenericDBTableRow(String rowKey) {
@@ -52,9 +50,7 @@ public class GenericDBTableRow {
     }
 
     /**
-     *
      * @param familyName
-     *
      * @return
      */
     public ColumnFamily getColumnFamily(String familyName) {
@@ -66,7 +62,6 @@ public class GenericDBTableRow {
     }
 
     /**
-     *
      * @return
      */
     public ColumnFamily getDefaultFamily() {
@@ -74,9 +69,7 @@ public class GenericDBTableRow {
     }
 
     /**
-     *
      * @param familyName
-     *
      * @return
      */
     public ColumnFamily createFamily(String familyName) {
@@ -88,7 +81,6 @@ public class GenericDBTableRow {
     }
 
     /**
-     *
      * @return
      */
     public String getRowKey() {
@@ -96,7 +88,6 @@ public class GenericDBTableRow {
     }
 
     /**
-     *
      * @param rowKey
      */
     public void setRowKey(String rowKey) {
@@ -104,7 +95,6 @@ public class GenericDBTableRow {
     }
 
     /**
-     *
      * @return
      */
     public Map<String, ColumnFamily> getColumnFamilies() {
@@ -112,7 +102,6 @@ public class GenericDBTableRow {
     }
 
     /**
-     *
      * @return
      */
     public JsonObject toJsonObject() {
@@ -141,7 +130,6 @@ public class GenericDBTableRow {
         private Map<String, Column> columns = null;
 
         /**
-         *
          * @param familyName
          */
         public ColumnFamily(String familyName) {
@@ -150,7 +138,6 @@ public class GenericDBTableRow {
         }
 
         /**
-         *
          * @param columnName
          * @param columnValue
          */
@@ -171,9 +158,7 @@ public class GenericDBTableRow {
         }
 
         /**
-         *
          * @param colName
-         *
          * @return
          */
         public Column getColumn(String colName) {
@@ -181,7 +166,6 @@ public class GenericDBTableRow {
         }
 
         /**
-         *
          * @return
          */
         public String getFamilyName() {
@@ -189,7 +173,6 @@ public class GenericDBTableRow {
         }
 
         /**
-         *
          * @param familyName
          */
         public void setFamilyName(String familyName) {
@@ -197,7 +180,6 @@ public class GenericDBTableRow {
         }
 
         /**
-         *
          * @return
          */
         public Map<String, Column> getColumns() {
@@ -205,7 +187,6 @@ public class GenericDBTableRow {
         }
 
         /**
-         *
          * @param columns
          */
         public void setColumns(Map<String, Column> columns) {
@@ -213,7 +194,6 @@ public class GenericDBTableRow {
         }
 
         /**
-         *
          * @return
          */
         public JsonObject toJsonObject() {
@@ -249,7 +229,6 @@ public class GenericDBTableRow {
         private Object columnValue = null;
 
         /**
-         *
          * @param columnName
          * @param columnValue
          */
@@ -259,7 +238,6 @@ public class GenericDBTableRow {
         }
 
         /**
-         *
          * @return
          */
         public String getColumnName() {
@@ -267,7 +245,6 @@ public class GenericDBTableRow {
         }
 
         /**
-         *
          * @param columnName
          */
         public void setColumnName(String columnName) {
@@ -275,7 +252,6 @@ public class GenericDBTableRow {
         }
 
         /**
-         *
          * @return
          */
         public Object getColumnValue() {
@@ -283,7 +259,6 @@ public class GenericDBTableRow {
         }
 
         /**
-         *
          * @param columnValue
          */
         public void setColumnValue(Object columnValue) {
@@ -291,7 +266,6 @@ public class GenericDBTableRow {
         }
 
         /**
-         *
          * @return
          */
         public String getColumnValueAsString() {

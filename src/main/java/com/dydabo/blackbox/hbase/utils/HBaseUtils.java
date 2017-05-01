@@ -1,16 +1,18 @@
-/**
- * ***************************************************************************** Copyright 2017 viswadas leher <vleher@gmail.com>.
+/*
+ * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS"
- * BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language
- * governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
- ******************************************************************************
  */
 package com.dydabo.blackbox.hbase.utils;
 
@@ -36,8 +38,8 @@ import java.util.logging.Logger;
 /**
  * Hbase specific utility methods
  *
- * @author viswadas leher <vleher@gmail.com>
  * @param <T>
+ * @author viswadas leher <vleher@gmail.com>
  */
 public class HBaseUtils<T extends BlackBoxable> extends DBUtils<T> {
 
@@ -46,12 +48,9 @@ public class HBaseUtils<T extends BlackBoxable> extends DBUtils<T> {
     private static final SortedSet<TableName> tableCache = new TreeSet<>();
 
     /**
-     *
      * @param row
      * @param connection
-     *
      * @return
-     *
      * @throws IOException
      * @throws BlackBoxException
      */
@@ -72,14 +71,11 @@ public class HBaseUtils<T extends BlackBoxable> extends DBUtils<T> {
     }
 
     /**
-     *
      * Checks if the specified row already exists in the table
      *
-     * @param row the value of row
+     * @param row    the value of row
      * @param hTable the value of hTable
-     *
      * @return the boolean
-     *
      * @throws java.io.IOException
      * @throws com.dydabo.blackbox.BlackBoxException
      */
@@ -93,12 +89,9 @@ public class HBaseUtils<T extends BlackBoxable> extends DBUtils<T> {
     }
 
     /**
-     *
-     * @param row the value of row
+     * @param row        the value of row
      * @param connection
-     *
      * @return the boolean
-     *
      * @throws java.io.IOException
      * @throws com.dydabo.blackbox.BlackBoxException
      */
@@ -130,9 +123,7 @@ public class HBaseUtils<T extends BlackBoxable> extends DBUtils<T> {
     }
 
     /**
-     *
      * @param thisValue
-     *
      * @return
      */
     public byte[] getAsByteArray(Object thisValue) {
@@ -168,9 +159,7 @@ public class HBaseUtils<T extends BlackBoxable> extends DBUtils<T> {
     }
 
     /**
-     *
      * @param row
-     *
      * @return
      */
     public TableName getTableName(T row) {
@@ -179,9 +168,7 @@ public class HBaseUtils<T extends BlackBoxable> extends DBUtils<T> {
     }
 
     /**
-     *
      * @param row
-     *
      * @return
      */
     public boolean isValidRowKey(T row) {
@@ -192,10 +179,8 @@ public class HBaseUtils<T extends BlackBoxable> extends DBUtils<T> {
     }
 
     /**
-     *
      * @param result
      * @param row
-     *
      * @return
      */
     public GenericDBTableRow parseResultToHTable(Result result, T row) {
@@ -246,9 +231,7 @@ public class HBaseUtils<T extends BlackBoxable> extends DBUtils<T> {
     }
 
     /**
-     *
      * @param regexValue
-     *
      * @return
      */
     public String sanitizeRegex(String regexValue) {

@@ -90,7 +90,7 @@ List<User> userList = new ArrayList<>();
 userList.add(new User(123, "David Jones");
 userList.add(new User(234, "Tom Hardy");
 // insert to database
-boolean success = instanceOne.insert(user);
+boolean success = instanceOne.insert(userList);
 
 // update the existing row
 success = instanceOne.update(user);

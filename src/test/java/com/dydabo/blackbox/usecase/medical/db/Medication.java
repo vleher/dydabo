@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *******************************************************************************/
+ */
 package com.dydabo.blackbox.usecase.medical.db;
 
 import com.dydabo.blackbox.BlackBoxable;
 import com.google.gson.Gson;
 
 /**
- *
  * @author viswadas leher <vleher@gmail.com>
  */
 public class Medication implements BlackBoxable {
@@ -37,7 +36,6 @@ public class Medication implements BlackBoxable {
     }
 
     /**
-     *
      * @param mId
      */
     public Medication(String mId) {
@@ -46,7 +44,6 @@ public class Medication implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public String getmId() {
@@ -54,7 +51,6 @@ public class Medication implements BlackBoxable {
     }
 
     /**
-     *
      * @param mId
      */
     public void setmId(String mId) {
@@ -62,7 +58,6 @@ public class Medication implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public String getmName() {
@@ -70,7 +65,6 @@ public class Medication implements BlackBoxable {
     }
 
     /**
-     *
      * @param mName
      */
     public void setmName(String mName) {
@@ -78,7 +72,6 @@ public class Medication implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public Integer getmDose() {
@@ -86,7 +79,6 @@ public class Medication implements BlackBoxable {
     }
 
     /**
-     *
      * @param mDose
      */
     public void setmDose(Integer mDose) {
@@ -94,7 +86,6 @@ public class Medication implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public String getmVendor() {
@@ -102,7 +93,6 @@ public class Medication implements BlackBoxable {
     }
 
     /**
-     *
      * @param mVendor
      */
     public void setmVendor(String mVendor) {
@@ -115,7 +105,6 @@ public class Medication implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     @Override

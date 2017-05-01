@@ -1,11 +1,11 @@
-/** *****************************************************************************
+/*
  * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- ******************************************************************************
  */
 package com.dydabo.blackbox.hbase.tasks;
 
@@ -23,20 +22,15 @@ import com.dydabo.blackbox.beans.Customer;
 import com.dydabo.blackbox.beans.Employee;
 import com.dydabo.blackbox.hbase.HBaseBlackBoxImpl;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
+import org.apache.hadoop.hbase.client.Connection;
+import org.testng.Assert;
+import org.testng.annotations.*;
+
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import org.apache.hadoop.hbase.client.Connection;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
 
 /**
- *
  * @author viswadas leher <vleher@gmail.com>
  */
 public class HBaseSearchTaskNGTest {
@@ -44,7 +38,6 @@ public class HBaseSearchTaskNGTest {
     private final Connection connection;
 
     /**
-     *
      * @throws IOException
      * @throws BlackBoxException
      */
@@ -55,7 +48,6 @@ public class HBaseSearchTaskNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @BeforeClass
@@ -63,7 +55,6 @@ public class HBaseSearchTaskNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @AfterClass
@@ -71,7 +62,6 @@ public class HBaseSearchTaskNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @BeforeMethod
@@ -79,7 +69,6 @@ public class HBaseSearchTaskNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @AfterMethod
@@ -90,7 +79,6 @@ public class HBaseSearchTaskNGTest {
      * Test of search method, of class HBaseSearchTask.
      *
      * @param row
-     *
      * @throws java.lang.Exception
      */
     @Test(dataProvider = "searchData")
@@ -101,13 +89,12 @@ public class HBaseSearchTaskNGTest {
     }
 
     /**
-     *
      * @return
      */
     @DataProvider(name = "searchData")
     public Object[][] searchData() {
         return new Object[][]{
-            {new Customer(2, null)}
+                {new Customer(2, null)}
         };
     }
 

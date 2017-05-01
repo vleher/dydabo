@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *******************************************************************************/
+ */
 package com.dydabo.blackbox.hbase.tasks;
 
 import com.dydabo.blackbox.BlackBoxException;
@@ -22,20 +22,16 @@ import com.dydabo.blackbox.beans.Customer;
 import com.dydabo.blackbox.beans.Employee;
 import com.dydabo.blackbox.hbase.HBaseBlackBoxImpl;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
+import org.apache.hadoop.hbase.client.Connection;
+import org.testng.Assert;
+import org.testng.annotations.*;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.apache.hadoop.hbase.client.Connection;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
 
 /**
- *
  * @author viswadas leher <vleher@gmail.com>
  */
 public class HBaseFetchTaskNGTest {
@@ -43,7 +39,6 @@ public class HBaseFetchTaskNGTest {
     private Connection connection;
 
     /**
-     *
      * @throws IOException
      * @throws BlackBoxException
      */
@@ -54,7 +49,6 @@ public class HBaseFetchTaskNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @BeforeClass
@@ -62,7 +56,6 @@ public class HBaseFetchTaskNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @AfterClass
@@ -70,7 +63,6 @@ public class HBaseFetchTaskNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @BeforeMethod
@@ -78,7 +70,6 @@ public class HBaseFetchTaskNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @AfterMethod
@@ -87,6 +78,7 @@ public class HBaseFetchTaskNGTest {
 
     /**
      * Test of fetch method, of class HBaseFetchTask.
+     *
      * @throws java.lang.Exception
      */
     @Test

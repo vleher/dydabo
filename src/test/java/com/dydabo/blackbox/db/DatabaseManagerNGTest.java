@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *******************************************************************************/
+ */
 package com.dydabo.blackbox.db;
 
 /**
- *
  * @author viswadas leher <vleher@gmail.com>
  */
 public class DatabaseManagerNGTest {
@@ -29,7 +28,6 @@ public class DatabaseManagerNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @org.testng.annotations.BeforeClass
@@ -37,7 +35,6 @@ public class DatabaseManagerNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @org.testng.annotations.AfterClass
@@ -45,7 +42,6 @@ public class DatabaseManagerNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @org.testng.annotations.BeforeMethod
@@ -53,7 +49,6 @@ public class DatabaseManagerNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @org.testng.annotations.AfterMethod

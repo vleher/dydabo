@@ -1,11 +1,11 @@
-/** *****************************************************************************
+/*
  * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- ******************************************************************************
  */
 package com.dydabo.blackbox.common;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,7 +47,6 @@ public class DyDaBoUtils {
      * The prefix to a regular expression.
      *
      * @param rowKey the row key that may or may not be a regex
-     *
      * @return the prefix to string
      */
     public static String getStringPrefix(String rowKey) {
@@ -68,7 +67,6 @@ public class DyDaBoUtils {
      * Standard method for checking for null or empty string.
      *
      * @param str
-     *
      * @return
      */
     public static boolean isBlankOrNull(String... str) {
@@ -84,7 +82,6 @@ public class DyDaBoUtils {
      * Customized check for regex.
      *
      * @param regexValue
-     *
      * @return
      */
     public static boolean isValidRegex(String regexValue) {
@@ -101,9 +98,7 @@ public class DyDaBoUtils {
     }
 
     /**
-     *
      * @param jsonString
-     *
      * @return
      */
     public static JsonElement parseJsonString(String jsonString) {
@@ -119,10 +114,7 @@ public class DyDaBoUtils {
     }
 
     /**
-     *
-     *
      * @param obj
-     *
      * @return the boolean
      */
     public static boolean isPrimitiveOrPrimitiveWrapperOrString(Object obj) {
@@ -136,9 +128,7 @@ public class DyDaBoUtils {
     }
 
     /**
-     *
      * @param obj
-     *
      * @return
      */
     public static boolean isNumber(Object obj) {
@@ -150,9 +140,7 @@ public class DyDaBoUtils {
     }
 
     /**
-     *
      * @param type
-     *
      * @return
      */
     public static Map<String, Field> getFieldFromType(Class<?> type) {
@@ -169,10 +157,8 @@ public class DyDaBoUtils {
     }
 
     /**
-     *
      * @param type
      * @param fieldName
-     *
      * @return
      */
     public static Field getFieldFromType(Class<?> type, String fieldName) {

@@ -290,7 +290,7 @@ If you have millions of patients, then this is probably not a great idea. But yo
 
 ```
 // create a bean with all null or empty values and pass it to search for all patients
-<Patient> allPatients = blackBox.search(new Patient());
+List<Patient> allPatients = blackBox.search(new Patient());
 ```
 
 #### patient by patient id

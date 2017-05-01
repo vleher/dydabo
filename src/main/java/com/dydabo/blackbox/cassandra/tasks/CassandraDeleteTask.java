@@ -1,9 +1,18 @@
 /*
- * Copyright 2017 viswadas leher <vleher@gmail.com>. Licensed under the Apache License, Version 2.0 (the "License"); you may not use
- * this file except in compliance with the License. You may obtain a copy of the License at
- * http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under
- * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under the License.
+ * Copyright 2017 viswadas leher <vleher@gmail.com>.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 package com.dydabo.blackbox.cassandra.tasks;
 
@@ -26,8 +35,8 @@ import java.util.logging.Logger;
 /**
  * Delete rows from Cassandra
  *
- * @author viswadas leher <vleher@gmail.com>
  * @param <T> the object (row) being processed
+ * @author viswadas leher <vleher@gmail.com>
  */
 public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boolean> {
 
@@ -41,7 +50,7 @@ public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<B
      * Constructor
      *
      * @param session a session instance for db connection
-     * @param row row instance to be deleted
+     * @param row     row instance to be deleted
      */
     private CassandraDeleteTask(Session session, T row) {
         this(session, Collections.singletonList(row));
@@ -51,7 +60,7 @@ public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<B
      * Constructor
      *
      * @param session a session instance for db connection
-     * @param rows list of rows to be deleted
+     * @param rows    list of rows to be deleted
      */
     public CassandraDeleteTask(Session session, List<T> rows) {
         this.session = session;
@@ -73,9 +82,7 @@ public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<B
      * Delete multiple rows from the database concurrently.
      *
      * @param rows rows to be deleted
-     *
      * @return true if all operations were successful
-     *
      * @throws BlackBoxException
      */
     private Boolean delete(List<T> rows) throws BlackBoxException {
@@ -107,9 +114,7 @@ public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<B
      * Delete a single row from the database
      *
      * @param row the row to be deleted
-     *
      * @return true if the delete was successful
-     *
      * @throws BlackBoxException
      */
     private Boolean delete(T row) throws BlackBoxException {
@@ -123,7 +128,6 @@ public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<B
     }
 
     /**
-     *
      * @return
      */
     private Session getSession() {

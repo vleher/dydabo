@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,18 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *******************************************************************************/
+ */
 package com.dydabo.blackbox;
 
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 /**
- *
  * @author viswadas leher <vleher@gmail.com>
  */
 public class BlackBoxExceptionNGTest {
@@ -36,7 +31,6 @@ public class BlackBoxExceptionNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @BeforeClass
@@ -44,7 +38,6 @@ public class BlackBoxExceptionNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @AfterClass
@@ -52,7 +45,6 @@ public class BlackBoxExceptionNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @BeforeMethod
@@ -60,7 +52,6 @@ public class BlackBoxExceptionNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @AfterMethod

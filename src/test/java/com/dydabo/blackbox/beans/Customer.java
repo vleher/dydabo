@@ -1,11 +1,11 @@
-/** *****************************************************************************
+/*
  * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,22 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- ******************************************************************************
  */
 package com.dydabo.blackbox.beans;
 
 import com.dydabo.blackbox.BlackBoxable;
 import com.google.gson.Gson;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.UUID;
 import org.apache.hadoop.hbase.util.Bytes;
 
+import java.util.*;
+
 /**
- *
  * @author viswadas leher <vleher@gmail.com>
  */
 public class Customer extends User implements BlackBoxable {
@@ -38,7 +32,6 @@ public class Customer extends User implements BlackBoxable {
     private String[] cars = new String[]{};
 
     /**
-     *
      * @param userId
      * @param userName
      */
@@ -63,7 +56,6 @@ public class Customer extends User implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public Map<String, Address> getAddress() {
@@ -71,7 +63,6 @@ public class Customer extends User implements BlackBoxable {
     }
 
     /**
-     *
      * @param address
      */
     public void setAddress(Map<String, Address> address) {
@@ -79,7 +70,6 @@ public class Customer extends User implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public List<String> getEmailAddresses() {
@@ -87,7 +77,6 @@ public class Customer extends User implements BlackBoxable {
     }
 
     /**
-     *
      * @param emailAddresses
      */
     public void setEmailAddresses(List<String> emailAddresses) {
@@ -95,7 +84,6 @@ public class Customer extends User implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public String[] getCars() {
@@ -103,7 +91,6 @@ public class Customer extends User implements BlackBoxable {
     }
 
     /**
-     *
      * @param cars
      */
     public void setCars(String[] cars) {
@@ -121,7 +108,6 @@ public class Customer extends User implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     @Override

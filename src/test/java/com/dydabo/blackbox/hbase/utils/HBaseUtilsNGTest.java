@@ -1,11 +1,11 @@
-/** *****************************************************************************
+/*
  * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- ******************************************************************************
  */
 package com.dydabo.blackbox.hbase.utils;
 
@@ -37,7 +36,6 @@ import java.util.Collections;
 import static org.testng.Assert.assertEquals;
 
 /**
- *
  * @author viswadas leher <vleher@gmail.com>
  */
 public class HBaseUtilsNGTest {
@@ -49,7 +47,6 @@ public class HBaseUtilsNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @BeforeClass
@@ -57,7 +54,6 @@ public class HBaseUtilsNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @AfterClass
@@ -65,7 +61,6 @@ public class HBaseUtilsNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @BeforeMethod
@@ -73,7 +68,6 @@ public class HBaseUtilsNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @AfterMethod
@@ -85,7 +79,6 @@ public class HBaseUtilsNGTest {
      *
      * @param row
      * @param tableName
-     *
      * @throws java.io.IOException
      */
     @Test(dataProvider = "gettablenamedata")
@@ -96,13 +89,12 @@ public class HBaseUtilsNGTest {
     }
 
     /**
-     *
      * @return
      */
     @DataProvider(name = "gettablenamedata")
     public Object[][] tableNameData() {
         return new Object[][]{
-            {new Employee(1, null), "comdydaboblackboxbeansEmployee"}
+                {new Employee(1, null), "comdydaboblackboxbeansEmployee"}
         };
     }
 
@@ -110,7 +102,6 @@ public class HBaseUtilsNGTest {
      * Test of createTable method, of class HBaseBlackBoxImpl.
      *
      * @param row
-     *
      * @throws java.lang.Exception
      */
     @Test(dataProvider = "createtabledata")
@@ -122,14 +113,13 @@ public class HBaseUtilsNGTest {
     }
 
     /**
-     *
      * @return
      */
     @DataProvider(name = "createtabledata")
     public Object[][] createTableData() {
         return new Object[][]{
-            {new Customer(null, null)},
-            {new Employee(null, null)}
+                {new Customer(null, null)},
+                {new Employee(null, null)}
         };
     }
 
@@ -150,7 +140,6 @@ public class HBaseUtilsNGTest {
      *
      * @param row
      * @param expResult
-     *
      * @throws java.lang.Exception
      */
     @Test(dataProvider = "rowexistsdata")
@@ -176,14 +165,13 @@ public class HBaseUtilsNGTest {
     }
 
     /**
-     *
      * @return
      */
     @DataProvider(name = "rowexistsdata")
     public Object[][] rowExistsData() {
         return new Object[][]{
-            {new Employee(1010101345, "Dummy Name"), false},
-            {new Employee(12312312, "Adele"), true}
+                {new Employee(1010101345, "Dummy Name"), false},
+                {new Employee(12312312, "Adele"), true}
         };
     }
 

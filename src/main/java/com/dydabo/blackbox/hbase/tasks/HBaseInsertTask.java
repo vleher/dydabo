@@ -1,16 +1,18 @@
-/**
- * ***************************************************************************** Copyright 2017 viswadas leher <vleher@gmail.com>.
+/*
+ * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS"
- * BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language
- * governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
- ******************************************************************************
  */
 package com.dydabo.blackbox.hbase.tasks;
 
@@ -26,16 +28,18 @@ import org.apache.hadoop.hbase.regionserver.NoSuchColumnFamilyException;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
- * @author viswadas leher <vleher@gmail.com>
  * @param <T>
+ * @author viswadas leher <vleher@gmail.com>
  */
 public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boolean> {
 
@@ -47,7 +51,6 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
     private final List<T> rows;
 
     /**
-     *
      * @param connection
      * @param row
      * @param checkExisting
@@ -57,7 +60,6 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
     }
 
     /**
-     *
      * @param connection
      * @param rows
      * @param checkExisting
@@ -70,12 +72,9 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
     }
 
     /**
-     *
      * @param rows
      * @param checkExisting
-     *
      * @return
-     *
      * @throws BlackBoxException
      */
     protected Boolean insert(List<T> rows, boolean checkExisting) throws BlackBoxException {
@@ -102,12 +101,9 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
     }
 
     /**
-     *
      * @param row
      * @param checkExisting
-     *
      * @return
-     *
      * @throws BlackBoxException
      */
     protected Boolean insert(T row, boolean checkExisting) throws BlackBoxException {
@@ -121,7 +117,7 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
                     boolean rowExists = utils.checkIfRowExists(row, hTable);
                     if (rowExists) {
                         throw new BlackBoxException("Cannot insert as the row exist. "
-                                        + "Change the rowkey or call update. Current RowKey " + row.getBBRowKey());
+                                + "Change the rowkey or call update. Current RowKey " + row.getBBRowKey());
                     }
                 }
 
@@ -174,7 +170,6 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
     }
 
     /**
-     *
      * @return
      */
     public Connection getConnection() {

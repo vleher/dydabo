@@ -1,11 +1,11 @@
-/** *****************************************************************************
+/*
  * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- ******************************************************************************
  */
 package com.dydabo.blackbox.usecase.medical;
 
@@ -30,44 +29,37 @@ import java.util.*;
 import java.util.logging.Logger;
 
 /**
- *
  * @author viswadas leher <vleher@gmail.com>
  */
 public class MedicalUseCaseTest {
-
-    private static final Logger logger = Logger.getLogger(MedicalUseCaseTest.class.getName());
-    private BlackBox cassBlackBox;
-    private BlackBox hbaseBlackBox;
 
     /**
      *
      */
     public static final List<String> Diagnosis = Arrays.asList("Diabetes", "High Blood Pressure", "Low Blood Pressure", "Polio", "Fever",
             "Common Cold", "Allergy");
-
+    /**
+     *
+     */
+    public static final List<String> Meds = Arrays.asList("Acetylmethadol", "Benzethidine", "Difenoxin", "Furethidine", "Phenoperidine");
+    private static final Logger logger = Logger.getLogger(MedicalUseCaseTest.class.getName());
     /**
      *
      */
     public static List<String> FirstNames = Arrays.asList("David", "Peter", "Tom", "Dick", "Harry", "John", "Bill", "Adele", "Britney",
             "Mariah", "Tina", "Diana", "Dionne", "Cyndi", "Kim", "Lindsey", "Shiela", "Bette");
-
     /**
      *
      */
     public static List<String> LastNames = Arrays.asList("Johnson", "Becker", "Smith", "Gates", "King", "Spears", "Perry", "Carey",
             "Gomez", "Lopez", "Turner", "Ross", "Warwick", "Lauper", "Carnes", "Midler", "Jackson", "Hayes");
-
-    /**
-     *
-     */
-    public static final List<String> Meds = Arrays.asList("Acetylmethadol", "Benzethidine", "Difenoxin", "Furethidine", "Phenoperidine");
-
     final int knownPatientId = 123456;
     final Random random = new Random();
     final DyDaBoTestUtils testUtils = new DyDaBoTestUtils();
+    private BlackBox cassBlackBox;
+    private BlackBox hbaseBlackBox;
 
     /**
-     *
      * @throws BlackBoxException
      * @throws IOException
      */
@@ -80,7 +72,6 @@ public class MedicalUseCaseTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @BeforeClass
@@ -89,7 +80,6 @@ public class MedicalUseCaseTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @AfterClass
@@ -97,7 +87,6 @@ public class MedicalUseCaseTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @BeforeMethod
@@ -105,7 +94,6 @@ public class MedicalUseCaseTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @AfterMethod
@@ -113,7 +101,6 @@ public class MedicalUseCaseTest {
     }
 
     /**
-     *
      * @throws BlackBoxException
      */
     @Test
@@ -141,7 +128,6 @@ public class MedicalUseCaseTest {
     }
 
     /**
-     *
      * @throws BlackBoxException
      */
     @Test
@@ -156,7 +142,6 @@ public class MedicalUseCaseTest {
     }
 
     /**
-     *
      * @throws BlackBoxException
      */
     @Test
@@ -185,7 +170,6 @@ public class MedicalUseCaseTest {
     }
 
     /**
-     *
      * @throws BlackBoxException
      */
     @Test
@@ -213,7 +197,6 @@ public class MedicalUseCaseTest {
     }
 
     /**
-     *
      * @throws BlackBoxException
      */
     @Test
@@ -229,7 +212,6 @@ public class MedicalUseCaseTest {
     }
 
     /**
-     *
      * @throws BlackBoxException
      */
     @Test
@@ -261,7 +243,6 @@ public class MedicalUseCaseTest {
     }
 
     /**
-     *
      * @throws BlackBoxException
      */
     @Test
@@ -294,7 +275,6 @@ public class MedicalUseCaseTest {
     }
 
     /**
-     *
      * @throws BlackBoxException
      */
     @Test
@@ -313,7 +293,6 @@ public class MedicalUseCaseTest {
     }
 
     /**
-     *
      * @throws BlackBoxException
      */
     @Test
@@ -371,7 +350,6 @@ public class MedicalUseCaseTest {
     }
 
     /**
-     *
      * @throws BlackBoxException
      */
     @Test
@@ -386,7 +364,6 @@ public class MedicalUseCaseTest {
     }
 
     /**
-     *
      * @throws BlackBoxException
      */
     @Test
@@ -416,7 +393,6 @@ public class MedicalUseCaseTest {
     }
 
     /**
-     *
      * @throws BlackBoxException
      */
     @Test
@@ -444,7 +420,6 @@ public class MedicalUseCaseTest {
     }
 
     /**
-     *
      * @throws BlackBoxException
      */
     @Test
@@ -463,7 +438,6 @@ public class MedicalUseCaseTest {
     }
 
     /**
-     *
      * @throws BlackBoxException
      */
     @Test
@@ -523,7 +497,6 @@ public class MedicalUseCaseTest {
     }
 
     /**
-     *
      * @throws BlackBoxException
      */
     @Test

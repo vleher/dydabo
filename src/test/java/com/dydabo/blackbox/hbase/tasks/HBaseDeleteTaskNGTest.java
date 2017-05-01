@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *******************************************************************************/
+ */
 package com.dydabo.blackbox.hbase.tasks;
 
 import com.dydabo.blackbox.BlackBoxException;
@@ -22,18 +22,13 @@ import com.dydabo.blackbox.beans.Customer;
 import com.dydabo.blackbox.beans.Employee;
 import com.dydabo.blackbox.hbase.HBaseBlackBoxImpl;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
-import java.io.IOException;
 import org.apache.hadoop.hbase.client.Connection;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
+
+import java.io.IOException;
 
 /**
- *
  * @author viswadas leher <vleher@gmail.com>
  */
 public class HBaseDeleteTaskNGTest {
@@ -41,7 +36,6 @@ public class HBaseDeleteTaskNGTest {
     private final Connection connection;
 
     /**
-     *
      * @throws IOException
      * @throws BlackBoxException
      */
@@ -52,7 +46,6 @@ public class HBaseDeleteTaskNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @BeforeClass
@@ -60,7 +53,6 @@ public class HBaseDeleteTaskNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @AfterClass
@@ -68,7 +60,6 @@ public class HBaseDeleteTaskNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @BeforeMethod
@@ -76,7 +67,6 @@ public class HBaseDeleteTaskNGTest {
     }
 
     /**
-     *
      * @throws Exception
      */
     @AfterMethod
@@ -85,6 +75,7 @@ public class HBaseDeleteTaskNGTest {
 
     /**
      * Test of delete method, of class HBaseDeleteTask.
+     *
      * @param row
      * @param expResult
      * @throws java.lang.Exception
@@ -97,13 +88,12 @@ public class HBaseDeleteTaskNGTest {
     }
 
     /**
-     *
      * @return
      */
     @DataProvider(name = "testDeleteData")
     public Object[][] testDeleteData() {
         return new Object[][]{
-            {new Customer(1234, "abcd"), true}
+                {new Customer(1234, "abcd"), true}
         };
     }
 

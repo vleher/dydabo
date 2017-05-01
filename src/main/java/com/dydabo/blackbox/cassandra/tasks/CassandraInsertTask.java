@@ -1,9 +1,18 @@
 /*
- * Copyright 2017 viswadas leher <vleher@gmail.com>. Licensed under the Apache License, Version 2.0 (the "License"); you may not use
- * this file except in compliance with the License. You may obtain a copy of the License at
- * http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under
- * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under the License.
+ * Copyright 2017 viswadas leher <vleher@gmail.com>.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 package com.dydabo.blackbox.cassandra.tasks;
 
@@ -17,16 +26,18 @@ import com.dydabo.blackbox.common.DyDaBoUtils;
 import com.dydabo.blackbox.db.CassandraConnectionManager;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
- * @author viswadas leher <vleher@gmail.com>
  * @param <T>
+ * @author viswadas leher <vleher@gmail.com>
  */
 public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<Boolean> {
 
@@ -38,7 +49,6 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
     private final CassandraUtils<T> utils;
 
     /**
-     *
      * @param session
      * @param row
      * @param checkExisting
@@ -48,7 +58,6 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
     }
 
     /**
-     *
      * @param session
      * @param rows
      * @param checkExisting
@@ -71,7 +80,6 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
     }
 
     /**
-     *
      * @return
      */
     private Session getSession() {
@@ -79,12 +87,9 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
     }
 
     /**
-     *
      * @param rows
      * @param checkExisting
-     *
      * @return
-     *
      * @throws BlackBoxException
      */
     private Boolean insert(List<T> rows, boolean checkExisting) throws BlackBoxException {
@@ -113,12 +118,9 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
     }
 
     /**
-     *
      * @param row
      * @param checkExisting
-     *
      * @return
-     *
      * @throws BlackBoxException
      */
     private Boolean insert(T row, boolean checkExisting) throws BlackBoxException {

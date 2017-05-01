@@ -1,11 +1,11 @@
-/** *****************************************************************************
+/*
  * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,17 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- ******************************************************************************
  */
 package com.dydabo.blackbox.beans;
 
 import com.dydabo.blackbox.BlackBoxable;
 import com.google.gson.Gson;
-import java.util.UUID;
 import org.apache.hadoop.hbase.util.Bytes;
 
+import java.util.UUID;
+
 /**
- *
  * @author leher
  */
 public class Employee extends User implements BlackBoxable {
@@ -32,7 +31,6 @@ public class Employee extends User implements BlackBoxable {
     private Integer salary;
 
     /**
-     *
      * @param id
      * @param name
      */
@@ -41,7 +39,6 @@ public class Employee extends User implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public String getEmployeeTitle() {
@@ -49,7 +46,6 @@ public class Employee extends User implements BlackBoxable {
     }
 
     /**
-     *
      * @param employeeTitle
      */
     public void setEmployeeTitle(String employeeTitle) {
@@ -57,7 +53,6 @@ public class Employee extends User implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public Integer getSalary() {
@@ -65,7 +60,6 @@ public class Employee extends User implements BlackBoxable {
     }
 
     /**
-     *
      * @param salary
      */
     public void setSalary(Integer salary) {
@@ -83,7 +77,6 @@ public class Employee extends User implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     @Override

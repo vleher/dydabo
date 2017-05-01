@@ -1,11 +1,11 @@
-/** *****************************************************************************
+/*
  * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,17 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- ******************************************************************************
  */
 package com.dydabo.blackbox.usecase.medical.db;
 
 import com.dydabo.blackbox.BlackBoxable;
 import com.google.gson.Gson;
+
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- *
  * @author viswadas leher <vleher@gmail.com>
  */
 public class Encounter implements BlackBoxable {
@@ -53,7 +52,6 @@ public class Encounter implements BlackBoxable {
     }
 
     /**
-     *
      * @param eId
      * @param pId
      */
@@ -63,7 +61,6 @@ public class Encounter implements BlackBoxable {
     }
 
     /**
-     *
      * @param eId
      * @param pId
      * @param pFN
@@ -76,7 +73,6 @@ public class Encounter implements BlackBoxable {
     }
 
     /**
-     *
      * @param eId
      * @param pat
      */
@@ -86,7 +82,6 @@ public class Encounter implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public String getpId() {
@@ -94,7 +89,6 @@ public class Encounter implements BlackBoxable {
     }
 
     /**
-     *
      * @param pId
      */
     public void setpId(String pId) {
@@ -102,7 +96,6 @@ public class Encounter implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public String geteId() {
@@ -110,7 +103,6 @@ public class Encounter implements BlackBoxable {
     }
 
     /**
-     *
      * @param eId
      */
     public void seteId(String eId) {
@@ -118,7 +110,6 @@ public class Encounter implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public String getpNotes() {
@@ -126,7 +117,6 @@ public class Encounter implements BlackBoxable {
     }
 
     /**
-     *
      * @param pNotes
      */
     public void setpNotes(String pNotes) {
@@ -134,7 +124,6 @@ public class Encounter implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public List<Procedure> getProcs() {
@@ -142,7 +131,6 @@ public class Encounter implements BlackBoxable {
     }
 
     /**
-     *
      * @param procs
      */
     public void setProcs(List<Procedure> procs) {
@@ -150,7 +138,6 @@ public class Encounter implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public List<Medication> getMeds() {
@@ -158,7 +145,6 @@ public class Encounter implements BlackBoxable {
     }
 
     /**
-     *
      * @param meds
      */
     public void setMeds(List<Medication> meds) {
@@ -166,7 +152,6 @@ public class Encounter implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public List<Diagnosis> getDiags() {
@@ -174,7 +159,6 @@ public class Encounter implements BlackBoxable {
     }
 
     /**
-     *
      * @param diags
      */
     public void setDiags(List<Diagnosis> diags) {
@@ -182,7 +166,6 @@ public class Encounter implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public List<Claim> getCls() {
@@ -190,55 +173,6 @@ public class Encounter implements BlackBoxable {
     }
 
     /**
-     *
-     * @return
-     */
-    public String getpFN() {
-        return pFN;
-    }
-
-    /**
-     *
-     * @param pFN
-     */
-    public void setpFN(String pFN) {
-        this.pFN = pFN;
-    }
-
-    /**
-     *
-     * @return
-     */
-    public String getpLN() {
-        return pLN;
-    }
-
-    /**
-     *
-     * @param pLN
-     */
-    public void setpLN(String pLN) {
-        this.pLN = pLN;
-    }
-
-    /**
-     *
-     * @return
-     */
-    public Patient getPatient() {
-        return patient;
-    }
-
-    /**
-     *
-     * @param patient
-     */
-    public void setPatient(Patient patient) {
-        this.patient = patient;
-    }
-
-    /**
-     *
      * @param cls
      */
     public void setCls(List<Claim> cls) {
@@ -246,7 +180,48 @@ public class Encounter implements BlackBoxable {
     }
 
     /**
-     *
+     * @return
+     */
+    public String getpFN() {
+        return pFN;
+    }
+
+    /**
+     * @param pFN
+     */
+    public void setpFN(String pFN) {
+        this.pFN = pFN;
+    }
+
+    /**
+     * @return
+     */
+    public String getpLN() {
+        return pLN;
+    }
+
+    /**
+     * @param pLN
+     */
+    public void setpLN(String pLN) {
+        this.pLN = pLN;
+    }
+
+    /**
+     * @return
+     */
+    public Patient getPatient() {
+        return patient;
+    }
+
+    /**
+     * @param patient
+     */
+    public void setPatient(Patient patient) {
+        this.patient = patient;
+    }
+
+    /**
      * @return
      */
     public String getMedIds() {
@@ -254,7 +229,6 @@ public class Encounter implements BlackBoxable {
     }
 
     /**
-     *
      * @param medIds
      */
     public void setMedIds(String medIds) {
@@ -262,7 +236,6 @@ public class Encounter implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     public String getDiagIds() {
@@ -270,7 +243,6 @@ public class Encounter implements BlackBoxable {
     }
 
     /**
-     *
      * @param diagIds
      */
     public void setDiagIds(String diagIds) {
@@ -283,7 +255,6 @@ public class Encounter implements BlackBoxable {
     }
 
     /**
-     *
      * @return
      */
     @Override
@@ -297,7 +268,6 @@ public class Encounter implements BlackBoxable {
     }
 
     /**
-     *
      * @param diagnosis
      */
     public void addDiagnosis(Diagnosis diagnosis) {
@@ -306,7 +276,6 @@ public class Encounter implements BlackBoxable {
     }
 
     /**
-     *
      * @param medication
      */
     public void addMedication(Medication medication) {
@@ -315,7 +284,6 @@ public class Encounter implements BlackBoxable {
     }
 
     /**
-     *
      * @param claim
      */
     public void addClaim(Claim claim) {
