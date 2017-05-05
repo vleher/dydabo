@@ -76,17 +76,15 @@ public class HBaseBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
 
     @Override
     public boolean delete(List<T> rows) throws BlackBoxException {
-        boolean successFlag = true;
         createTable(rows);
         try {
             ForkJoinPool fjPool = ForkJoinPool.commonPool();
             HBaseDeleteTask<T> deleteJob = new HBaseDeleteTask<>(getConnection(), rows);
-            Boolean flag = fjPool.invoke(deleteJob);
-            successFlag = successFlag && flag;
+            return fjPool.invoke(deleteJob);
         } catch (IOException ex) {
             logger.log(Level.SEVERE, null, ex);
         }
-        return successFlag;
+        return false;
     }
 
     @Override
@@ -148,18 +146,16 @@ public class HBaseBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
 
     @Override
     public boolean insert(List<T> rows) throws BlackBoxException {
-        boolean successFlag = true;
         createTable(rows);
         ForkJoinPool fjPool = ForkJoinPool.commonPool();
         try {
             HBaseInsertTask<T> insertJob = new HBaseInsertTask<>(getConnection(), rows, true);
-            boolean flag = fjPool.invoke(insertJob);
-            successFlag = successFlag && flag;
+            return fjPool.invoke(insertJob);
         } catch (IOException ex) {
             logger.log(Level.SEVERE, null, ex);
         }
 
-        return successFlag;
+        return false;
     }
 
     @Override
@@ -217,18 +213,16 @@ public class HBaseBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
 
     @Override
     public boolean update(List<T> rows) throws BlackBoxException {
-        boolean successFlag = true;
         createTable(rows);
         ForkJoinPool fjPool = ForkJoinPool.commonPool();
         try {
             HBaseInsertTask<T> insertJob = new HBaseInsertTask<>(getConnection(), rows, false);
-            boolean flag = fjPool.invoke(insertJob);
-            successFlag = successFlag && flag;
+            return fjPool.invoke(insertJob);
         } catch (IOException ex) {
             logger.log(Level.SEVERE, null, ex);
         }
 
-        return successFlag;
+        return false;
     }
 
     @Override

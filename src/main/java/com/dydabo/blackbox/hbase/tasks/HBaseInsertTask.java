@@ -68,7 +68,7 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
         this.connection = connection;
         this.rows = rows;
         this.checkExisting = checkExisting;
-        this.utils = new HBaseUtils<T>();
+        this.utils = new HBaseUtils<>();
     }
 
     /**

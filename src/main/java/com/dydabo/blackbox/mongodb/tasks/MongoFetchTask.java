@@ -23,6 +23,7 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import org.bson.Document;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -56,7 +57,7 @@ public class MongoFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
         this.collection = collection;
         this.rowKeys = rowKeys;
         this.row = row;
-        this.utils = new MongoUtils<T>();
+        this.utils = new MongoUtils<>();
         this.isPartialKey = isPartialKey;
         this.maxResults = maxResults;
     }
@@ -79,7 +80,7 @@ public class MongoFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
 
         List<ForkJoinTask<List<T>>> taskList = new ArrayList<>();
         for (String rowKey : rowKeys) {
-            ForkJoinTask<List<T>> fjTask = new MongoFetchTask<T>(collection, Collections.singletonList(rowKey), row, isPartialKey, maxResults).fork();
+            ForkJoinTask<List<T>> fjTask = new MongoFetchTask<>(collection, Collections.singletonList(rowKey), row, isPartialKey, maxResults).fork();
             taskList.add(fjTask);
         }
 
@@ -93,7 +94,7 @@ public class MongoFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
     private List<T> fetch(String rowKey) {
         List<T> results = new ArrayList<>();
 
-        FindIterable<Document> docIter = null;
+        FindIterable<Document> docIter;
 
         if (isPartialKey) {
             docIter = collection.find(regex(MongoUtils.PRIMARYKEY, rowKey));
@@ -102,7 +103,7 @@ public class MongoFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
         }
 
         for (Document doc : docIter) {
-            T resultObject = new Gson().fromJson(doc.toJson(), (Class<T>) row.getClass());
+            T resultObject = new Gson().fromJson(doc.toJson(), (Type) row.getClass());
             if (resultObject != null) {
                 results.add(resultObject);
             }

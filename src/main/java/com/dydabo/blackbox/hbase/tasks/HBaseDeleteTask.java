@@ -60,7 +60,7 @@ public class HBaseDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
     public HBaseDeleteTask(Connection connection, List<T> rows) {
         this.connection = connection;
         this.rows = rows;
-        this.utils = new HBaseUtils<T>();
+        this.utils = new HBaseUtils<>();
     }
 
     @Override

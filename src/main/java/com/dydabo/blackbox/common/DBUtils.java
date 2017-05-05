@@ -47,9 +47,7 @@ public abstract class DBUtils<T extends BlackBoxable> {
                     field.setAccessible(true);
                     cTable.getDefaultFamily().addColumn(key, field.get(row));
                 }
-            } catch (IllegalArgumentException ex) {
-                Logger.getLogger(CassandraUtils.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (IllegalAccessException ex) {
+            } catch (IllegalArgumentException | IllegalAccessException ex) {
                 Logger.getLogger(CassandraUtils.class.getName()).log(Level.SEVERE, null, ex);
             }
         }

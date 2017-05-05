@@ -27,6 +27,7 @@ import org.apache.hadoop.hbase.filter.*;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -82,7 +83,7 @@ public class HBaseRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
                     try (ResultScanner resultScanner = hTable.getScanner(scan)) {
                         for (Result result : resultScanner) {
                             GenericDBTableRow resultTable = utils.parseResultToHTable(result, startRow);
-                            T resultObject = new Gson().fromJson(resultTable.toJsonObject(), (Class<T>) startRow.getClass());
+                            T resultObject = new Gson().fromJson(resultTable.toJsonObject(), (Type) startRow.getClass());
                             if (resultObject != null) {
                                 if (maxResults < 0) {
                                     results.add(resultObject);
@@ -109,7 +110,7 @@ public class HBaseRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
     /**
      * @return
      */
-    public Connection getConnection() {
+    private Connection getConnection() {
         return connection;
     }
 
@@ -133,30 +134,28 @@ public class HBaseRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
                     // Binary Comparator Filter
 //                    String regexValue = colValue.getColumnValueAsString();
 //                    regexValue = utils.sanitizeRegex(regexValue);
-                    if (column != null) {
-                        BinaryComparator binaryComp = new BinaryComparator(utils.getAsByteArray(columnValue));
-                        SingleColumnValueFilter startFilter = new SingleColumnValueFilter(Bytes.toBytes(familyName),
-                                Bytes.toBytes(colName), CompareFilter.CompareOp.GREATER_OR_EQUAL, binaryComp);
-                        GenericDBTableRow.Column endValue = endTable.getColumnFamily(familyName).getColumn(colName);
-                        if (endValue != null && endValue.getColumnValue() != null) {
+                    BinaryComparator binaryComp = new BinaryComparator(utils.getAsByteArray(columnValue));
+                    SingleColumnValueFilter startFilter = new SingleColumnValueFilter(Bytes.toBytes(familyName),
+                            Bytes.toBytes(colName), CompareFilter.CompareOp.GREATER_OR_EQUAL, binaryComp);
+                    GenericDBTableRow.Column endValue = endTable.getColumnFamily(familyName).getColumn(colName);
+                    if (endValue != null && endValue.getColumnValue() != null) {
 //                            String endRegexValue = endValue.getColumnValueAsString();
 //                            endRegexValue = utils.sanitizeRegex(endRegexValue);
-                            //if (endRegexValue instanceof String && DyDaBoUtils.isValidRegex((String) endRegexValue)) {
-                            BinaryComparator endBinaryComp = new BinaryComparator(utils.getAsByteArray(endValue.getColumnValue()));
-                            SingleColumnValueFilter endFilter = new SingleColumnValueFilter(Bytes.toBytes(familyName),
-                                    Bytes.toBytes(colName), CompareFilter.CompareOp.LESS, endBinaryComp);
-                            filterList.addFilter(endFilter);
-                            //}
-                        }
-
-                        filterList.addFilter(startFilter);
-                        hasFilters = true;
+                        //if (endRegexValue instanceof String && DyDaBoUtils.isValidRegex((String) endRegexValue)) {
+                        BinaryComparator endBinaryComp = new BinaryComparator(utils.getAsByteArray(endValue.getColumnValue()));
+                        SingleColumnValueFilter endFilter = new SingleColumnValueFilter(Bytes.toBytes(familyName),
+                                Bytes.toBytes(colName), CompareFilter.CompareOp.LESS, endBinaryComp);
+                        filterList.addFilter(endFilter);
+                        //}
                     }
+
+                    filterList.addFilter(startFilter);
+                    hasFilters = true;
                 } else {
                     // Rgeular expression filter
                     String regexValue = column.getColumnValueAsString();
                     regexValue = utils.sanitizeRegex(regexValue);
-                    if (regexValue instanceof String && DyDaBoUtils.isValidRegex(regexValue)) {
+                    if (regexValue != null && DyDaBoUtils.isValidRegex(regexValue)) {
 
                         RegexStringComparator regexComp = new RegexStringComparator(regexValue);
                         SingleColumnValueFilter startFilter = new SingleColumnValueFilter(Bytes.toBytes(familyName),
@@ -165,7 +164,7 @@ public class HBaseRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
                         if (endValue != null) {
                             String endRegexValue = endValue.getColumnValueAsString();
                             endRegexValue = utils.sanitizeRegex(endRegexValue);
-                            if (endRegexValue instanceof String && DyDaBoUtils.isValidRegex(endRegexValue)) {
+                            if (endRegexValue != null && DyDaBoUtils.isValidRegex(endRegexValue)) {
                                 RegexStringComparator endRegexComp = new RegexStringComparator(endRegexValue);
                                 SingleColumnValueFilter endFilter = new SingleColumnValueFilter(Bytes.toBytes(familyName),
                                         Bytes.toBytes(colName), CompareFilter.CompareOp.LESS, endRegexComp);

@@ -35,12 +35,12 @@ public class DyDaBoUtils {
     /**
      * Empty array string representation
      */
-    public static final String EMPTY_ARRAY = "[]";
+    private static final String EMPTY_ARRAY = "[]";
 
     /**
      * Empty Map string representation
      */
-    public static final String EMPTY_MAP = "{}";
+    private static final String EMPTY_MAP = "{}";
     private static final Logger logger = Logger.getLogger(DyDaBoUtils.class.getName());
 
     /**
@@ -104,9 +104,7 @@ public class DyDaBoUtils {
     public static JsonElement parseJsonString(String jsonString) {
         try {
             return new JsonParser().parse(jsonString);
-        } catch (JsonSyntaxException ex) {
-            // ignore for now
-        } catch (NullPointerException ex) {
+        } catch (JsonSyntaxException | NullPointerException ex) {
             // ignore for now
         }
 

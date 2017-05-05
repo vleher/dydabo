@@ -66,7 +66,7 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
         this.session = session;
         this.rows = rows;
         this.checkExisting = checkExisting;
-        this.utils = new CassandraUtils<T>();
+        this.utils = new CassandraUtils<>();
     }
 
     @Override

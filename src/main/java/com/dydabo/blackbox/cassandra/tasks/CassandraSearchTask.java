@@ -30,6 +30,7 @@ import com.dydabo.blackbox.common.DyDaBoUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.google.gson.Gson;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -69,14 +70,14 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
     public CassandraSearchTask(Session session, List<T> rows, long maxResults) {
         this.session = session;
         this.rows = rows;
-        this.utils = new CassandraUtils<T>();
+        this.utils = new CassandraUtils<>();
         this.maxResults = maxResults;
     }
 
     /**
      * @return
      */
-    public Session getSession() {
+    private Session getSession() {
         return session;
     }
 
@@ -164,7 +165,7 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
                 }
             }
 
-            T resultObject = new Gson().fromJson(ctr.toJsonObject(), (Class<T>) row.getClass());
+            T resultObject = new Gson().fromJson(ctr.toJsonObject(), (Type) row.getClass());
             if (resultObject != null) {
                 results.add(resultObject);
             }

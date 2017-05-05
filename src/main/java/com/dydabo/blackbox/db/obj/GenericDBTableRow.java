@@ -35,7 +35,7 @@ public class GenericDBTableRow {
     /**
      *
      */
-    public static final String DEFAULT_FAMILY = "D";
+    private static final String DEFAULT_FAMILY = "D";
 
     private String rowKey;
     private Map<String, ColumnFamily> columnFamilies = null;
@@ -75,7 +75,7 @@ public class GenericDBTableRow {
     public ColumnFamily createFamily(String familyName) {
         ColumnFamily thisFamily = getColumnFamilies().get(familyName);
         if (thisFamily == null) {
-            thisFamily = getColumnFamilies().put(familyName, new ColumnFamily(familyName));
+            getColumnFamilies().put(familyName, new ColumnFamily(familyName));
         }
         return getColumnFamilies().get(familyName);
     }

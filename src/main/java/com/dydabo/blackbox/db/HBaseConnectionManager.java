@@ -65,7 +65,9 @@ public class HBaseConnectionManager {
                 thisConnection = ConnectionFactory.createConnection(config);
             }
         }
-        connectionPool.put(config.hashCode(), thisConnection);
+        if (thisConnection != null) {
+            connectionPool.put(config.hashCode(), thisConnection);
+        }
         return thisConnection;
     }
 

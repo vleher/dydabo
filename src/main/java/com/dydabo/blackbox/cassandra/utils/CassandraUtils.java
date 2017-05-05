@@ -78,7 +78,7 @@ public class CassandraUtils<T extends BlackBoxable> extends DBUtils<T> {
                 .getTable(getTableName(row));
         if (table == null) {
 
-            String query = "create table " + getTableName(row) + "(" + "bbkey text primary key";
+            StringBuilder query = new StringBuilder("create table " + getTableName(row) + "(" + "bbkey text primary key");
 
             Map<String, Field> fields = DyDaBoUtils.getFieldFromType(row.getClass());
 
@@ -88,7 +88,7 @@ public class CassandraUtils<T extends BlackBoxable> extends DBUtils<T> {
                 if (!field.isSynthetic()) {
                     String dbType = getDatabaseType(field.getType());
                     logger.info("Table::" + fName + " :" + field.getGenericType() + " :" + dbType);
-                    query += ", \"" + fName + "\" " + dbType;
+                    query.append(", \"").append(fName).append("\" ").append(dbType);
                 }
             }
 
@@ -104,10 +104,10 @@ public class CassandraUtils<T extends BlackBoxable> extends DBUtils<T> {
             // query += ", \"" + colName + "\" " + dbType;
             // }
             // }
-            query += ");";
+            query.append(");");
             Session session = CassandraConnectionManager.getSession("bb");
             logger.info("Create Table:" + query);
-            session.execute(query);
+            session.execute(query.toString());
         }
         return true;
     }

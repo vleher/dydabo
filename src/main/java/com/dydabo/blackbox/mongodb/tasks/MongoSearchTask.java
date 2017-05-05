@@ -26,6 +26,7 @@ import com.mongodb.client.MongoCollection;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -57,7 +58,7 @@ public class MongoSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
         this.collection = collection;
         this.rows = rows;
         this.maxResult = maxResult;
-        this.utils = new MongoUtils<T>();
+        this.utils = new MongoUtils<>();
     }
 
     @Override
@@ -105,7 +106,7 @@ public class MongoSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
         // create a task for each row
         List<ForkJoinTask<List<T>>> taskList = new ArrayList<>();
         for (T row : rows) {
-            ForkJoinTask<List<T>> fjTask = new MongoSearchTask<T>(collection, Collections.singletonList(row), maxResult).fork();
+            ForkJoinTask<List<T>> fjTask = new MongoSearchTask<>(collection, Collections.singletonList(row), maxResult).fork();
             taskList.add(fjTask);
         }
 
@@ -122,7 +123,7 @@ public class MongoSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
 
         Block<Document> addToResultBlock = (Document doc) -> {
             logger.info("Mongo Search Result :" + doc.toJson());
-            T resultObject = new Gson().fromJson(doc.toJson(), (Class<T>) row.getClass());
+            T resultObject = new Gson().fromJson(doc.toJson(), (Type) row.getClass());
             if (resultObject != null) {
                 results.add(resultObject);
             }

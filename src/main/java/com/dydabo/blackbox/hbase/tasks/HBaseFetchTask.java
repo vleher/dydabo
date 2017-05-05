@@ -30,6 +30,7 @@ import org.apache.hadoop.hbase.filter.RowFilter;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -114,7 +115,7 @@ public class HBaseFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
                     if (result.listCells() != null) {
                         GenericDBTableRow resultTable = utils.parseResultToHTable(result, bean);
 
-                        T resultObject = new Gson().fromJson(resultTable.toJsonObject(), (Class<T>) bean.getClass());
+                        T resultObject = new Gson().fromJson(resultTable.toJsonObject(), (Type) bean.getClass());
                         if (resultObject != null) {
                             allResults.add(resultObject);
                         }
@@ -153,7 +154,7 @@ public class HBaseFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
                         for (Result result : resultScanner) {
                             GenericDBTableRow resultTable = utils.parseResultToHTable(result, bean);
 
-                            T resultObject = new Gson().fromJson(resultTable.toJsonObject(), (Class<T>) bean.getClass());
+                            T resultObject = new Gson().fromJson(resultTable.toJsonObject(), (Type) bean.getClass());
                             if (resultObject != null) {
                                 results.add(resultObject);
                                 count++;

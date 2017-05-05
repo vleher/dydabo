@@ -38,13 +38,10 @@ public class CassandraBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T
 
     @Override
     public boolean delete(List<T> rows) throws BlackBoxException {
-        boolean successFlag = true;
         createTable(rows);
         ForkJoinPool fjPool = ForkJoinPool.commonPool();
         CassandraDeleteTask<T> deleteJob = new CassandraDeleteTask<>(getSession(), rows);
-        Boolean flag = fjPool.invoke(deleteJob);
-        successFlag = successFlag && flag;
-        return successFlag;
+        return fjPool.invoke(deleteJob);
     }
 
     @Override
@@ -91,14 +88,10 @@ public class CassandraBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T
 
     @Override
     public boolean insert(List<T> rows) throws BlackBoxException {
-        boolean successFlag = true;
         createTable(rows);
         ForkJoinPool fjPool = ForkJoinPool.commonPool();
         CassandraInsertTask<T> insertJob = new CassandraInsertTask<>(getSession(), rows, true);
-        boolean flag = fjPool.invoke(insertJob);
-        successFlag = successFlag && flag;
-
-        return successFlag;
+        return fjPool.invoke(insertJob);
     }
 
     @Override
@@ -147,14 +140,10 @@ public class CassandraBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T
 
     @Override
     public boolean update(List<T> rows) throws BlackBoxException {
-        boolean successFlag = true;
         createTable(rows);
         ForkJoinPool fjPool = ForkJoinPool.commonPool();
         CassandraInsertTask<T> insertJob = new CassandraInsertTask<>(getSession(), rows, true);
-        boolean flag = fjPool.invoke(insertJob);
-        successFlag = successFlag && flag;
-
-        return successFlag;
+        return fjPool.invoke(insertJob);
     }
 
     @Override

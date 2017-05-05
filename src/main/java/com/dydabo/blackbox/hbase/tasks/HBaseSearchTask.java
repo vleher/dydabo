@@ -28,6 +28,7 @@ import org.apache.hadoop.hbase.filter.*;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -66,7 +67,7 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
     public HBaseSearchTask(Connection connection, List<T> rows, long maxResults) {
         this.connection = connection;
         this.rows = rows;
-        this.utils = new HBaseUtils<T>();
+        this.utils = new HBaseUtils<>();
         this.maxResults = maxResults;
     }
 
@@ -92,7 +93,7 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
      * @param filterList
      * @return
      */
-    protected boolean parseForFilters(GenericDBTableRow thisTable, FilterList filterList) {
+    private boolean parseForFilters(GenericDBTableRow thisTable, FilterList filterList) {
         boolean hasFilters = false;
         for (Map.Entry<String, GenericDBTableRow.ColumnFamily> colFamEntry : thisTable.getColumnFamilies().entrySet()) {
             String familyName = colFamEntry.getKey();
@@ -102,7 +103,7 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
                 GenericDBTableRow.Column colValue = columnEntry.getValue();
                 String regexValue = colValue.getColumnValueAsString();
                 regexValue = utils.sanitizeRegex(regexValue);
-                if (regexValue instanceof String && DyDaBoUtils.isValidRegex(regexValue)) {
+                if (regexValue != null && DyDaBoUtils.isValidRegex(regexValue)) {
                     if (DyDaBoUtils.isNumber(colValue.getColumnValue())) {
                         BinaryComparator regexComp = new BinaryComparator(utils.getAsByteArray(colValue.getColumnValue()));
                         SingleColumnValueFilter scvf = new SingleColumnValueFilter(Bytes.toBytes(familyName),
@@ -181,7 +182,7 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
                     for (Result result : resultScanner) {
                         GenericDBTableRow resultTable = utils.parseResultToHTable(result, row);
 
-                        T resultObject = new Gson().fromJson(resultTable.toJsonObject(), (Class<T>) row.getClass());
+                        T resultObject = new Gson().fromJson(resultTable.toJsonObject(), (Type) row.getClass());
                         if (resultObject != null) {
                             results.add(resultObject);
                             count++;

@@ -65,7 +65,7 @@ public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<B
     public CassandraDeleteTask(Session session, List<T> rows) {
         this.session = session;
         this.rows = rows;
-        this.utils = new CassandraUtils<T>();
+        this.utils = new CassandraUtils<>();
     }
 
     @Override

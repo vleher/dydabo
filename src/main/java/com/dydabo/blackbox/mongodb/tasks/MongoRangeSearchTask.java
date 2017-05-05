@@ -26,6 +26,7 @@ import com.mongodb.client.MongoCollection;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -105,7 +106,7 @@ public class MongoRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
 
         Block<Document> addToResultBlock = (Document doc) -> {
             logger.info("Mongo Range Search Result :" + doc.toJson());
-            T resultObject = new Gson().fromJson(doc.toJson(), (Class<T>) startRow.getClass());
+            T resultObject = new Gson().fromJson(doc.toJson(), (Type) startRow.getClass());
             if (resultObject != null) {
                 results.add(resultObject);
             }

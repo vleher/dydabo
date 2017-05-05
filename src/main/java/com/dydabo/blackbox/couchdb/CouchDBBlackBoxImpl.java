@@ -14,128 +14,106 @@
  * limitations under the License.
  *
  */
-package com.dydabo.blackbox.mongodb;
+
+package com.dydabo.blackbox.couchdb;
 
 import com.dydabo.blackbox.BlackBox;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.db.MongoDBConnectionManager;
-import com.dydabo.blackbox.mongodb.tasks.*;
-import com.mongodb.client.MongoCollection;
-import org.bson.Document;
 
-import java.util.Collections;
 import java.util.List;
 
 /**
- * @param <T>
- * @author viswadas leher <vleher@gmail.com>
+ * Created by leher on 5/5/17.
  */
-public class MongoBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
-
+public class CouchDBBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
     @Override
     public boolean delete(List<T> rows) throws BlackBoxException {
-        MongoDeleteTask<T> task = new MongoDeleteTask<>(getCollection(), rows);
-        return task.invoke();
+        return false;
     }
 
     @Override
     public boolean delete(T row) throws BlackBoxException {
-        return delete(Collections.singletonList(row));
+        return false;
     }
 
     @Override
     public List<T> fetch(List<String> rowKeys, T bean) throws BlackBoxException {
-        MongoFetchTask<T> task = new MongoFetchTask<>(getCollection(), rowKeys, bean, false, -1);
-        return task.invoke();
+        return null;
     }
 
     @Override
     public List<T> fetch(String rowKey, T bean) throws BlackBoxException {
-        return fetch(Collections.singletonList(rowKey), bean);
+        return null;
     }
 
     @Override
     public List<T> fetchByPartialKey(List<String> rowKeys, T bean) throws BlackBoxException {
-        return fetchByPartialKey(rowKeys, bean, -1);
+        return null;
     }
 
     @Override
     public List<T> fetchByPartialKey(List<String> rowKeys, T bean, long maxResults) throws BlackBoxException {
-        MongoFetchTask<T> task = new MongoFetchTask<>(getCollection(), rowKeys, bean, true, maxResults);
-        return task.invoke();
+        return null;
     }
 
     @Override
     public List<T> fetchByPartialKey(String rowKey, T bean) throws BlackBoxException {
-        return fetchByPartialKey(Collections.singletonList(rowKey), bean, -1);
+        return null;
     }
 
     @Override
     public List<T> fetchByPartialKey(String rowKey, T bean, long maxResults) throws BlackBoxException {
-        return fetchByPartialKey(Collections.singletonList(rowKey), bean, maxResults);
+        return null;
     }
 
     @Override
     public boolean insert(List<T> rows) throws BlackBoxException {
-        MongoInsertTask<T> task = new MongoInsertTask<>(getCollection(), rows, true);
-        return task.invoke();
+        return false;
     }
 
     @Override
     public boolean insert(T row) throws BlackBoxException {
-        return insert(Collections.singletonList(row));
+        return false;
     }
 
     @Override
     public List<T> search(List<T> rows) throws BlackBoxException {
-        return search(rows, -1);
+        return null;
     }
 
     @Override
     public List<T> search(List<T> rows, long maxResults) throws BlackBoxException {
-        MongoSearchTask<T> task = new MongoSearchTask<>(getCollection(), rows, maxResults);
-        return task.invoke();
+        return null;
     }
 
     @Override
     public List<T> search(T row) throws BlackBoxException {
-        return search(Collections.singletonList(row), -1);
+        return null;
     }
 
     @Override
     public List<T> search(T row, long maxResults) throws BlackBoxException {
-        return search(Collections.singletonList(row), maxResults);
+        return null;
     }
 
     @Override
     public List<T> search(T startRow, T endRow) throws BlackBoxException {
-        return search(startRow, endRow, -1);
+        return null;
     }
 
     @Override
     public List<T> search(T startRow, T endRow, long maxResults) throws BlackBoxException {
-        MongoRangeSearchTask<T> task = new MongoRangeSearchTask<>(getCollection(), startRow, endRow, maxResults);
-        return task.invoke();
-
+        return null;
     }
 
     @Override
     public boolean update(List<T> newRows) throws BlackBoxException {
-        MongoInsertTask<T> task = new MongoInsertTask<>(getCollection(), newRows, false);
-        return task.invoke();
+        return false;
     }
 
     @Override
     public boolean update(T newRow) throws BlackBoxException {
-        return update(Collections.singletonList(newRow));
-    }
-
-    /**
-     * @return
-     */
-    public MongoCollection<Document> getCollection() {
-        // TODO: make this configurable
-        return MongoDBConnectionManager.getMongoDBCollection(null, "dydabo", "dydabo");
+        return false;
     }
 }

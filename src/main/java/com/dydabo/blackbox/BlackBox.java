@@ -27,7 +27,8 @@ import java.util.List;
 public interface BlackBox<T extends BlackBoxable> {
 
     /**
-     * Delete a list of POJO beans that are rows in the table. Each of these objects should have a valid row key.
+     * Delete a list of POJO beans that are
+     * rows in the table. Each of these objects should have a valid row key.
      *
      * @param rows a list of POJO
      * @return true if all deletes have been successful, false otherwise
@@ -49,7 +50,7 @@ public interface BlackBox<T extends BlackBoxable> {
      * @param bean    the POJO to return
      * @return
      * @throws BlackBoxException
-     * @returna list of POJO that match the keys
+     * @return a list of POJO that match the keys
      */
     List<T> fetch(List<String> rowKeys, T bean) throws BlackBoxException;
 

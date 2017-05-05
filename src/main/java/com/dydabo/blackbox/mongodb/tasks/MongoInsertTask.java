@@ -57,7 +57,7 @@ public class MongoInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
         this.collection = collection;
         this.rows = rows;
         this.checkExisting = checkExisting;
-        this.utils = new MongoUtils<T>();
+        this.utils = new MongoUtils<>();
     }
 
     @Override

@@ -29,6 +29,7 @@ import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.google.gson.Gson;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -83,7 +84,7 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
     public CassandraFetchTask(Session session, List<String> rowKeys, T row, boolean isPartialKeys, long maxResults) {
         this.session = session;
         this.rowKeys = rowKeys;
-        this.utils = new CassandraUtils<T>();
+        this.utils = new CassandraUtils<>();
         this.bean = row;
         this.isPartialKeys = isPartialKeys;
         this.maxResults = maxResults;
@@ -108,7 +109,7 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
         // create a task for each element or row in the list
         List<ForkJoinTask<List<T>>> taskList = new ArrayList<>();
         for (String rowKey : rowKeys) {
-            ForkJoinTask<List<T>> fjTask = new CassandraFetchTask<T>(getSession(), Collections.singletonList(rowKey), bean, isPartialKeys,
+            ForkJoinTask<List<T>> fjTask = new CassandraFetchTask<>(getSession(), Collections.singletonList(rowKey), bean, isPartialKeys,
                     maxResults).fork();
             taskList.add(fjTask);
         }
@@ -150,7 +151,7 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
                     ctr.getDefaultFamily().addColumn(def.getName(), result.getObject(def.getName()));
                 }
 
-                T resultObject = new Gson().fromJson(ctr.toJsonObject(), (Class<T>) bean.getClass());
+                T resultObject = new Gson().fromJson(ctr.toJsonObject(), (Type) bean.getClass());
 
                 if (resultObject != null) {
                     results.add(resultObject);

@@ -29,6 +29,7 @@ import com.dydabo.blackbox.common.DyDaBoUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.google.gson.Gson;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -88,7 +89,7 @@ public class CassandraRangeSearchTask<T extends BlackBoxable> extends RecursiveT
                 ctr.getDefaultFamily().addColumn(def.getName(), result.getObject(def.getName()));
             }
 
-            T resultObject = new Gson().fromJson(ctr.toJsonObject(), (Class<T>) startRow.getClass());
+            T resultObject = new Gson().fromJson(ctr.toJsonObject(), (Type) startRow.getClass());
             if (resultObject != null) {
                 if (maxResults < 0) {
                     results.add(resultObject);
@@ -106,11 +107,11 @@ public class CassandraRangeSearchTask<T extends BlackBoxable> extends RecursiveT
     /**
      * @return
      */
-    public Session getSession() {
+    private Session getSession() {
         return session;
     }
 
-    protected void parseClausesEnd(GenericDBTableRow endTableRow, List<Clause> whereClauses) {
+    private void parseClausesEnd(GenericDBTableRow endTableRow, List<Clause> whereClauses) {
         for (Map.Entry<String, GenericDBTableRow.ColumnFamily> fam : endTableRow.getColumnFamilies().entrySet()) {
             GenericDBTableRow.ColumnFamily colFamily = fam.getValue();
 
@@ -133,7 +134,7 @@ public class CassandraRangeSearchTask<T extends BlackBoxable> extends RecursiveT
         }
     }
 
-    protected void parseClausesStart(GenericDBTableRow startTableRow, List<Clause> whereClauses) {
+    private void parseClausesStart(GenericDBTableRow startTableRow, List<Clause> whereClauses) {
         for (Map.Entry<String, GenericDBTableRow.ColumnFamily> fam : startTableRow.getColumnFamilies().entrySet()) {
             GenericDBTableRow.ColumnFamily colFamily = fam.getValue();
 
