@@ -36,9 +36,9 @@ The eventual goal of the library can be summed up as below:
 
 * Someone who wants to develop an application quickly and easily without worrying about the back end. You can use this during the development phase of the project, before you have a complete understanding of all your requirements and query/access details. Once you have completed the application, you can identify the types of data access you need, and you will/may be able to come up with a better database design.
 * You don't necessarily need to have terabytes of data to use a NoSql database. Any small or medium size application can use it just as effectively. A simple application that do not have tons of data, and where every query need not be tuned to the fraction of a milli-second may find this easier to maintain.
-* You don't want to dabble with SQL, CQL, HQL queries. If you design your POJO ***wisely*** so as to easily access most of the data you want, with good row key selection then the library should suffice. 
+* You don't want to dabble with SQL, CQL, HQL queries. If you design your POJO ***wisely*** so as to easily access most of the data you want, with good row key selection then the library should suffice.
 
-**Who should not use this?** 
+**Who should not use this?**
 
 * Developers or Users who love to configure everything using XML files and/or annotations.
 * Companies with lots of resources and tons of data. You should ideally be writing customized libraries that works best for your problem/use case.
@@ -62,7 +62,7 @@ Support for the following databases:
 
 ### Status of the Project
 
-The project is still a work in progress and is in early alpha...so don't expect too much. 
+The project is still a work in progress and is in early alpha...so don't expect too much.
 
 There are still several features that needs to be implemented, and the interfaces are bound to change. So, all in all it is probably not good for prime time. I have used it in a couple of very simple projects and it has so far worked quite well.
 
@@ -73,15 +73,15 @@ There are still several features that needs to be implemented, and the interface
 
 ### Current Dependencies
 
- * Google Gson 
+ * Google Gson
  * Hbase java driver
 
 ### Build Status
-[![Build Status](https://travis-ci.org/vleher/dydabo.svg?branch=master)](https://travis-ci.org/vleher/dydabo)
- 
+[![Build Status](https://circleci.com/gh/vleher/dydabo.png?style=shield&circle-token=:circle-token)]
+
 ### License
 
-dydabo is released under the [Apache 2.0 License](https://www.apache.org/licenses/LICENSE-2.0  "Apache 2.0 License") 
+dydabo is released under the [Apache 2.0 License](https://www.apache.org/licenses/LICENSE-2.0  "Apache 2.0 License")
 
 ````
  Copyright 2017 viswadas leher <vleher@gmail.com>.
