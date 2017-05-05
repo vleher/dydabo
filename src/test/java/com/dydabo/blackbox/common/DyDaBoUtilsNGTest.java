@@ -139,7 +139,7 @@ public class DyDaBoUtilsNGTest {
         Assert.assertTrue(DyDaBoUtils.isPrimitiveOrPrimitiveWrapperOrString(Double.MAX_VALUE));
         Assert.assertTrue(DyDaBoUtils.isPrimitiveOrPrimitiveWrapperOrString("abcd"));
         Assert.assertTrue(DyDaBoUtils.isPrimitiveOrPrimitiveWrapperOrString(Integer.max(2, 6)));
-        Assert.assertTrue(DyDaBoUtils.isPrimitiveOrPrimitiveWrapperOrString(new Float(34.9)));
+        Assert.assertTrue(DyDaBoUtils.isPrimitiveOrPrimitiveWrapperOrString(34.9f));
         Assert.assertFalse(DyDaBoUtils.isPrimitiveOrPrimitiveWrapperOrString(DyDaBoUtils.class));
         Assert.assertFalse(DyDaBoUtils.isPrimitiveOrPrimitiveWrapperOrString(new Patient()));
     }

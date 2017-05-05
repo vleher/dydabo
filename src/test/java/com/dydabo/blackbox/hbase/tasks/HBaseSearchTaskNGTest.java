@@ -35,16 +35,21 @@ import java.util.List;
  */
 public class HBaseSearchTaskNGTest {
 
-    private final Connection connection;
+    private Connection connection;
 
     /**
      * @throws IOException
      * @throws BlackBoxException
      */
     public HBaseSearchTaskNGTest() throws IOException, BlackBoxException {
-        this.connection = new HBaseBlackBoxImpl<BlackBoxable>().getConnection();
-        new HBaseUtils<BlackBoxable>().createTable(new Customer(111, "sss"), connection);
-        new HBaseUtils<BlackBoxable>().createTable(new Employee(111, "sss"), connection);
+        try {
+            this.connection = new HBaseBlackBoxImpl<>().getConnection();
+            new HBaseUtils<>().createTable(new Customer(111, "sss"), connection);
+            new HBaseUtils<>().createTable(new Employee(111, "sss"), connection);
+        } catch (IOException exp) {
+            connection = null;
+        }
+
     }
 
     /**

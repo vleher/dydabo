@@ -56,11 +56,7 @@ public class HBaseConnectionManager {
      */
     public static Connection getConnection(Configuration config) throws IOException {
         Connection thisConnection = connectionPool.get(config.hashCode());
-        if (thisConnection == null) {
-            synchronized (lockObject) {
-                thisConnection = ConnectionFactory.createConnection(config);
-            }
-        } else if (thisConnection.isAborted() || thisConnection.isClosed()) {
+        if (thisConnection == null || thisConnection.isAborted() || thisConnection.isClosed()) {
             synchronized (lockObject) {
                 thisConnection = ConnectionFactory.createConnection(config);
             }
