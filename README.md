@@ -77,7 +77,7 @@ There are still several features that needs to be implemented, and the interface
  * Hbase java driver
 
 ### Build Status
-[![Build Status](https://circleci.com/gh/vleher/dydabo.png?style=shield&circle-token=:circle-token)]
+<img src="https://circleci.com/gh/vleher/dydabo.png?style=shield&circle-token=:circle-token">
 
 ### License
 
