@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 viswadas leher <vleher@gmail.com>.
+ * Copyright 2017 viswadas leher .
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ import java.util.logging.Logger;
 
 /**
  * @param <T>
- * @author viswadas leher <vleher@gmail.com>
+ * @author viswadas leher
  */
 public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boolean> {
 
@@ -78,14 +78,14 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
      * @throws BlackBoxException
      */
     protected Boolean insert(List<T> rows, boolean checkExisting) throws BlackBoxException {
+        Boolean successFlag = Boolean.TRUE;
         if (rows.size() < 2) {
-            Boolean successFlag = Boolean.TRUE;
             for (T t : rows) {
                 successFlag = successFlag && insert(t, checkExisting);
             }
             return successFlag;
         }
-        Boolean successFlag = Boolean.TRUE;
+
         // create a task for each element or row in the list
         List<ForkJoinTask<Boolean>> taskList = new ArrayList<>();
         for (T row : rows) {

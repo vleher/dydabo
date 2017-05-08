@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 viswadas leher <vleher@gmail.com>.
+ * Copyright 2017 viswadas leher .
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package com.dydabo.blackbox.cassandra.utils;
 /**
  * Some constants that the library uses
  *
- * @author viswadas leher <vleher@gmail.com>
+ * @author viswadas leher
  */
 public class CassandraConstants {
 

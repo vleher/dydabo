@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 viswadas leher <vleher@gmail.com>.
+ * Copyright 2017 viswadas leher .
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package com.dydabo.blackbox.usecase.medical;
 import com.dydabo.blackbox.BlackBox;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxFactory;
-import com.dydabo.blackbox.hbase.utils.DyDaBoTestUtils;
+import com.dydabo.blackbox.utils.DyDaBoTestUtils;
 import com.dydabo.blackbox.usecase.medical.db.*;
 import org.testng.Assert;
 import org.testng.annotations.*;
@@ -29,7 +29,7 @@ import java.util.*;
 import java.util.logging.Logger;
 
 /**
- * @author viswadas leher <vleher@gmail.com>
+ * @author viswadas leher
  */
 public class MedicalUseCaseTest {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 viswadas leher <vleher@gmail.com>.
+ * Copyright 2017 viswadas leher .
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import org.bson.Document;
 
 /**
  * @param <T>
- * @author viswadas leher <vleher@gmail.com>
+ * @author viswadas leher
  */
 public class MongoUtils<T extends BlackBoxable> extends DBUtils<T> {
 

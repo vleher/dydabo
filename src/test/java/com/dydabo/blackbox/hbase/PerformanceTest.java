@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 viswadas leher <vleher@gmail.com>.
+ * Copyright 2017 viswadas leher .
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import com.dydabo.blackbox.BlackBox;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxFactory;
 import com.dydabo.blackbox.beans.Customer;
-import com.dydabo.blackbox.hbase.utils.DyDaBoTestUtils;
+import com.dydabo.blackbox.utils.DyDaBoTestUtils;
 import org.testng.Assert;
 import org.testng.annotations.*;
 
@@ -32,20 +32,20 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * @author viswadas leher <vleher@gmail.com>
+ * @author viswadas leher
  */
-public class PerformaceTest {
+public class PerformanceTest {
 
     private static DyDaBoTestUtils utils;
     private static BlackBox instance;
-    private final Logger logger = Logger.getLogger(PerformaceTest.class.getName());
+    private final Logger logger = Logger.getLogger(PerformanceTest.class.getName());
 
     /**
      * @throws IOException
      */
-    public PerformaceTest() throws IOException {
-        PerformaceTest.utils = new DyDaBoTestUtils();
-        PerformaceTest.instance = BlackBoxFactory.getDatabase(BlackBoxFactory.HBASE);
+    public PerformanceTest() throws IOException {
+        PerformanceTest.utils = new DyDaBoTestUtils();
+        PerformanceTest.instance = BlackBoxFactory.getDatabase(BlackBoxFactory.HBASE);
     }
 
     /**

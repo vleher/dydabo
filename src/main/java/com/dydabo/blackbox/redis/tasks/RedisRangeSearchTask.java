@@ -14,12 +14,20 @@
  * limitations under the License.
  *
  */
-package com.dydabo.blackbox;
+
+package com.dydabo.blackbox.redis.tasks;
+
+import com.dydabo.blackbox.BlackBoxable;
+
+import java.util.List;
+import java.util.concurrent.RecursiveTask;
 
 /**
- * @param <T>
  * @author viswadas leher
  */
-public interface BlackBoxStateful<T extends BlackBoxable> {
-
+public class RedisRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
+    @Override
+    protected List<T> compute() {
+        return null;
+    }
 }

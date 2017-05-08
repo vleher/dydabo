@@ -84,7 +84,7 @@ There are still several features that needs to be implemented, and the interface
 dydabo is released under the [Apache 2.0 License](https://www.apache.org/licenses/LICENSE-2.0  "Apache 2.0 License")
 
 ````
- Copyright 2017 viswadas leher <vleher@gmail.com>.
+ Copyright 2017 viswadas leher .
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.

@@ -14,40 +14,34 @@
  * limitations under the License.
  *
  */
-package com.dydabo.blackbox.usecase.medical.db;
+
+package com.dydabo.blackbox.db;
+
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author viswadas leher
  */
-class PhoneNumber {
+public class RedisConnectionManager {
 
-    private String ph = null;
+    private static Map<String, JedisPool> pools = new HashMap<>();
 
-    public PhoneNumber(String phoneNumber) {
-        boolean valid = validatePhoneNumber(phoneNumber);
-        if (valid) {
-            this.ph = phoneNumber;
+    private RedisConnectionManager() {
+        //
+    }
+
+    public static Jedis getConnection(String hostName) {
+        JedisPool jedisPool = pools.get(hostName);
+        if (jedisPool == null) {
+            jedisPool = new JedisPool(new JedisPoolConfig(), hostName);
+            pools.put(hostName, jedisPool);
         }
-    }
 
-    @Override
-    public String toString() {
-        return "PhoneNumber{" + "ph=" + ph + '}';
+        return jedisPool.getResource();
     }
-
-    private boolean validatePhoneNumber(String phoneNumber) {
-        if (phoneNumber == null) {
-            return false;
-        }
-        return phoneNumber.trim().length() == 10;
-    }
-
-    public String getPh() {
-        return ph;
-    }
-
-    public void setPh(String ph) {
-        this.ph = ph;
-    }
-
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 viswadas leher <vleher@gmail.com>.
+ * Copyright 2017 viswadas leher .
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package com.dydabo.blackbox.hbase.utils;
+package com.dydabo.blackbox.utils;
 
 import com.dydabo.blackbox.BlackBox;
 import com.dydabo.blackbox.BlackBoxException;
@@ -28,9 +28,11 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * @author viswadas leher <vleher@gmail.com>
+ * @author viswadas leher
  */
 public class DyDaBoTestUtils {
+
+    public final List<String> dbToTest = Arrays.asList(BlackBoxFactory.REDIS);
 
     /**
      *

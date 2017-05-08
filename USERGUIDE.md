@@ -16,7 +16,7 @@
 * If you want ultimate control over how your data is stored and managed then this is **NOT** the library for you. The idea here is to completely isolate the user/developer from "*low level*" database design and management.
 * As of now, the class name is mapped to the table name. This means if you change the name of your POJO, it will create a new table. Your old table won't be deleted but you cannot access that data anymore using the new POJO. Using annotation for mapping could be implemented at some time in the future to allow for some flexibility.
 * The variable names are mapped to column names (and sometimes family names) which means you will need to do some extra work to still access the old column names if you change your variable name after going to production.
-* Generic search is implemented using regular expressions. That means Regular Expression filter is used (at this time) to match the rows in many generic searches, which can be quite slow in case of large data sets. 
+* Generic search is implemented using regular expressions. That means Regular Expression filter is used (at this time) to match the rowsToDelete in many generic searches, which can be quite slow in case of large data sets. 
 
 ### Using dydabo <a name="usingdydabo"></a>
 
@@ -98,7 +98,7 @@ success = instanceOne.update(user);
 // delete the row
 success = instanceOne.delete(user);
 
-// search/get for the rows where user name starts with "David" 
+// search/get for the rowsToDelete where user name starts with "David" 
 User u = new User(null, "^David.*");
 // this will return all users with the name starting with David
 List<User> searchResults = instanceOne.search(u);
@@ -111,7 +111,7 @@ List<User> allDavids = instanceOne.fetchByPartialKey(".*:David", new User());
 // to fetch the row.
 List<User> currentUser = instanceOne.fetch("1234:David", new User());
 
-// get rows using row keys
+// get rowsToDelete using row keys
 List<String> rowKeys = new ArrayList<>();
 rowKeys.add("1234:David");
 rowKeys.add("5321:Tom");

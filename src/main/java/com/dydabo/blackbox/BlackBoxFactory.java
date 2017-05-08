@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 viswadas leher <vleher@gmail.com>.
+ * Copyright 2017 viswadas leher .
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,10 @@
 package com.dydabo.blackbox;
 
 import com.dydabo.blackbox.cassandra.CassandraBlackBoxImpl;
+import com.dydabo.blackbox.couchdb.CouchDBBlackBoxImpl;
 import com.dydabo.blackbox.hbase.HBaseBlackBoxImpl;
 import com.dydabo.blackbox.mongodb.MongoBlackBoxImpl;
+import com.dydabo.blackbox.redis.RedisBlackBoxImpl;
 import org.apache.hadoop.conf.Configuration;
 
 import java.io.IOException;
@@ -26,7 +28,7 @@ import java.io.IOException;
 /**
  * Get an instance to to generic interface that allows you to interact with the backend database
  *
- * @author viswadas leher <vleher@gmail.com>
+ * @author viswadas leher
  */
 public class BlackBoxFactory {
 
@@ -44,6 +46,10 @@ public class BlackBoxFactory {
      * Constant specifying the MongoDB database
      */
     public final static String MONGODB = "mongodb";
+
+    public final static String REDIS = "redis";
+
+    public final static String COUCHDB = "couchdb";
 
     private BlackBoxFactory() {
         // No instance of this factory class
@@ -64,6 +70,10 @@ public class BlackBoxFactory {
                 return new CassandraBlackBoxImpl<>();
             case MONGODB:
                 return new MongoBlackBoxImpl<>();
+            case REDIS:
+                return new RedisBlackBoxImpl<>();
+            case COUCHDB:
+                return new CouchDBBlackBoxImpl<>();
             default:
                 return null;
         }
@@ -96,4 +106,11 @@ public class BlackBoxFactory {
         return new MongoBlackBoxImpl<>();
     }
 
+    public static BlackBox<BlackBoxable> getRedisDatabase() {
+        return new RedisBlackBoxImpl<>();
+    }
+
+    public static BlackBox<BlackBoxable> getCouchDBDatabase() {
+        return new CouchDBBlackBoxImpl<>();
+    }
 }

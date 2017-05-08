@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 viswadas leher <vleher@gmail.com>.
+ * Copyright 2017 viswadas leher .
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ import java.util.logging.Logger;
  * Hbase specific utility methods
  *
  * @param <T>
- * @author viswadas leher <vleher@gmail.com>
+ * @author viswadas leher
  */
 public class HBaseUtils<T extends BlackBoxable> extends DBUtils<T> {
 
@@ -48,11 +48,13 @@ public class HBaseUtils<T extends BlackBoxable> extends DBUtils<T> {
     private static final SortedSet<TableName> tableCache = new TreeSet<>();
 
     /**
-     * @param row
-     * @param connection
-     * @return
-     * @throws IOException
-     * @throws BlackBoxException
+     * Alter Hbase tables based on the new row class
+     *
+     * @param row the row class
+     * @param connection a active connection to the database
+     * @return  true if successful
+     * @throws IOException database error or exception
+     * @throws BlackBoxException blackbox exception if alter fails
      */
     public synchronized boolean alterTable(T row, Connection connection) throws IOException, BlackBoxException {
         try (Admin admin = connection.getAdmin()) {
@@ -89,6 +91,8 @@ public class HBaseUtils<T extends BlackBoxable> extends DBUtils<T> {
     }
 
     /**
+     * Create a table based on the row object
+     *
      * @param row        the value of row
      * @param connection
      * @return the boolean
