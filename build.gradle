@@ -4,7 +4,7 @@ apply plugin: 'maven'
 group = 'com.dydabo'
 version = '0.1.0'
 
-description = """Dynamic Database BlackBox"""
+description = "Dynamic Database BlackBox"
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
