@@ -1,0 +1,16 @@
+com.dydabo.blackbox
+com.dydabo.blackbox.cassandra
+com.dydabo.blackbox.cassandra.tasks
+com.dydabo.blackbox.cassandra.utils
+com.dydabo.blackbox.common
+com.dydabo.blackbox.couchdb
+com.dydabo.blackbox.db
+com.dydabo.blackbox.db.obj
+com.dydabo.blackbox.hbase
+com.dydabo.blackbox.hbase.tasks
+com.dydabo.blackbox.hbase.utils
+com.dydabo.blackbox.mongodb
+com.dydabo.blackbox.mongodb.tasks
+com.dydabo.blackbox.mongodb.utils
+com.dydabo.blackbox.redis
+com.dydabo.blackbox.redis.tasks
