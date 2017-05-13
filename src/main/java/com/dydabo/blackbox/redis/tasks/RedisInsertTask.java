@@ -68,14 +68,13 @@ public class RedisInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
             successFlag = successFlag && forkJoinTask.join();
         }
 
-
         return successFlag;
     }
 
     private Boolean insert(T row, boolean checkExisting) {
         try (Jedis connection = RedisConnectionManager.getConnection("localhost")) {
-            String result = connection.set(row.getBBRowKey(), row.getBBJson());
-            logger.info("Inserted "+row.getBBRowKey()+" :"+result);
+            String result = connection.set(row.getClass().getTypeName() + ":" + row.getBBRowKey(), row.getBBJson());
+            logger.info("Inserted " + row + " :" + result);
         }
         return true;
     }

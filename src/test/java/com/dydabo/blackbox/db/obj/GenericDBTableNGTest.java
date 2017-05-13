@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 viswadas leher .
+ * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,22 @@
  * limitations under the License.
  *
  */
-package com.dydabo.blackbox.hbase.obj;
+package com.dydabo.blackbox.db.obj;
 
-import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow.ColumnFamily;
 import org.testng.Assert;
-import org.testng.annotations.*;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import java.util.Map;
 
 /**
  * @author viswadas leher
  */
-public class HBaseTableNGTest {
+public class GenericDBTableNGTest {
 
     /**
      *
@@ -37,7 +40,7 @@ public class HBaseTableNGTest {
     /**
      *
      */
-    public HBaseTableNGTest() {
+    public GenericDBTableNGTest() {
         instance = new GenericDBTableRow(KEY);
     }
 

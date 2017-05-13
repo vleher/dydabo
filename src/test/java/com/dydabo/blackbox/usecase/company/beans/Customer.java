@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package com.dydabo.blackbox.beans;
+package com.dydabo.blackbox.usecase.company.beans;
 
 import com.dydabo.blackbox.BlackBoxable;
 import com.google.gson.Gson;

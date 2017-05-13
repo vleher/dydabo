@@ -288,7 +288,7 @@ public class GenericDBTableRow {
 
         @Override
         public String toString() {
-            return "Column{" + "columnName=" + columnName + ", columnValue=" + columnValue + '}';
+            return "Column{" + "columnName=" + columnName + ", columnValue=" + new Gson().toJson(columnValue).toString() + '}';
         }
 
     }

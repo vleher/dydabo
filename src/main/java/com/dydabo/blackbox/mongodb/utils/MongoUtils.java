@@ -36,9 +36,10 @@ public class MongoUtils<T extends BlackBoxable> extends DBUtils<T> {
      * @return
      */
     public Document parseRowToDocument(T row) {
+        String type = row.getClass().getTypeName();
         Document doc = Document.parse(row.getBBJson());
         // make sure we have an id
-        doc.append("_id", row.getBBRowKey());
+        doc.append(PRIMARYKEY, type + ":" + row.getBBRowKey());
         return doc;
     }
 }

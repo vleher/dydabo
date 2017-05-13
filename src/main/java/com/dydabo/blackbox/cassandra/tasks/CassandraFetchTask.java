@@ -128,19 +128,16 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
      * @throws BlackBoxException
      */
     private List<T> fetch(String rowKey) throws BlackBoxException {
-        // if (isPartialKeys) {
-        // return fetchByPartialKeys(rowKey);
-        // }
 
         Select queryStmt = QueryBuilder.select().from(utils.getTableName(bean)).allowFiltering();
         if (!isPartialKeys) {
-            queryStmt.where(QueryBuilder.eq(CassandraConstants.CASSANDRA_DEFAULT_ROWKEY, rowKey));
+            queryStmt.where(QueryBuilder.eq(CassandraConstants.DEFAULT_ROWKEY, rowKey));
         }
 
         ResultSet resultSet = getSession().execute(queryStmt);
         List<T> results = new ArrayList<>();
         for (Row result : resultSet) {
-            final String currRowKey = result.getString(CassandraConstants.CASSANDRA_DEFAULT_ROWKEY);
+            final String currRowKey = result.getString(CassandraConstants.DEFAULT_ROWKEY);
             boolean isResult = true;
             if (isPartialKeys) {
                 isResult = Pattern.matches(rowKey, currRowKey);

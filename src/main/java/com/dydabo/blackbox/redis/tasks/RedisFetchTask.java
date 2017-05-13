@@ -18,22 +18,27 @@
 package com.dydabo.blackbox.redis.tasks;
 
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.common.DyDaBoUtils;
 import com.dydabo.blackbox.db.RedisConnectionManager;
 import com.google.gson.Gson;
-import org.mortbay.util.SingletonList;
 import redis.clients.jedis.Jedis;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
+import java.util.logging.Logger;
 
 /**
  * @author viswadas leher
  */
 public class RedisFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
+
+    private Logger logger = Logger.getLogger(RedisFetchTask.class.getName());
+
     private final T bean;
     private final List<String> keys;
     private final boolean isPartialKey;
@@ -49,14 +54,13 @@ public class RedisFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
 
     @Override
     protected List<T> compute() {
-
         return fetch(keys, bean);
     }
 
     private List<T> fetch(List<String> keys, T bean) {
         if (keys.size() < 2) {
             List<T> fullResult = new ArrayList<>();
-            for (String k:keys) {
+            for (String k : keys) {
                 fullResult.addAll(fetch(k, bean));
             }
             return fullResult;
@@ -78,11 +82,38 @@ public class RedisFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
     }
 
     private List<T> fetch(String key, T bean) {
-        try (Jedis connection = RedisConnectionManager.getConnection("localhost")) {
-            String result = connection.get(key);
+        List<T> fullResults = new ArrayList<>();
 
-            T resultObj = new Gson().fromJson(result, (Type) bean.getClass());
-            return SingletonList.newSingletonList(resultObj);
+        if (DyDaBoUtils.isBlankOrNull(key)) {
+            return fullResults;
         }
+
+        String type = bean.getClass().getTypeName() + ":";
+
+        try (Jedis connection = RedisConnectionManager.getConnection("localhost")) {
+            if (isPartialKey) {
+                String partialKey = key.replaceAll("\\.\\*", "*");
+                Set<String> newKeys = connection.keys(type + partialKey);
+
+                for (String newKey : newKeys) {
+                    String result = connection.get(newKey);
+                    if (!DyDaBoUtils.isBlankOrNull(result)) {
+                        T resultObj = new Gson().fromJson(result, (Type) bean.getClass());
+                        fullResults.add(resultObj);
+                        if (maxResults > 0 && fullResults.size() >= maxResults) {
+                            return fullResults;
+                        }
+                    }
+                }
+            } else {
+                String result = connection.get(type + key);
+                if (!DyDaBoUtils.isBlankOrNull(result)) {
+                    T resultObj = new Gson().fromJson(result, (Type) bean.getClass());
+                    fullResults.add(resultObj);
+                }
+            }
+        }
+
+        return fullResults;
     }
 }

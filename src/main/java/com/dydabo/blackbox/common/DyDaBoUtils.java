@@ -35,12 +35,12 @@ public class DyDaBoUtils {
     /**
      * Empty array string representation
      */
-    private static final String EMPTY_ARRAY = "[]";
+    public static final String EMPTY_ARRAY = "[]";
 
     /**
      * Empty Map string representation
      */
-    private static final String EMPTY_MAP = "{}";
+    public static final String EMPTY_MAP = "{}";
     private static final Logger logger = Logger.getLogger(DyDaBoUtils.class.getName());
 
     /**
@@ -78,6 +78,11 @@ public class DyDaBoUtils {
         return false;
     }
 
+
+    public static boolean isNotBlankOrNull(String s) {
+        return !isBlankOrNull(s);
+    }
+
     /**
      * Customized check for regex.
      *
@@ -95,6 +100,17 @@ public class DyDaBoUtils {
         }
 
         return !EMPTY_MAP.equals(regexValue);
+    }
+
+    public static boolean isARegex(String str) {
+        if (isBlankOrNull(str))
+            return false;
+
+        if (str.contains(".") || str.contains(".*") || str.contains("^")) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

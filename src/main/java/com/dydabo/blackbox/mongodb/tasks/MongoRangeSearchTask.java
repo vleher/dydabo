@@ -76,7 +76,11 @@ public class MongoRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
                         if (DyDaBoUtils.isNumber(colValue.getColumnValue())) {
                             filterList.add(gte(colName, colValue.getColumnValue()));
                         } else {
-                            filterList.add(gte(colName, colString));
+                            if (DyDaBoUtils.isARegex(colString)) {
+                                filterList.add(regex(colName, colString));
+                            } else {
+                                filterList.add(gte(colName, colString));
+                            }
                         }
                     }
                 }
@@ -95,7 +99,11 @@ public class MongoRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
                         if (DyDaBoUtils.isNumber(colValue.getColumnValue())) {
                             filterList.add(lt(colName, colValue.getColumnValue()));
                         } else {
-                            filterList.add(lt(colName, colString));
+                            if (DyDaBoUtils.isARegex(colString)) {
+                                filterList.add(regex(colName, colString));
+                            } else {
+                                filterList.add(lt(colName, colString));
+                            }
                         }
                     }
                 }
@@ -103,6 +111,8 @@ public class MongoRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
             }
 
         }
+
+        String type = startRow.getClass().getTypeName();
 
         Block<Document> addToResultBlock = (Document doc) -> {
             logger.info("Mongo Range Search Result :" + doc.toJson());
@@ -113,6 +123,7 @@ public class MongoRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
         };
 
         logger.info("Filters :" + filterList);
+        filterList.add(regex(MongoUtils.PRIMARYKEY, type+":.*"));
         if (filterList.size() > 0) {
             collection.find(and(filterList)).forEach(addToResultBlock);
         } else {

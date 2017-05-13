@@ -18,16 +18,172 @@
 package com.dydabo.blackbox.redis.tasks;
 
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.common.DyDaBoUtils;
+import com.dydabo.blackbox.db.RedisConnectionManager;
+import com.dydabo.blackbox.db.obj.GenericDBTableRow;
+import com.dydabo.blackbox.redis.utils.RedisUtils;
+import com.google.gson.Gson;
+import redis.clients.jedis.Jedis;
 
+import java.lang.reflect.Type;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.RecursiveTask;
+import java.util.logging.Logger;
 
 /**
  * @author viswadas leher
  */
 public class RedisRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
+
+    private Logger logger = Logger.getLogger(RedisRangeSearchTask.class.getName());
+
+    private final T startRow;
+    private final T endRow;
+    private final long maxResults;
+    private final RedisUtils utils;
+
+    public RedisRangeSearchTask(T startRow, T endRow, long maxResults) {
+        this.startRow = startRow;
+        this.endRow = endRow;
+        this.maxResults = maxResults;
+        this.utils = new RedisUtils<>();
+    }
+
     @Override
     protected List<T> compute() {
-        return null;
+        return search(startRow, endRow, maxResults);
+    }
+
+    private List<T> search(T startRow, T endRow, long maxResults) {
+        List<T> results = new ArrayList<>();
+        GenericDBTableRow startTableRow = utils.convertRowToTableRow(startRow);
+        GenericDBTableRow endTableRow = utils.convertRowToTableRow(endRow);
+
+        final String type = startRow.getClass().getTypeName()+":";
+
+        // An inefficient search that scans all rows
+        try (Jedis connection = RedisConnectionManager.getConnection("localhost")) {
+            Set<String> allKeys = connection.keys(type + "*");
+
+            for (String key : allKeys) {
+                String currentRow = connection.get(key);
+                T rowObject = new Gson().fromJson(currentRow, (Type) startRow.getClass());
+
+                if (filter(rowObject, startTableRow, endTableRow)) {
+                    logger.info(" Matched :" + rowObject);
+                    results.add(rowObject);
+                    if (maxResults > 0 && results.size() >= maxResults) {
+                        break;
+                    }
+                }
+            }
+        }
+
+        return results;
+    }
+
+    private boolean filter(T rowObject, GenericDBTableRow startTableRow, GenericDBTableRow endTableRow) {
+        GenericDBTableRow tableRowObject = utils.convertRowToTableRow(rowObject);
+
+        for (Map.Entry<String, GenericDBTableRow.ColumnFamily> familyEntry : tableRowObject.getColumnFamilies().entrySet()) {
+            GenericDBTableRow.ColumnFamily colFamily = familyEntry.getValue();
+            for (Map.Entry<String, GenericDBTableRow.Column> columnEntry : colFamily.getColumns().entrySet()) {
+                String columnName = columnEntry.getKey();
+                GenericDBTableRow.Column columnValue = columnEntry.getValue();
+
+                GenericDBTableRow.Column startColValue = startTableRow.getColumnFamily(colFamily.getFamilyName()).getColumn(columnName);
+                GenericDBTableRow.Column endColValue = endTableRow.getColumnFamily(colFamily.getFamilyName()).getColumn(columnName);
+                //logger.info(" Compare " + columnName +" :"+columnValue);
+                if (!compare(startColValue, columnValue, endColValue)) {
+                    logger.info("DOES NOT Match");
+                    return false;
+                }
+
+            }
+        }
+
+        return true;
+    }
+
+    private boolean compare(GenericDBTableRow.Column startColValue, GenericDBTableRow.Column columnValue, GenericDBTableRow.Column endColValue) {
+        Object s1 = null;
+        Object s2 = null;
+        Object s3 = null;
+
+        if (startColValue != null && DyDaBoUtils.isNotBlankOrNull(startColValue.getColumnValueAsString())) {
+            s1 = startColValue.getColumnValue();
+        }
+
+        if (columnValue != null && DyDaBoUtils.isNotBlankOrNull(columnValue.getColumnValueAsString())) {
+            s2 = columnValue.getColumnValue();
+        }
+
+        if (endColValue != null && DyDaBoUtils.isNotBlankOrNull(endColValue.getColumnValueAsString())) {
+            s3 = endColValue.getColumnValue();
+        }
+        //logger.info("Comparing :" + s1 + " : " + s2 + " : " + s3);
+        boolean flag = false;
+
+        if (s1 == null && s3 == null) {
+            return true;
+        }
+
+        if (DyDaBoUtils.EMPTY_ARRAY.equals(startColValue.getColumnValueAsString()) && DyDaBoUtils.EMPTY_ARRAY.equals(endColValue.getColumnValueAsString())) {
+            return true;
+        }
+
+        if (DyDaBoUtils.EMPTY_MAP.equals(startColValue.getColumnValueAsString()) && DyDaBoUtils.EMPTY_MAP.equals(endColValue.getColumnValueAsString())) {
+            return true;
+        }
+
+        if (s1 != null && s2 != null) {
+            if (s1 instanceof Number && s2 instanceof Number) {
+                if (compareTo((Number) s1, (Number) s2) <= 0) {
+                    flag = true;
+                } else {
+                    flag = false;
+                }
+            } else if (s1 instanceof String && s2 instanceof String) {
+                if (DyDaBoUtils.isARegex((String) s1)) {
+                    flag = ((String) s2).matches((String) s1);
+                } else if (((String) s1).compareTo((String) s2) <= 0) {
+                    flag = true;
+                } else {
+                    flag = false;
+                }
+            }
+        }
+
+        if (flag && s2 != null && s3 != null) {
+            if (s2 instanceof Number && s3 instanceof Number) {
+                if (compareTo((Number) s2, (Number) s3) <= 0) {
+                    flag = true;
+                } else {
+                    flag = false;
+                }
+            } else if (s2 instanceof String && s3 instanceof String) {
+                if (DyDaBoUtils.isARegex((String) s3)) {
+                    flag = ((String) s2).matches((String) s3);
+                } else
+                if (((String) s2).compareTo((String) s3) <= 0) {
+                    flag = true;
+                } else {
+                    flag = false;
+                }
+            }
+        }
+        logger.info("== " + s1 + " : " + s2 + " : " + s3 + " :" + flag);
+        return flag;
+    }
+
+    public int compareTo(Number n1, Number n2) {
+        // ignoring null handling
+        BigDecimal b1 = new BigDecimal(n1.doubleValue());
+        BigDecimal b2 = new BigDecimal(n2.doubleValue());
+        return b1.compareTo(b2);
     }
 }

@@ -17,6 +17,7 @@
 package com.dydabo.blackbox.mongodb.tasks;
 
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.common.DyDaBoUtils;
 import com.dydabo.blackbox.mongodb.utils.MongoUtils;
 import com.google.gson.Gson;
 import com.mongodb.client.FindIterable;
@@ -94,8 +95,13 @@ public class MongoFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
     private List<T> fetch(String rowKey) {
         List<T> results = new ArrayList<>();
 
+        if (DyDaBoUtils.isBlankOrNull(rowKey)) {
+            return results;
+        }
+
         FindIterable<Document> docIter;
 
+        rowKey = (row.getClass().getTypeName()) + ":" + rowKey;
         if (isPartialKey) {
             docIter = collection.find(regex(MongoUtils.PRIMARYKEY, rowKey));
         } else {
@@ -104,8 +110,13 @@ public class MongoFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
 
         for (Document doc : docIter) {
             T resultObject = new Gson().fromJson(doc.toJson(), (Type) row.getClass());
+            logger.info(" DOC " + resultObject);
             if (resultObject != null) {
-                results.add(resultObject);
+                if (maxResults <= 0 || results.size() < maxResults) {
+                    results.add(resultObject);
+                } else {
+                    break;
+                }
             }
         }
 

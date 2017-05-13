@@ -17,7 +17,7 @@
 package com.dydabo.blackbox;
 
 import com.dydabo.blackbox.cassandra.CassandraBlackBoxImpl;
-import com.dydabo.blackbox.couchdb.CouchDBBlackBoxImpl;
+import com.dydabo.blackbox.db.CassandraConnectionManager;
 import com.dydabo.blackbox.hbase.HBaseBlackBoxImpl;
 import com.dydabo.blackbox.mongodb.MongoBlackBoxImpl;
 import com.dydabo.blackbox.redis.RedisBlackBoxImpl;
@@ -49,7 +49,6 @@ public class BlackBoxFactory {
 
     public final static String REDIS = "redis";
 
-    public final static String COUCHDB = "couchdb";
 
     private BlackBoxFactory() {
         // No instance of this factory class
@@ -72,8 +71,7 @@ public class BlackBoxFactory {
                 return new MongoBlackBoxImpl<>();
             case REDIS:
                 return new RedisBlackBoxImpl<>();
-            case COUCHDB:
-                return new CouchDBBlackBoxImpl<>();
+
             default:
                 return null;
         }
@@ -93,8 +91,9 @@ public class BlackBoxFactory {
     /**
      * @return
      */
-    public static BlackBox<BlackBoxable> getCassandraDatabase() {
+    public static BlackBox<BlackBoxable> getCassandraDatabase(String address) {
         // TODO: customizable...configuration of the database
+        CassandraConnectionManager.setAddress(address);
         return new CassandraBlackBoxImpl<>();
     }
 
@@ -110,7 +109,5 @@ public class BlackBoxFactory {
         return new RedisBlackBoxImpl<>();
     }
 
-    public static BlackBox<BlackBoxable> getCouchDBDatabase() {
-        return new CouchDBBlackBoxImpl<>();
-    }
+
 }

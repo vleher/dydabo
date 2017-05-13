@@ -18,6 +18,7 @@ package com.dydabo.blackbox.db;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
+import com.dydabo.blackbox.cassandra.utils.CassandraConstants;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,57 +33,70 @@ public class CassandraConnectionManager {
     private static final Map<String, Session> sessionPool = new HashMap<>();
     private static final Map<String, Cluster> clusterPool = new HashMap<>();
 
+    private static String address;
+
     private CassandraConnectionManager() {
     }
 
     // TODO: clean this up
 
     /**
-     * @param keyspace
+     * @param CassandraConstants.KEYSPACE
+     * @param address
      * @return
      */
-    public static synchronized Session getSession(String keyspace) {
+    public static synchronized Session getSession() {
 
-        if (sessionPool.get(keyspace) == null) {
-            if (clusterPool.get("myCluster") == null) { // TODO: parametirize this
+        if (sessionPool.get(CassandraConstants.KEYSPACE) == null) {
+            if (clusterPool.get(CassandraConstants.CLUSTER_NAME) == null) {
                 Cluster cluster = Cluster.builder()
-                        .withClusterName("myCluster")
-                        .addContactPoint("127.0.0.1")
+                        .withClusterName(CassandraConstants.CLUSTER_NAME)
+                        .addContactPoint(address)
                         .build();
-                clusterPool.put("myCluster", cluster);
+                clusterPool.put(CassandraConstants.CLUSTER_NAME, cluster);
             }
 
-            Cluster cluster = clusterPool.get("myCluster");
+            Cluster cluster = clusterPool.get(CassandraConstants.CLUSTER_NAME);
             Session session = cluster.connect();
 
-            // keysapce query TODO: create a keyspace name, make it all configurable
-            String ksQuery = "create keyspace if not exists " + keyspace + " with replication = {'class':'SimpleStrategy', 'replication_factor':1};";
+            // keysapce query TODO: create a CassandraConstants.KEYSPACE name, make it all configurable
+            String ksQuery = "create keyspace if not exists " + CassandraConstants.KEYSPACE + " with replication = {'class':'SimpleStrategy', 'replication_factor':1};";
             session.execute(ksQuery);
-            session = cluster.connect(keyspace);
-            sessionPool.put(keyspace, session);
+            session = cluster.connect(CassandraConstants.KEYSPACE);
+            sessionPool.put(CassandraConstants.KEYSPACE, session);
         }
 
-        return sessionPool.get(keyspace);
+        return sessionPool.get(CassandraConstants.KEYSPACE);
     }
 
     /**
      * @param clusterName
-     * @param keyspace
+     * @param CassandraConstants.KEYSPACE
+     * @param address
      * @return
      */
-    public static synchronized Cluster getCluster(String clusterName, String keyspace) {
-        if (clusterPool.get("myCluster") == null) {
+    public static synchronized Cluster getCluster() {
+        if (clusterPool.get(CassandraConstants.CLUSTER_NAME) == null) {
             Cluster cluster = Cluster.builder()
-                    .withClusterName("myCluster")
-                    .addContactPoint("127.0.0.1")
+                    .withClusterName(CassandraConstants.CLUSTER_NAME)
+                    .addContactPoint(address)
                     .build();
-            clusterPool.put("myCluster", cluster);
+            clusterPool.put(CassandraConstants.CLUSTER_NAME, cluster);
         }
-        Session session = clusterPool.get("myCluster").connect();
+        Session session = clusterPool.get(CassandraConstants.CLUSTER_NAME).connect();
 
-        // keysapce query TODO: create a keyspace name
-        String ksQuery = "create keyspace if not exists " + keyspace + " with replication = {'class':'SimpleStrategy', 'replication_factor':1};";
+        // keysapce query TODO: create a CassandraConstants.KEYSPACE name
+        String ksQuery = "create keyspace if not exists " + CassandraConstants.KEYSPACE + " with replication = {'class':'SimpleStrategy', 'replication_factor':1};";
         session.execute(ksQuery);
-        return clusterPool.get("myCluster");
+        return clusterPool.get(CassandraConstants.CLUSTER_NAME);
     }
+
+    public static String getAddress() {
+        return address;
+    }
+
+    public static void setAddress(String address) {
+        CassandraConnectionManager.address = address;
+    }
+
 }

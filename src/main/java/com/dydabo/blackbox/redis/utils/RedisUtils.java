@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 viswadas leher .
+ * Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,14 @@
  * limitations under the License.
  *
  */
-package com.dydabo.blackbox.cassandra.utils;
+
+package com.dydabo.blackbox.redis.utils;
+
+import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.common.DBUtils;
 
 /**
- * Some constants that the library uses
- *
  * @author viswadas leher
  */
-public class CassandraConstants {
-    public static final String CLUSTER_NAME = "bbcluster";
-    public static final String KEYSPACE = "bb";
-    public static final String DEFAULT_ROWKEY = "bbkey";
+public class RedisUtils<T extends BlackBoxable> extends DBUtils<T> {
 }

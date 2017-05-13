@@ -142,7 +142,7 @@ public class CassandraBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T
     public boolean update(List<T> rows) throws BlackBoxException {
         createTable(rows);
         ForkJoinPool fjPool = ForkJoinPool.commonPool();
-        CassandraInsertTask<T> insertJob = new CassandraInsertTask<>(getSession(), rows, true);
+        CassandraInsertTask<T> insertJob = new CassandraInsertTask<>(getSession(), rows, false);
         return fjPool.invoke(insertJob);
     }
 
@@ -166,6 +166,6 @@ public class CassandraBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T
      * @return
      */
     private Session getSession() {
-        return CassandraConnectionManager.getSession("bb");
+        return CassandraConnectionManager.getSession();
     }
 }

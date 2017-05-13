@@ -19,8 +19,8 @@ package com.dydabo.blackbox.utils;
 import com.dydabo.blackbox.BlackBox;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxFactory;
-import com.dydabo.blackbox.beans.Customer;
-import com.dydabo.blackbox.beans.Employee;
+import com.dydabo.blackbox.usecase.company.beans.Customer;
+import com.dydabo.blackbox.usecase.company.beans.Employee;
 import com.dydabo.blackbox.usecase.medical.MedicalUseCaseTest;
 import com.dydabo.blackbox.usecase.medical.db.*;
 
@@ -32,16 +32,16 @@ import java.util.*;
  */
 public class DyDaBoTestUtils {
 
-    public final List<String> dbToTest = Arrays.asList(BlackBoxFactory.REDIS);
+    public final List<String> dbToTest = Arrays.asList(BlackBoxFactory.REDIS, BlackBoxFactory.CASSANDRA, BlackBoxFactory.HBASE, BlackBoxFactory.MONGODB);
 
     /**
-     *
+     * Random first names
      */
     public final List<String> FirstNames = Arrays.asList("David", "Peter", "Tom", "Dick", "Harry", "John", "Bill", "Adele", "Britney",
             "Mariah");
 
     /**
-     *
+     * Random last names
      */
     public final List<String> LastNames = Arrays.asList("Johnson", "Becker", "Smith", "Gates", "King", "Spears", "Perry", "Carey",
             "Gomez", "Lopez");
@@ -85,13 +85,12 @@ public class DyDaBoTestUtils {
      * @throws BlackBoxException
      * @throws IOException
      */
-    public void generateEncounters(int count) throws BlackBoxException, IOException {
+    public void generateEncounters(int count, BlackBox blackBox) throws BlackBoxException, IOException {
         Patient p = new Patient();
-        BlackBox hbaseBlackBox = BlackBoxFactory.getDatabase(BlackBoxFactory.HBASE);
-        BlackBox cassBlackBox = BlackBoxFactory.getDatabase(BlackBoxFactory.CASSANDRA);
+
         Random random = new Random();
-        assert hbaseBlackBox != null;
-        List<Patient> pList = hbaseBlackBox.search(Collections.singletonList(p));
+        assert blackBox != null;
+        List<Patient> pList = blackBox.search(Collections.singletonList(p));
         List<Encounter> encounters = new ArrayList<>();
         for (int j = 0; j < count; j++) {
             int id = random.nextInt();
@@ -105,9 +104,7 @@ public class DyDaBoTestUtils {
             for (int i = 0; i < dCount; i++) {
                 final Diagnosis diagnosis = new Diagnosis(
                         MedicalUseCaseTest.Diagnosis.get(random.nextInt(10000) % MedicalUseCaseTest.Diagnosis.size()));
-                assert cassBlackBox != null;
-                cassBlackBox.update(diagnosis);
-                if (hbaseBlackBox.update(diagnosis)) {
+                if (blackBox.update(diagnosis)) {
                     enc.addDiagnosis(diagnosis);
                 }
 
@@ -118,9 +115,7 @@ public class DyDaBoTestUtils {
                 final Medication medication = new Medication(
                         MedicalUseCaseTest.Meds.get(random.nextInt(10000) % MedicalUseCaseTest.Meds.size()));
                 medication.setmDose(random.nextInt(8));
-                assert cassBlackBox != null;
-                cassBlackBox.update(medication);
-                if (hbaseBlackBox.update(medication)) {
+                if (blackBox.update(medication)) {
                     enc.addMedication(medication);
                 }
             }
@@ -132,32 +127,24 @@ public class DyDaBoTestUtils {
                 int cdCount = random.nextInt(5) + 1;
                 for (int k = 0; k < cdCount; k++) {
                     ClaimDetails cDet = new ClaimDetails(random.nextInt() + "CD");
-                    assert cassBlackBox != null;
-                    cassBlackBox.update(cDet);
-                    if (hbaseBlackBox.update(cDet)) {
+                    if (blackBox.update(cDet)) {
                         claim.getcDets().add(cDet);
                     }
                 }
                 cdCount = random.nextInt(5) + 1;
                 for (int k = 0; k < cdCount; k++) {
                     ClaimCharges cc = new ClaimCharges(random.nextInt() + "CC", random.nextInt(10000) * 1.1);
-                    assert cassBlackBox != null;
-                    cassBlackBox.update(cc);
-                    if (hbaseBlackBox.update(cc)) {
+                    if (blackBox.update(cc)) {
                         claim.getcCharges().add(cc);
                     }
                 }
-                assert cassBlackBox != null;
-                cassBlackBox.update(claim);
-                if (hbaseBlackBox.update(claim)) {
+                if (blackBox.update(claim)) {
                     enc.addClaim(claim);
                 }
             }
             encounters.add(enc);
         }
-        assert cassBlackBox != null;
-        cassBlackBox.update(encounters);
-        hbaseBlackBox.update(encounters);
+        blackBox.update(encounters);
     }
 
     /**
@@ -165,11 +152,10 @@ public class DyDaBoTestUtils {
      * @throws BlackBoxException
      * @throws IOException
      */
-    public void generatePatients(int count) throws BlackBoxException, IOException {
+    public void generatePatients(int count, BlackBox blackBox) throws BlackBoxException, IOException {
         int knownPatientId = 123456;
         List<Patient> patientList = new ArrayList<>();
-        BlackBox hbaseBlackBox = BlackBoxFactory.getDatabase(BlackBoxFactory.HBASE);
-        BlackBox cassBlackBox = BlackBoxFactory.getDatabase(BlackBoxFactory.CASSANDRA);
+
         Random random = new Random();
         for (int i = 0; i < count; i++) {
             int id = random.nextInt();
@@ -179,16 +165,15 @@ public class DyDaBoTestUtils {
             patientList.add(patient);
         }
         // update the table
-        assert hbaseBlackBox != null;
-        hbaseBlackBox.update(patientList);
-        assert cassBlackBox != null;
-        cassBlackBox.update(patientList);
+        assert blackBox != null;
+        blackBox.update(patientList);
+
         // Create some patients with specific ids so that we can query them
         Patient p = new Patient(knownPatientId + "P", FirstNames.get(Math.abs(knownPatientId % FirstNames.size())),
                 LastNames.get(Math.abs(knownPatientId % LastNames.size())));
         p.initData();
-        hbaseBlackBox.update(Collections.singletonList(p));
-        cassBlackBox.update(p);
+        blackBox.update(Collections.singletonList(p));
+
     }
 
 }

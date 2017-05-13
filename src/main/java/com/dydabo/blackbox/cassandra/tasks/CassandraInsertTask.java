@@ -16,11 +16,13 @@
  */
 package com.dydabo.blackbox.cassandra.tasks;
 
+import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.cassandra.utils.CassandraConstants;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
 import com.dydabo.blackbox.common.DyDaBoUtils;
 import com.dydabo.blackbox.db.CassandraConnectionManager;
@@ -126,7 +128,7 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
     private Boolean insert(T row, boolean checkExisting) throws BlackBoxException {
         boolean successFlag = true;
 
-        Insert insStmt = QueryBuilder.insertInto("bb", utils.getTableName(row));
+        Insert insStmt = QueryBuilder.insertInto(CassandraConstants.KEYSPACE, utils.getTableName(row));
 
         if (checkExisting) {
             insStmt = insStmt.ifNotExists();
@@ -136,7 +138,7 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
         for (Map.Entry<String, GenericDBTableRow.ColumnFamily> entry : cTable.getColumnFamilies().entrySet()) {
             GenericDBTableRow.ColumnFamily family = entry.getValue();
 
-            insStmt.value("\"bbkey\"", row.getBBRowKey());
+            insStmt.value("\""+CassandraConstants.DEFAULT_ROWKEY+"\"", row.getBBRowKey());
 
             for (Map.Entry<String, GenericDBTableRow.Column> columns : family.getColumns().entrySet()) {
                 String colName = columns.getKey();
@@ -151,9 +153,10 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
             }
         }
 
-        Session session = CassandraConnectionManager.getSession("bb");
+        Session session = CassandraConnectionManager.getSession();
+        logger.info("Executing "+insStmt.toString());
         // execute query, might throw exception
-        session.execute(insStmt);
+        ResultSet resultSet = session.execute(insStmt);
 
         return successFlag;
     }

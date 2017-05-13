@@ -112,7 +112,12 @@ public class Claim implements BlackBoxable {
 
     @Override
     public String toString() {
-        return "Claim{" + "cId=" + cId + ", cDets=" + cDets + ", cCharges=" + cCharges + '}';
+        return "Claim{" +
+                "cId='" + cId + '\'' +
+                ", pId='" + pId + '\'' +
+                ", cDets=" + cDets +
+                ", cCharges=" + cCharges +
+                '}';
     }
 
 }

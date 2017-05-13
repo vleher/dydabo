@@ -25,6 +25,7 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.cassandra.utils.CassandraConstants;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
 import com.dydabo.blackbox.common.DyDaBoUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
@@ -135,11 +136,19 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
                 if (colValue != null && colValue.getColumnValue() != null) {
                     String colString = colValue.getColumnValueAsString();
                     if (DyDaBoUtils.isValidRegex(colString)) {
-                        utils.createIndex("\"" + colName + "\"", row);
                         if (DyDaBoUtils.isNumber(colValue.getColumnValue())) {
                             whereClauses.add(QueryBuilder.eq("\"" + colName + "\"", colValue.getColumnValue()));
                         } else {
-                            whereClauses.add(QueryBuilder.eq("\"" + colName + "\"", colString));
+                            logger.info("ColString :"+colString);
+                            if (DyDaBoUtils.isARegex(colString)) {
+                                utils.createIndex(colName, row);
+                                colString = cleanup(colString);
+                                whereClauses.add(QueryBuilder.like("\"" + colName + "\"", colString));
+                            } else if (colString.startsWith("[") || colString.startsWith("{")) {
+                                // TODO : search inside maps and arrays
+                            } else {
+                                whereClauses.add(QueryBuilder.eq("\"" + colName + "\"", colString));
+                            }
                         }
                     }
                 }
@@ -156,7 +165,7 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
         logger.info("Search: " + selectStmt);
         ResultSet resultSet = getSession().execute(selectStmt);
         for (Row result : resultSet) {
-            GenericDBTableRow ctr = new GenericDBTableRow(result.getString("bbkey"));
+            GenericDBTableRow ctr = new GenericDBTableRow(result.getString(CassandraConstants.DEFAULT_ROWKEY));
 
             for (ColumnDefinitions.Definition def : result.getColumnDefinitions().asList()) {
                 final Object object = result.getObject(def.getName());
@@ -176,6 +185,17 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
 
         }
         return results;
+    }
+
+    private String cleanup(String regexString) {
+        String finalString = regexString;
+        if (regexString.startsWith("^")) {
+            finalString = regexString.substring(1);
+        }
+
+        finalString = finalString.replaceAll("\\.\\*", "%");
+
+        return finalString;
     }
 
     @Override

@@ -16,7 +16,7 @@
  */
 package com.dydabo.blackbox.common;
 
-import com.dydabo.blackbox.beans.Customer;
+import com.dydabo.blackbox.usecase.company.beans.Customer;
 import com.dydabo.blackbox.usecase.medical.db.Patient;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
@@ -143,6 +143,19 @@ public class DyDaBoUtilsNGTest {
         Assert.assertFalse(DyDaBoUtils.isPrimitiveOrPrimitiveWrapperOrString(DyDaBoUtils.class));
         Assert.assertFalse(DyDaBoUtils.isPrimitiveOrPrimitiveWrapperOrString(new Patient()));
     }
+
+    @Test
+    public void testIsARegex() throws Exception {
+        Assert.assertTrue(DyDaBoUtils.isARegex("Tom.*"));
+        Assert.assertTrue(DyDaBoUtils.isARegex("Tom."));
+        Assert.assertTrue(DyDaBoUtils.isARegex("^Tom"));
+        Assert.assertTrue(DyDaBoUtils.isARegex("^Tom.*"));
+    }
+
+    @Test
+    public void testIsNumber() throws Exception {
+    }
+
 
     /**
      *

@@ -24,6 +24,7 @@ import com.datastax.driver.core.querybuilder.Clause;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.cassandra.utils.CassandraConstants;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
 import com.dydabo.blackbox.common.DyDaBoUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
@@ -66,7 +67,7 @@ public class CassandraRangeSearchTask<T extends BlackBoxable> extends RecursiveT
     @Override
     protected List<T> compute() {
         List<T> results = new ArrayList<>();
-        Select queryStmt = QueryBuilder.select().from("bb", utils.getTableName(startRow));
+        Select queryStmt = QueryBuilder.select().from(CassandraConstants.KEYSPACE, utils.getTableName(startRow));
         queryStmt.allowFiltering();
 
         GenericDBTableRow startTableRow = utils.convertRowToTableRow(startRow);
@@ -84,7 +85,7 @@ public class CassandraRangeSearchTask<T extends BlackBoxable> extends RecursiveT
         logger.info("Range Search :" + queryStmt);
         ResultSet resultSet = getSession().execute(queryStmt);
         for (Row result : resultSet) {
-            GenericDBTableRow ctr = new GenericDBTableRow(result.getString("bbkey"));
+            GenericDBTableRow ctr = new GenericDBTableRow(result.getString(CassandraConstants.DEFAULT_ROWKEY));
             for (ColumnDefinitions.Definition def : result.getColumnDefinitions().asList()) {
                 ctr.getDefaultFamily().addColumn(def.getName(), result.getObject(def.getName()));
             }
@@ -122,11 +123,15 @@ public class CassandraRangeSearchTask<T extends BlackBoxable> extends RecursiveT
                 if (column != null && column.getColumnValue() != null) {
                     final String colString = column.getColumnValueAsString();
                     if (DyDaBoUtils.isValidRegex(colString)) {
-                        utils.createIndex("\"" + colName + "\"", startRow);
                         if (DyDaBoUtils.isNumber(column.getColumnValue())) {
                             whereClauses.add(QueryBuilder.lt("\"" + colName + "\"", column.getColumnValue()));
                         } else {
-                            whereClauses.add(QueryBuilder.lt("\"" + colName + "\"", colString));
+                            if (DyDaBoUtils.isARegex(colString)) {
+                                utils.createIndex(colName, startRow);
+                                whereClauses.add(QueryBuilder.like("\"" + colName + "\"", cleanup(colString)));
+                            } else {
+                                whereClauses.add(QueryBuilder.lt("\"" + colName + "\"", colString));
+                            }
                         }
                     }
                 }
@@ -145,11 +150,15 @@ public class CassandraRangeSearchTask<T extends BlackBoxable> extends RecursiveT
                 if (column != null && column.getColumnValue() != null) {
                     final String colString = column.getColumnValueAsString();
                     if (DyDaBoUtils.isValidRegex(colString)) {
-                        utils.createIndex("\"" + colName + "\"", startRow);
                         if (DyDaBoUtils.isNumber(column.getColumnValue())) {
                             whereClauses.add(QueryBuilder.gte("\"" + colName + "\"", column.getColumnValue()));
                         } else {
-                            whereClauses.add(QueryBuilder.gte("\"" + colName + "\"", colString));
+                            if (DyDaBoUtils.isARegex(colString)) {
+                                utils.createIndex(colName, startRow);
+                                whereClauses.add(QueryBuilder.like("\"" + colName + "\"", cleanup(colString)));
+                            } else {
+                                whereClauses.add(QueryBuilder.gte("\"" + colName + "\"", colString));
+                            }
                         }
                     }
                 }
@@ -158,5 +167,14 @@ public class CassandraRangeSearchTask<T extends BlackBoxable> extends RecursiveT
 
         }
     }
+    private String cleanup(String regexString) {
+        String finalString = regexString;
+        if (regexString.startsWith("^")) {
+            finalString = regexString.substring(1);
+        }
 
+        finalString = finalString.replaceAll("\\.\\*", "%");
+
+        return finalString;
+    }
 }
