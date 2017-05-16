@@ -50,16 +50,6 @@ public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<B
      * Constructor
      *
      * @param session a session instance for db connection
-     * @param row     row instance to be deleted
-     */
-    private CassandraDeleteTask(Session session, T row) {
-        this(session, Collections.singletonList(row));
-    }
-
-    /**
-     * Constructor
-     *
-     * @param session a session instance for db connection
      * @param rows    list of rows to be deleted
      */
     public CassandraDeleteTask(Session session, List<T> rows) {

@@ -55,8 +55,6 @@ public class MongoDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
 
     @Override
     protected Boolean compute() {
-        logger.info("Delete Rows:" + rows);
-
         // Stop case
         if (rows.size() < 2) {
             boolean successFlag = Boolean.TRUE;

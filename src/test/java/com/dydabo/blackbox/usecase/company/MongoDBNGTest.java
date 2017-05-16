@@ -28,11 +28,13 @@ import java.io.IOException;
  */
 public class MongoDBNGTest extends SimpleUseCase {
     protected BlackBox instance;
+
     /**
      * @throws IOException
      */
     public MongoDBNGTest() throws IOException {
-        super();if (utils.dbToTest.contains(BlackBoxFactory.MONGODB)) {
+        super();
+        if (utils.dbToTest.contains(BlackBoxFactory.MONGODB)) {
             this.instance = BlackBoxFactory.getMongoDatabase();
         }
     }

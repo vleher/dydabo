@@ -33,7 +33,6 @@ import com.google.gson.Gson;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Logger;
 
@@ -82,7 +81,7 @@ public class CassandraRangeSearchTask<T extends BlackBoxable> extends RecursiveT
         for (Clause whereClause : whereClauses) {
             queryStmt.where().and(whereClause);
         }
-        logger.info("Range Search :" + queryStmt);
+        logger.finer("Range Search :" + queryStmt);
         ResultSet resultSet = getSession().execute(queryStmt);
         for (Row result : resultSet) {
             GenericDBTableRow ctr = new GenericDBTableRow(result.getString(CassandraConstants.DEFAULT_ROWKEY));
@@ -113,60 +112,42 @@ public class CassandraRangeSearchTask<T extends BlackBoxable> extends RecursiveT
     }
 
     private void parseClausesEnd(GenericDBTableRow endTableRow, List<Clause> whereClauses) {
-        for (Map.Entry<String, GenericDBTableRow.ColumnFamily> fam : endTableRow.getColumnFamilies().entrySet()) {
-            GenericDBTableRow.ColumnFamily colFamily = fam.getValue();
 
-            for (Map.Entry<String, GenericDBTableRow.Column> cols : colFamily.getColumns().entrySet()) {
-                String colName = cols.getKey();
-                GenericDBTableRow.Column column = cols.getValue();
-
-                if (column != null && column.getColumnValue() != null) {
-                    final String colString = column.getColumnValueAsString();
-                    if (DyDaBoUtils.isValidRegex(colString)) {
-                        if (DyDaBoUtils.isNumber(column.getColumnValue())) {
-                            whereClauses.add(QueryBuilder.lt("\"" + colName + "\"", column.getColumnValue()));
-                        } else {
-                            if (DyDaBoUtils.isARegex(colString)) {
-                                utils.createIndex(colName, startRow);
-                                whereClauses.add(QueryBuilder.like("\"" + colName + "\"", cleanup(colString)));
-                            } else {
-                                whereClauses.add(QueryBuilder.lt("\"" + colName + "\"", colString));
-                            }
-                        }
+        endTableRow.forEach((familyName, columnName, columnValue, columnValueAsString) -> {
+            if (DyDaBoUtils.isValidRegex(columnValueAsString)) {
+                if (DyDaBoUtils.isNumber(columnValue)) {
+                    whereClauses.add(QueryBuilder.lt("\"" + columnName + "\"", columnValue));
+                } else {
+                    if (DyDaBoUtils.isARegex(columnValueAsString)) {
+                        utils.createIndex(columnName, startRow);
+                        whereClauses.add(QueryBuilder.like("\"" + columnName + "\"", cleanup(columnValueAsString)));
+                    } else {
+                        whereClauses.add(QueryBuilder.lt("\"" + columnName + "\"", columnValueAsString));
                     }
                 }
             }
-        }
+        });
+
     }
 
     private void parseClausesStart(GenericDBTableRow startTableRow, List<Clause> whereClauses) {
-        for (Map.Entry<String, GenericDBTableRow.ColumnFamily> fam : startTableRow.getColumnFamilies().entrySet()) {
-            GenericDBTableRow.ColumnFamily colFamily = fam.getValue();
 
-            for (Map.Entry<String, GenericDBTableRow.Column> cols : colFamily.getColumns().entrySet()) {
-                String colName = cols.getKey();
-                GenericDBTableRow.Column column = cols.getValue();
-
-                if (column != null && column.getColumnValue() != null) {
-                    final String colString = column.getColumnValueAsString();
-                    if (DyDaBoUtils.isValidRegex(colString)) {
-                        if (DyDaBoUtils.isNumber(column.getColumnValue())) {
-                            whereClauses.add(QueryBuilder.gte("\"" + colName + "\"", column.getColumnValue()));
-                        } else {
-                            if (DyDaBoUtils.isARegex(colString)) {
-                                utils.createIndex(colName, startRow);
-                                whereClauses.add(QueryBuilder.like("\"" + colName + "\"", cleanup(colString)));
-                            } else {
-                                whereClauses.add(QueryBuilder.gte("\"" + colName + "\"", colString));
-                            }
-                        }
+        startTableRow.forEach((familyName, columnName, columnValue, columnValueAsString) -> {
+            if (DyDaBoUtils.isValidRegex(columnValueAsString)) {
+                if (DyDaBoUtils.isNumber(columnValue)) {
+                    whereClauses.add(QueryBuilder.gte("\"" + columnName + "\"", columnValue));
+                } else {
+                    if (DyDaBoUtils.isARegex(columnValueAsString)) {
+                        utils.createIndex(columnName, startRow);
+                        whereClauses.add(QueryBuilder.like("\"" + columnName + "\"", cleanup(columnValueAsString)));
+                    } else {
+                        whereClauses.add(QueryBuilder.gte("\"" + columnName + "\"", columnValueAsString));
                     }
                 }
-
             }
-
-        }
+        });
     }
+
     private String cleanup(String regexString) {
         String finalString = regexString;
         if (regexString.startsWith("^")) {

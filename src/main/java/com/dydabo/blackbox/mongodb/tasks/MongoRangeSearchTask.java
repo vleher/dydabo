@@ -29,7 +29,6 @@ import org.bson.conversions.Bson;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Logger;
 
@@ -64,66 +63,47 @@ public class MongoRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
         GenericDBTableRow startTableRow = utils.convertRowToTableRow(startRow);
         GenericDBTableRow endTableRow = utils.convertRowToTableRow(endRow);
         List<Bson> filterList = new ArrayList<>();
-        for (Map.Entry<String, GenericDBTableRow.ColumnFamily> entry : startTableRow.getColumnFamilies().entrySet()) {
-            GenericDBTableRow.ColumnFamily colFam = entry.getValue();
-            for (Map.Entry<String, GenericDBTableRow.Column> col : colFam.getColumns().entrySet()) {
-                String colName = col.getKey();
-                GenericDBTableRow.Column colValue = col.getValue();
 
-                if (colValue != null && colValue.getColumnValue() != null) {
-                    final String colString = colValue.getColumnValueAsString();
-                    if (DyDaBoUtils.isValidRegex(colString)) {
-                        if (DyDaBoUtils.isNumber(colValue.getColumnValue())) {
-                            filterList.add(gte(colName, colValue.getColumnValue()));
-                        } else {
-                            if (DyDaBoUtils.isARegex(colString)) {
-                                filterList.add(regex(colName, colString));
-                            } else {
-                                filterList.add(gte(colName, colString));
-                            }
-                        }
+
+        startTableRow.forEach((familyName, columnName, columnValue, columnValueAsString) -> {
+            if (DyDaBoUtils.isValidRegex(columnValueAsString)) {
+                if (DyDaBoUtils.isNumber(columnValue)) {
+                    filterList.add(gte(columnName, columnValue));
+                } else {
+                    if (DyDaBoUtils.isARegex(columnValueAsString)) {
+                        filterList.add(regex(columnName, columnValueAsString));
+                    } else {
+                        filterList.add(gte(columnName, columnValueAsString));
                     }
                 }
             }
-        }
+        });
 
-        for (Map.Entry<String, GenericDBTableRow.ColumnFamily> entry : endTableRow.getColumnFamilies().entrySet()) {
-            GenericDBTableRow.ColumnFamily colFam = entry.getValue();
-            for (Map.Entry<String, GenericDBTableRow.Column> col : colFam.getColumns().entrySet()) {
-                String colName = col.getKey();
-                GenericDBTableRow.Column colValue = col.getValue();
-
-                if (colValue != null && colValue.getColumnValue() != null) {
-                    final String colString = colValue.getColumnValueAsString();
-                    if (DyDaBoUtils.isValidRegex(colString)) {
-                        if (DyDaBoUtils.isNumber(colValue.getColumnValue())) {
-                            filterList.add(lt(colName, colValue.getColumnValue()));
-                        } else {
-                            if (DyDaBoUtils.isARegex(colString)) {
-                                filterList.add(regex(colName, colString));
-                            } else {
-                                filterList.add(lt(colName, colString));
-                            }
-                        }
+        endTableRow.forEach((familyName, columnName, columnValue, columnValueAsString) -> {
+            if (DyDaBoUtils.isValidRegex(columnValueAsString)) {
+                if (DyDaBoUtils.isNumber(columnValue)) {
+                    filterList.add(lt(columnName, columnValue));
+                } else {
+                    if (DyDaBoUtils.isARegex(columnValueAsString)) {
+                        filterList.add(regex(columnName, columnValueAsString));
+                    } else {
+                        filterList.add(lt(columnName, columnValueAsString));
                     }
                 }
-
             }
-
-        }
+        });
 
         String type = startRow.getClass().getTypeName();
 
         Block<Document> addToResultBlock = (Document doc) -> {
-            logger.info("Mongo Range Search Result :" + doc.toJson());
             T resultObject = new Gson().fromJson(doc.toJson(), (Type) startRow.getClass());
             if (resultObject != null) {
                 results.add(resultObject);
             }
         };
 
-        logger.info("Filters :" + filterList);
-        filterList.add(regex(MongoUtils.PRIMARYKEY, type+":.*"));
+        logger.finest("Filters :" + filterList);
+        filterList.add(regex(MongoUtils.PRIMARYKEY, type + ":.*"));
         if (filterList.size() > 0) {
             collection.find(and(filterList)).forEach(addToResultBlock);
         } else {

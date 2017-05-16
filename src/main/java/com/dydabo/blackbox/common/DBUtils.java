@@ -38,10 +38,8 @@ public abstract class DBUtils<T extends BlackBoxable> {
     public GenericDBTableRow convertRowToTableRow(T row) {
         GenericDBTableRow cTable = new GenericDBTableRow(row.getBBRowKey());
         Map<String, Field> fields = DyDaBoUtils.getFieldFromType(row.getClass());
-        for (Map.Entry<String, Field> entry : fields.entrySet()) {
-            String key = entry.getKey();
-            Field field = entry.getValue();
 
+        fields.forEach((key, field) -> {
             try {
                 if (!field.isSynthetic()) {
                     field.setAccessible(true);
@@ -50,7 +48,7 @@ public abstract class DBUtils<T extends BlackBoxable> {
             } catch (IllegalArgumentException | IllegalAccessException ex) {
                 Logger.getLogger(CassandraUtils.class.getName()).log(Level.SEVERE, null, ex);
             }
-        }
+        });
 
         return cTable;
     }

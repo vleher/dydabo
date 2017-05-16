@@ -21,6 +21,8 @@
     <test name="com.dydabo.blackbox suite">
         <packages>
             <package name="com.dydabo.blackbox"/>
+            <package name="com.dydabo.blackbox.common"/>
+            <package name="com.dydabo.blackbox.db"/>
         </packages>
     </test>
 </suite>

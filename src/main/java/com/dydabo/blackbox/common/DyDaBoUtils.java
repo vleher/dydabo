@@ -103,8 +103,9 @@ public class DyDaBoUtils {
     }
 
     public static boolean isARegex(String str) {
-        if (isBlankOrNull(str))
+        if (isBlankOrNull(str)) {
             return false;
+        }
 
         if (str.contains(".") || str.contains(".*") || str.contains("^")) {
             return true;
@@ -160,13 +161,11 @@ public class DyDaBoUtils {
     public static Map<String, Field> getFieldFromType(Class<?> type) {
         Map<String, Field> fields = new HashMap<>();
         for (Class<?> c = type; c != Object.class; c = c.getSuperclass()) {
-            //logger.info("c:" + c);
             for (Field declaredField : c.getDeclaredFields()) {
-                //logger.info("f:" + declaredField);
                 fields.put(declaredField.getName(), declaredField);
             }
         }
-        //logger.info("All Fields:" + fields);
+
         return fields;
     }
 

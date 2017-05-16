@@ -22,10 +22,20 @@ import com.dydabo.blackbox.BlackBoxFactory;
 import com.dydabo.blackbox.usecase.company.beans.Customer;
 import com.dydabo.blackbox.usecase.company.beans.Employee;
 import com.dydabo.blackbox.usecase.medical.MedicalUseCaseTest;
-import com.dydabo.blackbox.usecase.medical.db.*;
+import com.dydabo.blackbox.usecase.medical.db.Claim;
+import com.dydabo.blackbox.usecase.medical.db.ClaimCharges;
+import com.dydabo.blackbox.usecase.medical.db.ClaimDetails;
+import com.dydabo.blackbox.usecase.medical.db.Diagnosis;
+import com.dydabo.blackbox.usecase.medical.db.Encounter;
+import com.dydabo.blackbox.usecase.medical.db.Medication;
+import com.dydabo.blackbox.usecase.medical.db.Patient;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 
 /**
  * @author viswadas leher

@@ -35,7 +35,6 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Level;
@@ -127,33 +126,29 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
 
         List<Clause> whereClauses = new ArrayList<>();
 
-        for (Map.Entry<String, GenericDBTableRow.ColumnFamily> family : cTable.getColumnFamilies().entrySet()) {
-            GenericDBTableRow.ColumnFamily familyValue = family.getValue();
-            for (Map.Entry<String, GenericDBTableRow.Column> cols : familyValue.getColumns().entrySet()) {
-                String colName = cols.getKey();
-                GenericDBTableRow.Column colValue = cols.getValue();
-
-                if (colValue != null && colValue.getColumnValue() != null) {
-                    String colString = colValue.getColumnValueAsString();
-                    if (DyDaBoUtils.isValidRegex(colString)) {
-                        if (DyDaBoUtils.isNumber(colValue.getColumnValue())) {
-                            whereClauses.add(QueryBuilder.eq("\"" + colName + "\"", colValue.getColumnValue()));
+        cTable.getColumnFamilies().forEach((familyName, columnFamily) -> {
+            columnFamily.getColumns().forEach((columnName, column) -> {
+                Object columnValue = column.getColumnValue();
+                if (columnValue != null) {
+                    String columnValueString = column.getColumnValueAsString();
+                    if (DyDaBoUtils.isValidRegex(columnValueString)) {
+                        if (DyDaBoUtils.isNumber(columnValue)) {
+                            whereClauses.add(QueryBuilder.eq("\"" + columnName + "\"", columnValue));
                         } else {
-                            logger.info("ColString :"+colString);
-                            if (DyDaBoUtils.isARegex(colString)) {
-                                utils.createIndex(colName, row);
-                                colString = cleanup(colString);
-                                whereClauses.add(QueryBuilder.like("\"" + colName + "\"", colString));
-                            } else if (colString.startsWith("[") || colString.startsWith("{")) {
+                            if (DyDaBoUtils.isARegex(columnValueString)) {
+                                utils.createIndex(columnName, row);
+                                columnValueString = cleanup(columnValueString);
+                                whereClauses.add(QueryBuilder.like("\"" + columnName + "\"", columnValueString));
+                            } else if (columnValueString.startsWith("[") || columnValueString.startsWith("{")) {
                                 // TODO : search inside maps and arrays
                             } else {
-                                whereClauses.add(QueryBuilder.eq("\"" + colName + "\"", colString));
+                                whereClauses.add(QueryBuilder.eq("\"" + columnName + "\"", columnValueString));
                             }
                         }
                     }
                 }
-            }
-        }
+            });
+        });
 
         for (Clause whereClause : whereClauses) {
             selectStmt.where().and(whereClause);
@@ -162,7 +157,7 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
         if (maxResults > 0) {
             selectStmt.limit((int) maxResults);
         }
-        logger.info("Search: " + selectStmt);
+        logger.finer("Search: " + selectStmt);
         ResultSet resultSet = getSession().execute(selectStmt);
         for (Row result : resultSet) {
             GenericDBTableRow ctr = new GenericDBTableRow(result.getString(CassandraConstants.DEFAULT_ROWKEY));

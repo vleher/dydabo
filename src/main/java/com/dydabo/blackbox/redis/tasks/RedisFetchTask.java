@@ -37,12 +37,11 @@ import java.util.logging.Logger;
  */
 public class RedisFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
 
-    private Logger logger = Logger.getLogger(RedisFetchTask.class.getName());
-
     private final T bean;
     private final List<String> keys;
     private final boolean isPartialKey;
     private final long maxResults;
+    private Logger logger = Logger.getLogger(RedisFetchTask.class.getName());
 
 
     public RedisFetchTask(List<String> rowKeys, T bean, boolean isPartialKey, long maxResults) {
@@ -82,7 +81,7 @@ public class RedisFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
     }
 
     private List<T> fetch(String key, T bean) {
-        List<T> fullResults = new ArrayList<>();
+        List<T> fullResults = Collections.synchronizedList(new ArrayList<>());
 
         if (DyDaBoUtils.isBlankOrNull(key)) {
             return fullResults;

@@ -20,7 +20,11 @@ import com.datastax.driver.core.Session;
 import com.dydabo.blackbox.BlackBox;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.cassandra.tasks.*;
+import com.dydabo.blackbox.cassandra.tasks.CassandraDeleteTask;
+import com.dydabo.blackbox.cassandra.tasks.CassandraFetchTask;
+import com.dydabo.blackbox.cassandra.tasks.CassandraInsertTask;
+import com.dydabo.blackbox.cassandra.tasks.CassandraRangeSearchTask;
+import com.dydabo.blackbox.cassandra.tasks.CassandraSearchTask;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
 import com.dydabo.blackbox.db.CassandraConnectionManager;
 

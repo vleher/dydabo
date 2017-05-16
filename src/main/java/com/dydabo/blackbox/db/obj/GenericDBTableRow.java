@@ -21,7 +21,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,7 +30,7 @@ import java.util.Map;
  */
 public class GenericDBTableRow {
 
-    // The ColumnFamily names should be as small as possible for performance
+    // NOTE: The ColumnFamily names should be as small as possible for performance
     /**
      *
      */
@@ -51,6 +50,7 @@ public class GenericDBTableRow {
 
     /**
      * @param familyName
+     *
      * @return
      */
     public ColumnFamily getColumnFamily(String familyName) {
@@ -70,6 +70,7 @@ public class GenericDBTableRow {
 
     /**
      * @param familyName
+     *
      * @return
      */
     public ColumnFamily createFamily(String familyName) {
@@ -116,6 +117,15 @@ public class GenericDBTableRow {
         return jsonObject;
     }
 
+    public void forEach(DBTableIterator dbTableIterator) {
+        getColumnFamilies().forEach((familyName, columnFamily) -> {
+            columnFamily.getColumns().forEach((columnName, column) -> {
+                dbTableIterator.accept(familyName, columnName, column.getColumnValue(), column.getColumnValueAsString());
+            });
+        });
+
+    }
+
     @Override
     public String toString() {
         return "HBaseTable{" + "rowKey=" + rowKey + ", columnFamilies=" + columnFamilies + '}';
@@ -159,6 +169,7 @@ public class GenericDBTableRow {
 
         /**
          * @param colName
+         *
          * @return
          */
         public Column getColumn(String colName) {

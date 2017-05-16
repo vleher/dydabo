@@ -30,6 +30,7 @@ public class ClaimCharges implements BlackBoxable {
     private Date ccDate = null;
     private TranType type = null;
     private Double amount = 0.0;
+
     /**
      * @param ccId
      * @param amount

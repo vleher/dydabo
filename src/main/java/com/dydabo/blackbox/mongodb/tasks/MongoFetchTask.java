@@ -110,7 +110,6 @@ public class MongoFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
 
         for (Document doc : docIter) {
             T resultObject = new Gson().fromJson(doc.toJson(), (Type) row.getClass());
-            logger.info(" DOC " + resultObject);
             if (resultObject != null) {
                 if (maxResults <= 0 || results.size() < maxResults) {
                     results.add(resultObject);

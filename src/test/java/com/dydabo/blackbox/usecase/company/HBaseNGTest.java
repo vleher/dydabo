@@ -28,6 +28,7 @@ import java.io.IOException;
  */
 public class HBaseNGTest extends SimpleUseCase {
     protected BlackBox instance;
+
     /**
      * @throws IOException
      */

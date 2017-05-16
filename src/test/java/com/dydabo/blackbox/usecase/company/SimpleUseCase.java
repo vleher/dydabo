@@ -42,7 +42,6 @@ public abstract class SimpleUseCase {
     protected final Random random = new Random();
 
 
-
     /**
      * @throws IOException
      */
@@ -64,7 +63,7 @@ public abstract class SimpleUseCase {
         for (Customer customer : customers) {
             try {
                 List<Customer> result = blackBox.fetch(customer.getBBRowKey(), new Customer(null, null));
-                Assert.assertTrue(result.size() == 1, result.size()+"");
+                Assert.assertTrue(result.size() == 1, result.size() + "");
                 Assert.assertTrue(customer.getBBRowKey().equals(result.get(0).getBBRowKey()));
                 Assert.assertTrue(customer.getUserName().equals(result.get(0).getUserName()));
             } catch (BlackBoxException e) {
@@ -82,7 +81,7 @@ public abstract class SimpleUseCase {
             for (Customer customer : customers) {
                 List<Customer> results = blackBox.fetch(customer.getBBRowKey(), new Customer(null, null));
 
-                Assert.assertTrue(results.size() == 1, results.size()+"");
+                Assert.assertTrue(results.size() == 1, results.size() + "");
             }
         } catch (BlackBoxException e) {
             Assert.fail();
@@ -117,7 +116,7 @@ public abstract class SimpleUseCase {
                     String key = rowKey.substring(0, rowKey.length() / 2) + ".*";
 
                     List<Customer> results = blackBox.fetchByPartialKey(key, new Customer(null, null));
-                    Assert.assertTrue(results.size() > 0, results.size()+"");
+                    Assert.assertTrue(results.size() > 0, results.size() + "");
                 }
             }
         } catch (BlackBoxException e) {
@@ -261,8 +260,8 @@ public abstract class SimpleUseCase {
             Assert.assertTrue(taxRateCust.size() > 0);
             for (Customer customer : taxRateCust) {
                 if (customer.getTaxRate() != null) {
-                    Assert.assertTrue(customer.getTaxRate() >= minTaxRate, "Min :"+minTaxRate+" :"+customer.getTaxRate());
-                    Assert.assertTrue(customer.getTaxRate() < maxTaxRate, "Max :"+maxTaxRate+" :"+customer.getTaxRate());
+                    Assert.assertTrue(customer.getTaxRate() >= minTaxRate, "Min :" + minTaxRate + " :" + customer.getTaxRate());
+                    Assert.assertTrue(customer.getTaxRate() < maxTaxRate, "Max :" + maxTaxRate + " :" + customer.getTaxRate());
                 }
             }
 

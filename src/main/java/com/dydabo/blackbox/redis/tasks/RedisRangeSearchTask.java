@@ -39,12 +39,11 @@ import java.util.logging.Logger;
  */
 public class RedisRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
 
-    private Logger logger = Logger.getLogger(RedisRangeSearchTask.class.getName());
-
     private final T startRow;
     private final T endRow;
     private final long maxResults;
     private final RedisUtils utils;
+    private Logger logger = Logger.getLogger(RedisRangeSearchTask.class.getName());
 
     public RedisRangeSearchTask(T startRow, T endRow, long maxResults) {
         this.startRow = startRow;
@@ -63,7 +62,7 @@ public class RedisRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
         GenericDBTableRow startTableRow = utils.convertRowToTableRow(startRow);
         GenericDBTableRow endTableRow = utils.convertRowToTableRow(endRow);
 
-        final String type = startRow.getClass().getTypeName()+":";
+        final String type = startRow.getClass().getTypeName() + ":";
 
         // An inefficient search that scans all rows
         try (Jedis connection = RedisConnectionManager.getConnection("localhost")) {
@@ -74,7 +73,6 @@ public class RedisRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
                 T rowObject = new Gson().fromJson(currentRow, (Type) startRow.getClass());
 
                 if (filter(rowObject, startTableRow, endTableRow)) {
-                    logger.info(" Matched :" + rowObject);
                     results.add(rowObject);
                     if (maxResults > 0 && results.size() >= maxResults) {
                         break;
@@ -97,9 +95,8 @@ public class RedisRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
 
                 GenericDBTableRow.Column startColValue = startTableRow.getColumnFamily(colFamily.getFamilyName()).getColumn(columnName);
                 GenericDBTableRow.Column endColValue = endTableRow.getColumnFamily(colFamily.getFamilyName()).getColumn(columnName);
-                //logger.info(" Compare " + columnName +" :"+columnValue);
+
                 if (!compare(startColValue, columnValue, endColValue)) {
-                    logger.info("DOES NOT Match");
                     return false;
                 }
 
@@ -168,15 +165,14 @@ public class RedisRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
             } else if (s2 instanceof String && s3 instanceof String) {
                 if (DyDaBoUtils.isARegex((String) s3)) {
                     flag = ((String) s2).matches((String) s3);
-                } else
-                if (((String) s2).compareTo((String) s3) <= 0) {
+                } else if (((String) s2).compareTo((String) s3) <= 0) {
                     flag = true;
                 } else {
                     flag = false;
                 }
             }
         }
-        logger.info("== " + s1 + " : " + s2 + " : " + s3 + " :" + flag);
+
         return flag;
     }
 

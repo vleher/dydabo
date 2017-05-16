@@ -31,7 +31,6 @@ import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Level;
@@ -128,33 +127,27 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
     private Boolean insert(T row, boolean checkExisting) throws BlackBoxException {
         boolean successFlag = true;
 
-        Insert insStmt = QueryBuilder.insertInto(CassandraConstants.KEYSPACE, utils.getTableName(row));
+        final Insert insStmt = QueryBuilder.insertInto(CassandraConstants.KEYSPACE, utils.getTableName(row));
 
         if (checkExisting) {
-            insStmt = insStmt.ifNotExists();
+            insStmt.ifNotExists();
         }
 
         GenericDBTableRow cTable = utils.convertRowToTableRow(row);
-        for (Map.Entry<String, GenericDBTableRow.ColumnFamily> entry : cTable.getColumnFamilies().entrySet()) {
-            GenericDBTableRow.ColumnFamily family = entry.getValue();
+        insStmt.value("\"" + CassandraConstants.DEFAULT_ROWKEY + "\"", row.getBBRowKey());
 
-            insStmt.value("\""+CassandraConstants.DEFAULT_ROWKEY+"\"", row.getBBRowKey());
-
-            for (Map.Entry<String, GenericDBTableRow.Column> columns : family.getColumns().entrySet()) {
-                String colName = columns.getKey();
-                GenericDBTableRow.Column colValue = columns.getValue();
-                if (colValue != null && colValue.getColumnValue() != null) {
-                    if (DyDaBoUtils.isNumber(colValue.getColumnValue())) {
-                        insStmt.value("\"" + colName + "\"", colValue.getColumnValue());
-                    } else {
-                        insStmt.value("\"" + colName + "\"", colValue.getColumnValueAsString());
-                    }
+        cTable.forEach((familyName, columnName, columnValue, columnValueAsString) -> {
+            if (columnValue != null) {
+                if (DyDaBoUtils.isNumber(columnValue)) {
+                    insStmt.value("\"" + columnName + "\"", columnValue);
+                } else {
+                    insStmt.value("\"" + columnName + "\"", columnValueAsString);
                 }
             }
-        }
+        });
 
         Session session = CassandraConnectionManager.getSession();
-        logger.info("Executing "+insStmt.toString());
+        logger.info("Executing " + insStmt.toString());
         // execute query, might throw exception
         ResultSet resultSet = session.execute(insStmt);
 

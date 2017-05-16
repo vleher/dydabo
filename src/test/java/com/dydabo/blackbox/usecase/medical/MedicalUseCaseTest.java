@@ -60,9 +60,9 @@ public abstract class MedicalUseCaseTest {
      */
     public static List<String> LastNames = Arrays.asList("Johnson", "Becker", "Smith", "Gates", "King", "Spears", "Perry", "Carey",
             "Gomez", "Lopez", "Turner", "Ross", "Warwick", "Lauper", "Carnes", "Midler", "Jackson", "Hayes");
+    protected final DyDaBoTestUtils utils = new DyDaBoTestUtils();
     final int knownPatientId = 123456;
     final Random random = new Random();
-    protected final DyDaBoTestUtils utils = new DyDaBoTestUtils();
     protected BlackBox instance;
 
     /**
@@ -371,7 +371,7 @@ public abstract class MedicalUseCaseTest {
     public void testGetEncounterByPatient() throws BlackBoxException {
         Encounter pe = new Encounter();
         List<Encounter> peL1 = instance.search(Collections.singletonList(pe));
-        int randId = random.nextInt(100000000) % peL1.size();
+        int randId = random.nextInt(2984745) % peL1.size();
 
         String patientId = peL1.get(randId).getpId();
         String encId = peL1.get(randId).geteId();
@@ -382,7 +382,7 @@ public abstract class MedicalUseCaseTest {
         long execTime = endTime - startTime;
         logger.info("1 :" + resultOne.size() + ":" + execTime);
         if (resultOne.size() > 0) {
-            Assert.assertTrue(execTime / resultOne.size() < 10000000, "" + (execTime / resultOne.size()));
+            Assert.assertTrue(execTime / resultOne.size() < 1e7, "" + (execTime / resultOne.size()));
         }
 
         startTime = System.nanoTime();
@@ -391,7 +391,7 @@ public abstract class MedicalUseCaseTest {
         execTime = endTime - startTime;
         logger.info("2 :" + resultTwo.size() + ":" + execTime);
         if (resultTwo.size() > 0) {
-            Assert.assertTrue(execTime / resultTwo.size() < 10000000, "" + (execTime / resultTwo.size()));
+            Assert.assertTrue(execTime / resultTwo.size() < 1e7, "" + (execTime / resultTwo.size()));
         }
 
         startTime = System.nanoTime();
@@ -400,7 +400,7 @@ public abstract class MedicalUseCaseTest {
         execTime = endTime - startTime;
         logger.info("3 :" + resultThree.size() + ":" + execTime);
         if (resultThree.size() > 0) {
-            Assert.assertTrue(execTime / resultThree.size() < 10000000, "" + (execTime / resultThree.size()));
+            Assert.assertTrue(execTime / resultThree.size() < 1e8, "" + (execTime / resultThree.size()));
         }
 
         startTime = System.nanoTime();
@@ -409,7 +409,7 @@ public abstract class MedicalUseCaseTest {
         execTime = endTime - startTime;
         logger.info("4 :" + resultFour.size() + ":" + execTime);
         if (resultFour.size() > 0) {
-            Assert.assertTrue(execTime / resultFour.size() < 10000000, "" + (execTime / resultFour.size()));
+            Assert.assertTrue(execTime / resultFour.size() < 1e8, "" + (execTime / resultFour.size()));
         }
 
         startTime = System.nanoTime();
@@ -418,7 +418,7 @@ public abstract class MedicalUseCaseTest {
         execTime = endTime - startTime;
         logger.info("5 :" + resultFive.size() + ":" + execTime);
         if (resultFive.size() > 0) {
-            Assert.assertTrue(execTime / resultFive.size() < 10000000, "" + (execTime / resultFive.size()));
+            Assert.assertTrue(execTime / resultFive.size() < 1e7, "" + (execTime / resultFive.size()));
         }
 
     }

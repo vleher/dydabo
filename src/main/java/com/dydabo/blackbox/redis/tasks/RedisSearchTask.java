@@ -87,19 +87,18 @@ public class RedisSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
 
     private List<T> search(T row) {
         List<T> results = new ArrayList<>();
-        final String type = row.getClass().getTypeName()+":";
+        final String type = row.getClass().getTypeName() + ":";
         GenericDBTableRow tableRow = utils.convertRowToTableRow(row);
 
         // A very inefficient search....Redis is not designed for this.
         try (Jedis connection = RedisConnectionManager.getConnection("localhost")) {
-            Set<String> allKeys = connection.keys(type+"*");
+            Set<String> allKeys = connection.keys(type + "*");
 
             for (String key : allKeys) {
                 if (key.startsWith(type.toString())) {
                     String currentRow = connection.get(key);
 
                     T rowObject = new Gson().fromJson(currentRow, (Type) row.getClass());
-                    logger.info(key + " => " + currentRow + " => " + rowObject);
                     if (compare(rowObject, tableRow)) {
                         results.add(rowObject);
                         if (maxResults > 0 && results.size() >= maxResults) {
@@ -125,8 +124,6 @@ public class RedisSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
                     final String colString = colValue.getColumnValueAsString();
                     if (DyDaBoUtils.isValidRegex(colString)) {
                         final String columnValueAsString = tableRowObject.getColumnFamily(colFam.getFamilyName()).getColumn(colName).getColumnValueAsString();
-                        logger.info("Comparing: " + colName + ":" + colString + " == " +
-                                columnValueAsString);
                         if (colString.startsWith("{") || colString.startsWith("[")) {
                             // TODO: compare maps and arrays
                         } else {

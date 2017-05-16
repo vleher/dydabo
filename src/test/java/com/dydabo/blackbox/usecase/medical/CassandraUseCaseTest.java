@@ -14,14 +14,13 @@
  * limitations under the License.
  *
  */
-
 package com.dydabo.blackbox.usecase.medical;
 
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxFactory;
-
 import java.io.IOException;
 import java.util.logging.Logger;
+import org.testng.annotations.Test;
 
 /**
  * @author viswadas leher
@@ -44,5 +43,79 @@ public class CassandraUseCaseTest extends MedicalUseCaseTest {
         }
     }
 
+    @Test
+    public void testAllClaimChargesForPatient() throws BlackBoxException {
+        super.testAllClaimChargesForPatient();
+    }
+
+    @Test
+    public void testAllClaimsForPatient() throws BlackBoxException {
+        super.testAllClaimsForPatient();
+    }
+
+    @Test
+    public void testAllPatientEncounters() throws BlackBoxException {
+        super.testAllPatientEncounters();
+    }
+
+    @Test
+    public void testAllPatients() throws BlackBoxException {
+        super.testAllPatients();
+    }
+
+    @Test
+    public void testAllPatientsWithDiagnosis() throws BlackBoxException {
+        super.testAllPatientsWithDiagnosis();
+    }
+
+    @Test
+    public void testFetchQueryPerformance() throws BlackBoxException {
+        super.testFetchQueryPerformance();
+    }
+
+    @Test
+    public void testGetEncounterByPatient() throws BlackBoxException {
+        super.testGetEncounterByPatient();
+    }
+
+    @Test
+    public void testPatientByName() throws BlackBoxException {
+        super.testPatientByName();
+    }
+
+    @Test
+    public void testPatientEncountersById() throws BlackBoxException {
+        super.testPatientEncountersById();
+    }
+
+    @Test
+    public void testPatientEncountersByMedId() throws BlackBoxException {
+        super.testPatientEncountersByMedId();
+    }
+
+    @Test
+    public void testPatientEncountersByMedIdAndPFName() throws BlackBoxException {
+        super.testPatientEncountersByMedIdAndPFName();
+    }
+
+    @Test
+    public void testPatientEncountersByName() throws BlackBoxException {
+        super.testPatientEncountersByName();
+    }
+
+    @Test
+    public void testPatientWithId() throws BlackBoxException {
+        super.testPatientWithId();
+    }
+
+    @Test
+    public void testPatientsWithFirstAndLastName() throws BlackBoxException {
+        super.testPatientsWithFirstAndLastName();
+    }
+
+    @Test
+    public void testRangeSearch() throws BlackBoxException {
+        super.testRangeSearch();
+    }
 
 }

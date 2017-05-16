@@ -23,8 +23,17 @@ import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.dydabo.blackbox.hbase.HBaseBlackBoxImpl;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import com.google.gson.Gson;
-import org.apache.hadoop.hbase.client.*;
-import org.apache.hadoop.hbase.filter.*;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.filter.BinaryComparator;
+import org.apache.hadoop.hbase.filter.CompareFilter;
+import org.apache.hadoop.hbase.filter.FilterList;
+import org.apache.hadoop.hbase.filter.RegexStringComparator;
+import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
@@ -32,7 +41,6 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Level;
@@ -94,33 +102,28 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
      * @return
      */
     private boolean parseForFilters(GenericDBTableRow thisTable, FilterList filterList) {
-        boolean hasFilters = false;
-        for (Map.Entry<String, GenericDBTableRow.ColumnFamily> colFamEntry : thisTable.getColumnFamilies().entrySet()) {
-            String familyName = colFamEntry.getKey();
-            GenericDBTableRow.ColumnFamily colFamily = colFamEntry.getValue();
-            for (Map.Entry<String, GenericDBTableRow.Column> columnEntry : colFamily.getColumns().entrySet()) {
-                String colName = columnEntry.getKey();
-                GenericDBTableRow.Column colValue = columnEntry.getValue();
-                String regexValue = colValue.getColumnValueAsString();
-                regexValue = utils.sanitizeRegex(regexValue);
-                if (regexValue != null && DyDaBoUtils.isValidRegex(regexValue)) {
-                    if (DyDaBoUtils.isNumber(colValue.getColumnValue())) {
-                        BinaryComparator regexComp = new BinaryComparator(utils.getAsByteArray(colValue.getColumnValue()));
-                        SingleColumnValueFilter scvf = new SingleColumnValueFilter(Bytes.toBytes(familyName),
-                                Bytes.toBytes(colName), CompareFilter.CompareOp.EQUAL, regexComp);
-                        filterList.addFilter(scvf);
-                        hasFilters = true;
-                    } else {
-                        RegexStringComparator regexComp = new RegexStringComparator(regexValue);
-                        SingleColumnValueFilter scvf = new SingleColumnValueFilter(Bytes.toBytes(familyName),
-                                Bytes.toBytes(colName), CompareFilter.CompareOp.EQUAL, regexComp);
-                        filterList.addFilter(scvf);
-                        hasFilters = true;
-                    }
+        final boolean[] hasFilters = {false};
+
+        thisTable.forEach((familyName, columnName, columnValue, columnValueAsString) -> {
+            String regexValue = utils.sanitizeRegex(columnValueAsString);
+            if (regexValue != null && DyDaBoUtils.isValidRegex(regexValue)) {
+                if (DyDaBoUtils.isNumber(columnValue)) {
+                    BinaryComparator regexComp = new BinaryComparator(utils.getAsByteArray(columnValue));
+                    SingleColumnValueFilter scvf = new SingleColumnValueFilter(Bytes.toBytes(familyName),
+                            Bytes.toBytes(columnName), CompareFilter.CompareOp.EQUAL, regexComp);
+                    filterList.addFilter(scvf);
+                    hasFilters[0] = true;
+                } else {
+                    RegexStringComparator regexComp = new RegexStringComparator(regexValue);
+                    SingleColumnValueFilter scvf = new SingleColumnValueFilter(Bytes.toBytes(familyName),
+                            Bytes.toBytes(columnName), CompareFilter.CompareOp.EQUAL, regexComp);
+                    filterList.addFilter(scvf);
+                    hasFilters[0] = true;
                 }
             }
-        }
-        return hasFilters;
+        });
+
+        return hasFilters[0];
     }
 
     /**
@@ -173,7 +176,7 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
                 FilterList filterList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
                 boolean hasFilters = parseForFilters(thisTable, filterList);
                 if (hasFilters) {
-                    logger.log(Level.INFO, "Filters:" + filterList);
+                    logger.finest("Filters:" + filterList);
                     scan.setFilter(filterList);
                 }
 

@@ -74,7 +74,6 @@ public class RedisInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
     private Boolean insert(T row, boolean checkExisting) {
         try (Jedis connection = RedisConnectionManager.getConnection("localhost")) {
             String result = connection.set(row.getClass().getTypeName() + ":" + row.getBBRowKey(), row.getBBJson());
-            logger.info("Inserted " + row + " :" + result);
         }
         return true;
     }

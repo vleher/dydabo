@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Level;
@@ -125,21 +124,13 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
                 GenericDBTableRow thisTable = utils.convertRowToTableRow(row);
                 if (utils.isValidRowKey(row)) {
                     Put put = new Put(Bytes.toBytes(row.getBBRowKey()));
-                    for (Map.Entry<String, GenericDBTableRow.ColumnFamily> entry : thisTable.getColumnFamilies().entrySet()) {
-                        String familyName = entry.getKey();
-                        GenericDBTableRow.ColumnFamily colFamily = entry.getValue();
-                        for (Map.Entry<String, GenericDBTableRow.Column> column : colFamily.getColumns().entrySet()) {
-                            String colName = column.getKey();
-                            GenericDBTableRow.Column colValue = column.getValue();
-                            Object thisValue = colValue.getColumnValue();
-                            byte[] byteArray = utils.getAsByteArray(thisValue);
 
-                            if (byteArray != null) {
-                                put.addColumn(Bytes.toBytes(familyName), Bytes.toBytes(colName), byteArray);
-                            }
-
+                    thisTable.forEach((familyName, columnName, columnValue, columnValueAsString) -> {
+                        byte[] byteArray = utils.getAsByteArray(columnValue);
+                        if (byteArray != null) {
+                            put.addColumn(Bytes.toBytes(familyName), Bytes.toBytes(columnName), byteArray);
                         }
-                    }
+                    });
 
                     try {
                         hTable.put(put);

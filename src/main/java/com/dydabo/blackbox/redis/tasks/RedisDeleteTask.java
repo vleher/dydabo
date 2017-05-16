@@ -73,7 +73,6 @@ public class RedisDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
         // TODO : handle return value
         try (Jedis connection = RedisConnectionManager.getConnection("localhost")) {
             Long result = connection.del(row.getBBRowKey());
-            logger.info("Deleted " + row.getBBRowKey() + " :" + result);
         }
         return true;
     }

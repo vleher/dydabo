@@ -30,7 +30,6 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Logger;
@@ -72,27 +71,21 @@ public class MongoSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
      */
     protected List<Bson> parseFilters(GenericDBTableRow tableRow) {
         List<Bson> filterList = new ArrayList<>();
-        for (Map.Entry<String, GenericDBTableRow.ColumnFamily> entry : tableRow.getColumnFamilies().entrySet()) {
-            GenericDBTableRow.ColumnFamily colFam = entry.getValue();
-            for (Map.Entry<String, GenericDBTableRow.Column> column : colFam.getColumns().entrySet()) {
-                String colName = column.getKey();
-                GenericDBTableRow.Column colValue = column.getValue();
-                if (colValue != null && colValue.getColumnValue() != null) {
-                    final String colString = colValue.getColumnValueAsString();
-                    if (DyDaBoUtils.isValidRegex(colString)) {
-                        if (DyDaBoUtils.isNumber(colValue.getColumnValue())) {
-                            filterList.add(eq(colName, colValue.getColumnValue()));
-                        } else {
-                            if (colString.startsWith("[") || colString.startsWith("{")) {
-                                // TODO : search inside maps and arrays
-                            } else {
-                                filterList.add(regex(colName, colString));
-                            }
-                        }
+
+        tableRow.forEach((familyName, columnName, columnValue, columnValueAsString) -> {
+            if (DyDaBoUtils.isValidRegex(columnValueAsString)) {
+                if (DyDaBoUtils.isNumber(columnValue)) {
+                    filterList.add(eq(columnName, columnValue));
+                } else {
+                    if (columnValueAsString.startsWith("[") || columnValueAsString.startsWith("{")) {
+                        // TODO : search inside maps and arrays
+                    } else {
+                        filterList.add(regex(columnName, columnValueAsString));
                     }
                 }
             }
-        }
+        });
+
         return filterList;
     }
 
@@ -125,9 +118,7 @@ public class MongoSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
     private List<T> search(T row) {
         List<T> results = new ArrayList<>();
         String type = row.getClass().getTypeName();
-logger.info("XXXXXXXXXX TYPE "+type);
         Block<Document> addToResultBlock = (Document doc) -> {
-            logger.info("Mongo Search Result :" + doc.toJson());
             T resultObject = new Gson().fromJson(doc.toJson(), (Type) row.getClass());
             if (resultObject != null) {
                 if (maxResult <= 0) {
@@ -143,7 +134,7 @@ logger.info("XXXXXXXXXX TYPE "+type);
         List<Bson> filterList = parseFilters(tableRow);
         filterList.add(regex(MongoUtils.PRIMARYKEY, type + ":.*"));
 
-        logger.info("Mongo Filter:" + filterList);
+        logger.finest("Mongo Filter:" + filterList);
         if (filterList.size() > 0) {
             collection.find(and(filterList)).forEach(addToResultBlock);
         }

@@ -25,3 +25,4 @@ usecaseone.txt
 .eclipse-pmd
 .idea/
 *.iml
+/.nb-gradle/

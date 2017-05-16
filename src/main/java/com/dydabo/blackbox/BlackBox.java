@@ -48,9 +48,8 @@ public interface BlackBox<T extends BlackBoxable> {
      *
      * @param rowKeys list of row keys
      * @param bean    the POJO to return
-     * @return
-     * @throws BlackBoxException
      * @return a list of POJO that match the keys
+     * @throws BlackBoxException
      */
     List<T> fetch(List<String> rowKeys, T bean) throws BlackBoxException;
 

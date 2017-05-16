@@ -22,7 +22,13 @@ import com.dydabo.blackbox.common.DyDaBoUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import com.google.gson.Gson;
-import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.filter.CompareFilter;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.RegexStringComparator;
@@ -146,7 +152,7 @@ public class HBaseFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
                     if (!DyDaBoUtils.isBlankOrNull(rowPrefix)) {
                         scan.setRowPrefixFilter(Bytes.toBytes(rowPrefix));
                     }
-                    logger.info(rowFilter.toString());
+                    logger.finest(rowFilter.toString());
                     scan.setFilter(rowFilter);
 
                     try (ResultScanner resultScanner = hTable.getScanner(scan)) {

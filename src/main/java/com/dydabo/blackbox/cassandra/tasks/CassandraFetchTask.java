@@ -54,15 +54,6 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
     private final Session session;
     private final CassandraUtils<T> utils;
 
-    /**
-     * @param session
-     * @param rowKey
-     * @param row
-     * @param isPartialKeys
-     */
-    private CassandraFetchTask(Session session, String rowKey, T row, boolean isPartialKeys) {
-        this(session, Collections.singletonList(rowKey), row, isPartialKeys);
-    }
 
     /**
      * @param session
