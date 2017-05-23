@@ -45,7 +45,7 @@ public class CassandraConnectionManager {
      * @param address
      * @return
      */
-    public static synchronized Session getSession() {
+    public static synchronized Session getSession(String address) {
 
         if (sessionPool.get(CassandraConstants.KEYSPACE) == null) {
             if (clusterPool.get(CassandraConstants.CLUSTER_NAME) == null) {
@@ -67,6 +67,10 @@ public class CassandraConnectionManager {
         }
 
         return sessionPool.get(CassandraConstants.KEYSPACE);
+    }
+
+    public static Session getSession() {
+        return getSession(address);
     }
 
     /**
