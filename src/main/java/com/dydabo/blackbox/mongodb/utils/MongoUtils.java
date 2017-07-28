@@ -24,7 +24,7 @@ import org.bson.Document;
  * @param <T>
  * @author viswadas leher
  */
-public class MongoUtils<T extends BlackBoxable> extends DBUtils<T> {
+public class MongoUtils<T extends BlackBoxable> implements DBUtils<T> {
 
     /**
      *

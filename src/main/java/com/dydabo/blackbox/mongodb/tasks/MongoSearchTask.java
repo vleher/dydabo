@@ -69,7 +69,7 @@ public class MongoSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
      * @param tableRow the value of tableRow
      * @return
      */
-    protected List<Bson> parseFilters(GenericDBTableRow tableRow) {
+    private List<Bson> parseFilters(GenericDBTableRow tableRow) {
         List<Bson> filterList = new ArrayList<>();
 
         tableRow.forEach((familyName, columnName, columnValue, columnValueAsString) -> {

@@ -62,19 +62,27 @@ public class BlackBoxFactory {
      * @throws java.io.IOException
      */
     public static BlackBox<BlackBoxable> getDatabase(String databaseType) throws IOException {
+        BlackBox<BlackBoxable> db = null;
         switch (databaseType) {
             case HBASE:
-                return new HBaseBlackBoxImpl<>();
+                db = new HBaseBlackBoxImpl<>();
+                break;
             case CASSANDRA:
-                return new CassandraBlackBoxImpl<>();
+                db = new CassandraBlackBoxImpl<>();
+                break;
             case MONGODB:
-                return new MongoBlackBoxImpl<>();
+                db = new MongoBlackBoxImpl<>();
+                break;
             case REDIS:
-                return new RedisBlackBoxImpl<>();
+                db = new RedisBlackBoxImpl<>();
+                break;
 
             default:
-                return null;
+                db = null;
+                break;
         }
+
+        return db;
     }
 
     /**

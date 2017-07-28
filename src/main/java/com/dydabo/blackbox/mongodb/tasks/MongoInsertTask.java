@@ -94,7 +94,7 @@ public class MongoInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
         return true;
     }
 
-    public MongoCollection getCollection() {
+    private MongoCollection getCollection() {
         return collection;
     }
 

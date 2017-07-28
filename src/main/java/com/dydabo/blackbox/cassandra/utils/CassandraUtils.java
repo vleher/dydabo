@@ -36,28 +36,29 @@ import java.util.logging.Logger;
  * @param <T>
  * @author viswadas leher
  */
-public class CassandraUtils<T extends BlackBoxable> extends DBUtils<T> {
+public class CassandraUtils<T extends BlackBoxable> implements DBUtils<T> {
 
     private final Logger logger = Logger.getLogger(CassandraUtils.class.getName());
 
     private String getDatabaseType(Type type) {
+        String dbType = "text";
         if (type == String.class) {
-            return "varchar";
+            dbType = "varchar";
         } else if (type == Integer.class) {
-            return "varint";
+            dbType = "varint";
         } else if (type == Float.class) {
-            return "float";
+            dbType = "float";
         } else if (type == Double.class || type == Long.class) {
-            return "double";
+            dbType = "double";
         } else if (type == Boolean.class) {
-            return "Boolean";
+            dbType = "Boolean";
         } else if (type == List.class || type == Set.class) {
-            return "text";
+            dbType = "text";
         } else if (type == Map.class) {
-            return "text";
+            dbType = "text";
         }
 
-        return "text";
+        return dbType;
     }
 
     /**

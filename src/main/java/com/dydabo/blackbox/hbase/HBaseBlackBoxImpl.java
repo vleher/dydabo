@@ -50,7 +50,7 @@ public class HBaseBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
     /**
      * @throws IOException
      */
-    public HBaseBlackBoxImpl() throws IOException {
+    public HBaseBlackBoxImpl() {
         this.config = HBaseConfiguration.create();
     }
 
@@ -58,7 +58,7 @@ public class HBaseBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
      * @param config
      * @throws java.io.IOException
      */
-    public HBaseBlackBoxImpl(Configuration config) throws IOException {
+    public HBaseBlackBoxImpl(Configuration config) {
         this.config = config;
     }
 
@@ -66,7 +66,7 @@ public class HBaseBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
      * @param rows
      * @throws BlackBoxException
      */
-    protected void createTable(List<T> rows) throws BlackBoxException {
+    private void createTable(List<T> rows) throws BlackBoxException {
         for (T row : rows) {
             try {
                 new HBaseUtils<T>().createTable(row, getConnection());
@@ -144,7 +144,7 @@ public class HBaseBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
      * @return
      * @throws java.io.IOException
      */
-    public Connection getConnection() throws IOException {
+    private Connection getConnection() throws IOException {
         return HBaseConnectionManager.getConnection(config);
     }
 

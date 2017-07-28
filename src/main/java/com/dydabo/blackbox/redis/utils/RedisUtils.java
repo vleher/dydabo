@@ -23,5 +23,5 @@ import com.dydabo.blackbox.common.DBUtils;
 /**
  * @author viswadas leher
  */
-public class RedisUtils<T extends BlackBoxable> extends DBUtils<T> {
+public class RedisUtils<T extends BlackBoxable> implements DBUtils<T> {
 }

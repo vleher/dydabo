@@ -138,7 +138,7 @@ public class MongoBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
     /**
      * @return
      */
-    public MongoCollection<Document> getCollection() {
+    private MongoCollection<Document> getCollection() {
         // TODO: make this configurable
         return MongoDBConnectionManager.getMongoDBCollection(null, "dydabo", "dydabo");
     }

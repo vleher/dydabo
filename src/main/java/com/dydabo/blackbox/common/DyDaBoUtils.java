@@ -70,6 +70,10 @@ public class DyDaBoUtils {
      * @return
      */
     public static boolean isBlankOrNull(String... str) {
+        if (str == null) {
+            return true;
+        }
+
         for (String s : str) {
             if (s == null || s.trim().isEmpty()) {
                 return true;
@@ -95,11 +99,7 @@ public class DyDaBoUtils {
             return false;
         }
 
-        if (EMPTY_ARRAY.equals(regexValue)) {
-            return false;
-        }
-
-        return !EMPTY_MAP.equals(regexValue);
+        return !EMPTY_ARRAY.equals(regexValue) && !EMPTY_MAP.equals(regexValue);
     }
 
     public static boolean isARegex(String str) {
@@ -107,7 +107,7 @@ public class DyDaBoUtils {
             return false;
         }
 
-        if (str.contains(".") || str.contains(".*") || str.contains("^")) {
+        if (str.contains(".") || str.contains("^")) {
             return true;
         }
 

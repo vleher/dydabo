@@ -20,9 +20,10 @@
 <suite name="com.dydabo_DynamicDataBlackBox_jar_1.0-SNAPSHOT">
     <test name="com.dydabo.blackbox suite">
         <packages>
-            <package name="com.dydabo.blackbox"/>
             <package name="com.dydabo.blackbox.common"/>
             <package name="com.dydabo.blackbox.db"/>
+            <package name="com.dydabo.blackbox.utils"/>
+            <package name="com.dydabo.blackbox.hbase.utils"/>
         </packages>
     </test>
 </suite>

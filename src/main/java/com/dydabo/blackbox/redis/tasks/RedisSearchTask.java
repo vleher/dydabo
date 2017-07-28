@@ -23,11 +23,11 @@ import com.dydabo.blackbox.db.RedisConnectionManager;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.dydabo.blackbox.redis.utils.RedisUtils;
 import com.google.gson.Gson;
-import org.mortbay.util.SingletonList;
 import redis.clients.jedis.Jedis;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,7 +45,7 @@ public class RedisSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
 
     private final List<T> rows;
     private final long maxResults;
-    private RedisUtils utils = null;
+    private final RedisUtils utils;
 
 
     public RedisSearchTask(List<T> rows, long maxResults) {
@@ -61,7 +61,7 @@ public class RedisSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
 
     private List<T> search(List<T> rows) {
         if (rows.size() < 2) {
-            List<T> fullResult = new ArrayList<>();
+            final ArrayList<T> fullResult = new ArrayList<>();
             for (T r : rows) {
                 List<T> res = search(r);
                 fullResult.addAll(res);
@@ -69,12 +69,12 @@ public class RedisSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
             return fullResult;
         }
 
-        List<T> fullResult = new ArrayList<>();
+        final List<T> fullResult = new ArrayList<>();
 
-        List<ForkJoinTask<List<T>>> taskList = new ArrayList<>();
+        final List<ForkJoinTask<List<T>>> taskList = new ArrayList<>();
 
         for (T r : rows) {
-            ForkJoinTask<List<T>> sTask = new RedisSearchTask<>(SingletonList.newSingletonList(r), maxResults).fork();
+            ForkJoinTask<List<T>> sTask = new RedisSearchTask<>(Collections.singletonList(r), maxResults).fork();
             taskList.add(sTask);
         }
 
@@ -95,7 +95,7 @@ public class RedisSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
             Set<String> allKeys = connection.keys(type + "*");
 
             for (String key : allKeys) {
-                if (key.startsWith(type.toString())) {
+                if (key.startsWith(type)) {
                     String currentRow = connection.get(key);
 
                     T rowObject = new Gson().fromJson(currentRow, (Type) row.getClass());
@@ -122,21 +122,28 @@ public class RedisSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
                 GenericDBTableRow.Column colValue = column.getValue();
                 if (colValue != null && colValue.getColumnValue() != null) {
                     final String colString = colValue.getColumnValueAsString();
-                    if (DyDaBoUtils.isValidRegex(colString)) {
-                        final String columnValueAsString = tableRowObject.getColumnFamily(colFam.getFamilyName()).getColumn(colName).getColumnValueAsString();
-                        if (colString.startsWith("{") || colString.startsWith("[")) {
-                            // TODO: compare maps and arrays
-                        } else {
-                            Pattern p = Pattern.compile(colString);
-                            if (DyDaBoUtils.isBlankOrNull(columnValueAsString) || !p.matcher(columnValueAsString).matches()) {
-                                return false;
-                            }
-                        }
+                    if (compareColumnStrings(tableRowObject, colFam, colName, colString)) {
+                        return false;
                     }
                 }
             }
         }
 
         return true;
+    }
+
+    private boolean compareColumnStrings(GenericDBTableRow tableRowObject, GenericDBTableRow.ColumnFamily colFam, String colName, String colString) {
+        if (DyDaBoUtils.isValidRegex(colString)) {
+            final String columnValueAsString = tableRowObject.getColumnFamily(colFam.getFamilyName()).getColumn(colName).getColumnValueAsString();
+            if (colString.startsWith("{") || colString.startsWith("[")) {
+                // TODO: compare maps and arrays
+            } else {
+                Pattern p = Pattern.compile(colString);
+                if (DyDaBoUtils.isBlankOrNull(columnValueAsString) || !p.matcher(columnValueAsString).matches()) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

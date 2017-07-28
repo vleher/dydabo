@@ -50,7 +50,7 @@ import java.util.logging.Logger;
  * @param <T>
  * @author viswadas leher
  */
-public class HBaseUtils<T extends BlackBoxable> extends DBUtils<T> {
+public class HBaseUtils<T extends BlackBoxable> implements DBUtils<T> {
 
     private static final Logger logger = Logger.getLogger(HBaseUtils.class.getName());
 
@@ -65,7 +65,7 @@ public class HBaseUtils<T extends BlackBoxable> extends DBUtils<T> {
      * @throws IOException       database error or exception
      * @throws BlackBoxException blackbox exception if alter fails
      */
-    public synchronized boolean alterTable(T row, Connection connection) throws IOException, BlackBoxException {
+    public synchronized boolean alterTable(T row, Connection connection) throws IOException {
         try (Admin admin = connection.getAdmin()) {
             TableName tableName = getTableName(row);
 
@@ -108,7 +108,7 @@ public class HBaseUtils<T extends BlackBoxable> extends DBUtils<T> {
      * @throws java.io.IOException
      * @throws com.dydabo.blackbox.BlackBoxException
      */
-    public synchronized boolean createTable(T row, Connection connection) throws IOException, BlackBoxException {
+    public synchronized boolean createTable(T row, Connection connection) throws IOException {
         try (Admin admin = connection.getAdmin()) {
             TableName tableName = getTableName(row);
 
@@ -143,6 +143,8 @@ public class HBaseUtils<T extends BlackBoxable> extends DBUtils<T> {
         byte[] byteArray = null;
         if (thisValue instanceof Double) {
             byteArray = Bytes.toBytes((Double) thisValue);
+            logger.info(" Bytes to string :" + Bytes.toString(byteArray));
+            logger.info("Bytes to double :" + Bytes.toDouble(byteArray));
         } else if (thisValue instanceof Integer) {
             byteArray = Bytes.toBytes((Integer) thisValue);
         } else if (thisValue instanceof Float) {
@@ -185,10 +187,7 @@ public class HBaseUtils<T extends BlackBoxable> extends DBUtils<T> {
      * @return
      */
     public boolean isValidRowKey(T row) {
-        if (row == null) {
-            return false;
-        }
-        return !DyDaBoUtils.isBlankOrNull(row.getBBRowKey());
+        return row != null && !DyDaBoUtils.isBlankOrNull(row.getBBRowKey());
     }
 
     /**
@@ -204,39 +203,42 @@ public class HBaseUtils<T extends BlackBoxable> extends DBUtils<T> {
             NavigableMap<byte[], byte[]> famColMap = entry.getValue();
             for (Map.Entry<byte[], byte[]> cols : famColMap.entrySet()) {
                 String colName = Bytes.toString(cols.getKey());
-                try {
-                    Field f = DyDaBoUtils.getFieldFromType(row.getClass(), colName);
-                    if (f.getGenericType().equals(Integer.class)) {
-                        int colValue = Bytes.toInt(cols.getValue());
-                        resultTable.getColumnFamily(familyName).addColumn(colName, colValue);
-                    } else if (f.getGenericType().equals(Double.class)) {
-                        double colValue = Bytes.toDouble(cols.getValue());
-                        resultTable.getColumnFamily(familyName).addColumn(colName, colValue);
-                    } else if (f.getGenericType().equals(Boolean.class)) {
-                        boolean colValue = Bytes.toBoolean(cols.getValue());
-                        resultTable.getColumnFamily(familyName).addColumn(colName, colValue);
-                    } else if (f.getGenericType().equals(Long.class)) {
-                        long colValue = Bytes.toLong(cols.getValue());
-                        resultTable.getColumnFamily(familyName).addColumn(colName, colValue);
-                    } else if (f.getGenericType().equals(Short.class)) {
-                        short colValue = Bytes.toShort(cols.getValue());
-                        resultTable.getColumnFamily(familyName).addColumn(colName, colValue);
-                    } else if (f.getGenericType().equals(Float.class)) {
-                        float colValue = Bytes.toFloat(cols.getValue());
-                        resultTable.getColumnFamily(familyName).addColumn(colName, colValue);
-                    } else if (f.getGenericType().equals(BigDecimal.class)) {
-                        BigDecimal colValue = Bytes.toBigDecimal(cols.getValue());
-                        resultTable.getColumnFamily(familyName).addColumn(colName, colValue);
-                    } else if (f.getGenericType().equals(Date.class)) {
-                        long colValue = Bytes.toLong(cols.getValue());
-                        Date thisDate = new Date(colValue);
-                        resultTable.getColumnFamily(familyName).addColumn(colName, thisDate);
-                    } else {
-                        String colValue = Bytes.toString(cols.getValue());
-                        resultTable.getColumnFamily(familyName).addColumn(colName, colValue);
+                logger.info("Parsing Result :" + colName + " :" + Bytes.toString(cols.getValue()));
+                if (cols.getValue() != null) {
+                    try {
+                        Field f = DyDaBoUtils.getFieldFromType(row.getClass(), colName);
+                        if (f.getGenericType().equals(Integer.class)) {
+                            int colValue = Bytes.toInt(cols.getValue());
+                            resultTable.getColumnFamily(familyName).addColumn(colName, colValue);
+                        } else if (f.getGenericType().equals(Double.class)) {
+                            double colValue = Bytes.toDouble(cols.getValue());
+                            resultTable.getColumnFamily(familyName).addColumn(colName, colValue);
+                        } else if (f.getGenericType().equals(Boolean.class)) {
+                            boolean colValue = Bytes.toBoolean(cols.getValue());
+                            resultTable.getColumnFamily(familyName).addColumn(colName, colValue);
+                        } else if (f.getGenericType().equals(Long.class)) {
+                            long colValue = Bytes.toLong(cols.getValue());
+                            resultTable.getColumnFamily(familyName).addColumn(colName, colValue);
+                        } else if (f.getGenericType().equals(Short.class)) {
+                            short colValue = Bytes.toShort(cols.getValue());
+                            resultTable.getColumnFamily(familyName).addColumn(colName, colValue);
+                        } else if (f.getGenericType().equals(Float.class)) {
+                            float colValue = Bytes.toFloat(cols.getValue());
+                            resultTable.getColumnFamily(familyName).addColumn(colName, colValue);
+                        } else if (f.getGenericType().equals(BigDecimal.class)) {
+                            BigDecimal colValue = Bytes.toBigDecimal(cols.getValue());
+                            resultTable.getColumnFamily(familyName).addColumn(colName, colValue);
+                        } else if (f.getGenericType().equals(Date.class)) {
+                            long colValue = Bytes.toLong(cols.getValue());
+                            Date thisDate = new Date(colValue);
+                            resultTable.getColumnFamily(familyName).addColumn(colName, thisDate);
+                        } else {
+                            String colValue = Bytes.toString(cols.getValue());
+                            resultTable.getColumnFamily(familyName).addColumn(colName, colValue);
+                        }
+                    } catch (SecurityException ex) {
+                        logger.log(Level.SEVERE, null, ex);
                     }
-                } catch (SecurityException ex) {
-                    logger.log(Level.SEVERE, null, ex);
                 }
             }
         }

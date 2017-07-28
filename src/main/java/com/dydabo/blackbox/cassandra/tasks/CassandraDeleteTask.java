@@ -107,7 +107,7 @@ public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<B
      * @return true if the delete was successful
      * @throws BlackBoxException
      */
-    private Boolean delete(T row) throws BlackBoxException {
+    private Boolean delete(T row) {
         // Create a delete statement with the row key
         Delete delStmt = QueryBuilder.delete().from(CassandraConstants.KEYSPACE, utils.getTableName(row));
         delStmt.where(QueryBuilder.eq(CassandraConstants.DEFAULT_ROWKEY, row.getBBRowKey()));

@@ -30,6 +30,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.RecursiveTask;
 import java.util.logging.Logger;
@@ -43,7 +44,7 @@ public class RedisRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
     private final T endRow;
     private final long maxResults;
     private final RedisUtils utils;
-    private Logger logger = Logger.getLogger(RedisRangeSearchTask.class.getName());
+    private transient Logger logger = Logger.getLogger(RedisRangeSearchTask.class.getName());
 
     public RedisRangeSearchTask(T startRow, T endRow, long maxResults) {
         this.startRow = startRow;
@@ -129,45 +130,41 @@ public class RedisRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
             return true;
         }
 
-        if (DyDaBoUtils.EMPTY_ARRAY.equals(startColValue.getColumnValueAsString()) && DyDaBoUtils.EMPTY_ARRAY.equals(endColValue.getColumnValueAsString())) {
-            return true;
+        if (Objects.equals(DyDaBoUtils.EMPTY_ARRAY, startColValue.getColumnValueAsString()) && Objects.equals(DyDaBoUtils.EMPTY_ARRAY, endColValue.getColumnValueAsString())) {
+            flag = true;
         }
 
-        if (DyDaBoUtils.EMPTY_MAP.equals(startColValue.getColumnValueAsString()) && DyDaBoUtils.EMPTY_MAP.equals(endColValue.getColumnValueAsString())) {
-            return true;
+        if (Objects.equals(DyDaBoUtils.EMPTY_MAP, startColValue.getColumnValueAsString()) && Objects.equals(DyDaBoUtils.EMPTY_MAP, endColValue.getColumnValueAsString())) {
+            flag = true;
+        }
+
+        if (flag) {
+            return flag;
         }
 
         if (s1 != null && s2 != null) {
             if (s1 instanceof Number && s2 instanceof Number) {
                 if (compareTo((Number) s1, (Number) s2) <= 0) {
                     flag = true;
-                } else {
-                    flag = false;
                 }
             } else if (s1 instanceof String && s2 instanceof String) {
                 if (DyDaBoUtils.isARegex((String) s1)) {
                     flag = ((String) s2).matches((String) s1);
                 } else if (((String) s1).compareTo((String) s2) <= 0) {
                     flag = true;
-                } else {
-                    flag = false;
                 }
             }
         }
 
         if (flag && s2 != null && s3 != null) {
             if (s2 instanceof Number && s3 instanceof Number) {
-                if (compareTo((Number) s2, (Number) s3) <= 0) {
-                    flag = true;
-                } else {
+                if (compareTo((Number) s2, (Number) s3) > 0) {
                     flag = false;
                 }
             } else if (s2 instanceof String && s3 instanceof String) {
                 if (DyDaBoUtils.isARegex((String) s3)) {
                     flag = ((String) s2).matches((String) s3);
-                } else if (((String) s2).compareTo((String) s3) <= 0) {
-                    flag = true;
-                } else {
+                } else if (((String) s2).compareTo((String) s3) > 0) {
                     flag = false;
                 }
             }
@@ -176,10 +173,8 @@ public class RedisRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
         return flag;
     }
 
-    public int compareTo(Number n1, Number n2) {
+    private int compareTo(Number n1, Number n2) {
         // ignoring null handling
-        BigDecimal b1 = new BigDecimal(n1.doubleValue());
-        BigDecimal b2 = new BigDecimal(n2.doubleValue());
-        return b1.compareTo(b2);
+        return BigDecimal.valueOf(n1.doubleValue()).compareTo(BigDecimal.valueOf(n2.doubleValue()));
     }
 }

@@ -76,7 +76,7 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
      * @return
      * @throws BlackBoxException
      */
-    protected Boolean insert(List<T> rows, boolean checkExisting) throws BlackBoxException {
+    private Boolean insert(List<T> rows, boolean checkExisting) throws BlackBoxException {
         Boolean successFlag = Boolean.TRUE;
         if (rows.size() < 2) {
             for (T t : rows) {
@@ -105,7 +105,7 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
      * @return
      * @throws BlackBoxException
      */
-    protected Boolean insert(T row, boolean checkExisting) throws BlackBoxException {
+    private Boolean insert(T row, boolean checkExisting) throws BlackBoxException {
         boolean successFlag = true;
         try (final Admin admin = getConnection().getAdmin()) {
             // consider create to be is nothing but alter...so
@@ -133,6 +133,7 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
                     });
 
                     try {
+                        logger.info("Updating the row :" + put.toString());
                         hTable.put(put);
                     } catch (NoSuchColumnFamilyException ncfEx) {
                         // TODO: try altering the table....
@@ -147,6 +148,7 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
             logger.log(Level.SEVERE, null, ex);
             successFlag = false;
         }
+        logger.info("Inserted Row :" + row + " :" + successFlag);
         return successFlag;
     }
 
@@ -163,7 +165,7 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
     /**
      * @return
      */
-    public Connection getConnection() {
+    private Connection getConnection() {
         return connection;
     }
 }

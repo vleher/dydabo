@@ -159,7 +159,7 @@ public class CassandraBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T
      * @param rows
      * @throws BlackBoxException
      */
-    private void createTable(List<T> rows) throws BlackBoxException {
+    private void createTable(List<T> rows) {
         for (T row : rows) {
             new CassandraUtils<T>().createTable(row);
         }

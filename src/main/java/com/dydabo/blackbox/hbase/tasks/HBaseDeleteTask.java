@@ -78,7 +78,7 @@ public class HBaseDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
      * @return
      * @throws BlackBoxException
      */
-    protected Boolean delete(List<T> rows) throws BlackBoxException {
+    private Boolean delete(List<T> rows) throws BlackBoxException {
         if (rows.size() < 2) {
             Boolean successFlag = true;
             for (T t : rows) {
@@ -108,7 +108,7 @@ public class HBaseDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
      * @return
      * @throws BlackBoxException
      */
-    protected Boolean delete(T row) throws BlackBoxException {
+    private Boolean delete(T row) {
         try (Admin admin = getConnection().getAdmin()) {
             // consider create to be is nothing but alter...so
             try (Table hTable = admin.getConnection().getTable(utils.getTableName(row))) {

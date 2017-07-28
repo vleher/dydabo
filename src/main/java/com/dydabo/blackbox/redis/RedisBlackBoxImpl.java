@@ -26,7 +26,6 @@ import com.dydabo.blackbox.redis.tasks.RedisFetchTask;
 import com.dydabo.blackbox.redis.tasks.RedisInsertTask;
 import com.dydabo.blackbox.redis.tasks.RedisRangeSearchTask;
 import com.dydabo.blackbox.redis.tasks.RedisSearchTask;
-import org.mortbay.util.SingletonList;
 import redis.clients.jedis.Jedis;
 
 import java.util.Collections;
@@ -41,20 +40,20 @@ public class RedisBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
     public boolean delete(List<T> rows) throws BlackBoxException {
         ForkJoinPool fjPool = ForkJoinPool.commonPool();
 
-        RedisDeleteTask<T> delJob = new RedisDeleteTask<T>(rows);
+        RedisDeleteTask<T> delJob = new RedisDeleteTask<>(rows);
         return fjPool.invoke(delJob);
     }
 
     @Override
     public boolean delete(T row) throws BlackBoxException {
-        return delete(SingletonList.newSingletonList(row));
+        return delete(Collections.singletonList(row));
     }
 
     @Override
     public List<T> fetch(List<String> rowKeys, T bean) throws BlackBoxException {
         ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();
 
-        RedisFetchTask<T> fetchJob = new RedisFetchTask<T>(rowKeys, bean, false, -1);
+        RedisFetchTask<T> fetchJob = new RedisFetchTask<>(rowKeys, bean, false, -1);
         return forkJoinPool.invoke(fetchJob);
     }
 
@@ -82,7 +81,7 @@ public class RedisBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
 
     @Override
     public List<T> fetchByPartialKey(String rowKey, T bean, long maxResults) throws BlackBoxException {
-        return fetchByPartialKey(SingletonList.newSingletonList(rowKey), bean, -1);
+        return fetchByPartialKey(Collections.singletonList(rowKey), bean, -1);
     }
 
     @Override
@@ -94,7 +93,7 @@ public class RedisBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
 
     @Override
     public boolean insert(T row) throws BlackBoxException {
-        return insert(SingletonList.newSingletonList(row));
+        return insert(Collections.singletonList(row));
     }
 
     @Override
@@ -116,7 +115,7 @@ public class RedisBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
 
     @Override
     public List<T> search(T row, long maxResults) throws BlackBoxException {
-        return search(SingletonList.newSingletonList(row), maxResults);
+        return search(Collections.singletonList(row), maxResults);
     }
 
     @Override
@@ -134,13 +133,13 @@ public class RedisBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
     @Override
     public boolean update(List<T> newRows) throws BlackBoxException {
         ForkJoinPool fjPool = ForkJoinPool.commonPool();
-        RedisInsertTask<T> updateTask = new RedisInsertTask<T>(newRows, false);
+        RedisInsertTask<T> updateTask = new RedisInsertTask<>(newRows, false);
         return fjPool.invoke(updateTask);
     }
 
     @Override
     public boolean update(T newRow) throws BlackBoxException {
-        return update(SingletonList.newSingletonList(newRow));
+        return update(Collections.singletonList(newRow));
     }
 
     protected Jedis getConnection() {

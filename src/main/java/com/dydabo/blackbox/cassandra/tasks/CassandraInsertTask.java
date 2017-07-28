@@ -124,7 +124,7 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
      * @return
      * @throws BlackBoxException
      */
-    private Boolean insert(T row, boolean checkExisting) throws BlackBoxException {
+    private Boolean insert(T row, boolean checkExisting) {
         boolean successFlag = true;
 
         final Insert insStmt = QueryBuilder.insertInto(CassandraConstants.KEYSPACE, utils.getTableName(row));

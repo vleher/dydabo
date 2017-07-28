@@ -70,7 +70,7 @@ public abstract class MedicalUseCaseTest {
      * @throws IOException
      */
     public MedicalUseCaseTest() throws BlackBoxException, IOException {
-
+        instance = null;
     }
 
 

@@ -74,10 +74,7 @@ public class GenericDBTableRow {
      * @return
      */
     public ColumnFamily createFamily(String familyName) {
-        ColumnFamily thisFamily = getColumnFamilies().get(familyName);
-        if (thisFamily == null) {
-            getColumnFamilies().put(familyName, new ColumnFamily(familyName));
-        }
+        getColumnFamilies().computeIfAbsent(familyName, ColumnFamily::new);
         return getColumnFamilies().get(familyName);
     }
 
@@ -118,11 +115,9 @@ public class GenericDBTableRow {
     }
 
     public void forEach(DBTableIterator dbTableIterator) {
-        getColumnFamilies().forEach((familyName, columnFamily) -> {
-            columnFamily.getColumns().forEach((columnName, column) -> {
-                dbTableIterator.accept(familyName, columnName, column.getColumnValue(), column.getColumnValueAsString());
-            });
-        });
+        getColumnFamilies().forEach((familyName, columnFamily) -> columnFamily.getColumns().forEach((columnName, column) -> {
+            dbTableIterator.accept(familyName, columnName, column.getColumnValue(), column.getColumnValueAsString());
+        }));
 
     }
 
@@ -299,7 +294,7 @@ public class GenericDBTableRow {
 
         @Override
         public String toString() {
-            return "Column{" + "columnName=" + columnName + ", columnValue=" + new Gson().toJson(columnValue).toString() + '}';
+            return "Column{" + "columnName=" + columnName + ", columnValue=" + new Gson().toJson(columnValue) + '}';
         }
 
     }

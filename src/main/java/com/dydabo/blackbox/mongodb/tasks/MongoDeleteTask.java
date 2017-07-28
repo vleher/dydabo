@@ -81,7 +81,7 @@ public class MongoDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
      * @param row
      * @return
      */
-    public Boolean delete(T row) {
+    private Boolean delete(T row) {
 
         Document doc = utils.parseRowToDocument(row);
         DeleteResult delResult = collection.deleteOne(eq(MongoUtils.PRIMARYKEY, doc.get(MongoUtils.PRIMARYKEY)));

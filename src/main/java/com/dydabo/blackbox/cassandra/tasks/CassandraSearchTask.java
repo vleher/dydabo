@@ -86,7 +86,7 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
      * @return
      * @throws BlackBoxException
      */
-    protected List<T> search(List<T> rows) throws BlackBoxException {
+    private List<T> search(List<T> rows) throws BlackBoxException {
         if (rows.size() < 2) {
             List<T> fullResult = new ArrayList<>();
             for (T row : rows) {
@@ -116,7 +116,7 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
      * @return
      * @throws BlackBoxException
      */
-    protected List<T> search(T row) throws BlackBoxException {
+    private List<T> search(T row) {
         List<T> results = new ArrayList<>();
 
         GenericDBTableRow cTable = utils.convertRowToTableRow(row);
@@ -126,29 +126,27 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
 
         List<Clause> whereClauses = new ArrayList<>();
 
-        cTable.getColumnFamilies().forEach((familyName, columnFamily) -> {
-            columnFamily.getColumns().forEach((columnName, column) -> {
-                Object columnValue = column.getColumnValue();
-                if (columnValue != null) {
-                    String columnValueString = column.getColumnValueAsString();
-                    if (DyDaBoUtils.isValidRegex(columnValueString)) {
-                        if (DyDaBoUtils.isNumber(columnValue)) {
-                            whereClauses.add(QueryBuilder.eq("\"" + columnName + "\"", columnValue));
+        cTable.getColumnFamilies().forEach((familyName, columnFamily) -> columnFamily.getColumns().forEach((columnName, column) -> {
+            Object columnValue = column.getColumnValue();
+            if (columnValue != null) {
+                String columnValueString = column.getColumnValueAsString();
+                if (DyDaBoUtils.isValidRegex(columnValueString)) {
+                    if (DyDaBoUtils.isNumber(columnValue)) {
+                        whereClauses.add(QueryBuilder.eq("\"" + columnName + "\"", columnValue));
+                    } else {
+                        if (DyDaBoUtils.isARegex(columnValueString)) {
+                            utils.createIndex(columnName, row);
+                            columnValueString = cleanup(columnValueString);
+                            whereClauses.add(QueryBuilder.like("\"" + columnName + "\"", columnValueString));
+                        } else if (columnValueString.startsWith("[") || columnValueString.startsWith("{")) {
+                            // TODO : search inside maps and arrays
                         } else {
-                            if (DyDaBoUtils.isARegex(columnValueString)) {
-                                utils.createIndex(columnName, row);
-                                columnValueString = cleanup(columnValueString);
-                                whereClauses.add(QueryBuilder.like("\"" + columnName + "\"", columnValueString));
-                            } else if (columnValueString.startsWith("[") || columnValueString.startsWith("{")) {
-                                // TODO : search inside maps and arrays
-                            } else {
-                                whereClauses.add(QueryBuilder.eq("\"" + columnName + "\"", columnValueString));
-                            }
+                            whereClauses.add(QueryBuilder.eq("\"" + columnName + "\"", columnValueString));
                         }
                     }
                 }
-            });
-        });
+            }
+        }));
 
         for (Clause whereClause : whereClauses) {
             selectStmt.where().and(whereClause);

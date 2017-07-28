@@ -92,7 +92,7 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
     /**
      * @return
      */
-    public Connection getConnection() {
+    private Connection getConnection() {
         return connection;
     }
 
@@ -131,7 +131,7 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
      * @return
      * @throws BlackBoxException
      */
-    protected List<T> search(List<T> rows) throws BlackBoxException {
+    private List<T> search(List<T> rows) throws BlackBoxException {
         if (rows.size() < 2) {
             List<T> fullResult = new ArrayList<>();
             for (T row : rows) {
@@ -161,7 +161,7 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
      * @return
      * @throws BlackBoxException
      */
-    protected List<T> search(T row) throws BlackBoxException {
+    private List<T> search(T row) {
         List<T> results = new ArrayList<>();
 
         try (Admin admin = getConnection().getAdmin()) {

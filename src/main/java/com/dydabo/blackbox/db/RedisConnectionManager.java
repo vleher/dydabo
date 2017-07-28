@@ -29,19 +29,14 @@ import java.util.Map;
  */
 public class RedisConnectionManager {
 
-    private static Map<String, JedisPool> pools = new HashMap<>();
+    private static final Map<String, JedisPool> pools = new HashMap<>();
 
     private RedisConnectionManager() {
         //
     }
 
     public static Jedis getConnection(String hostName) {
-        JedisPool jedisPool = pools.get(hostName);
-        if (jedisPool == null) {
-            jedisPool = new JedisPool(new JedisPoolConfig(), hostName);
-            pools.put(hostName, jedisPool);
-        }
-
+        JedisPool jedisPool = pools.computeIfAbsent(hostName, n -> new JedisPool(new JedisPoolConfig(), n));
         return jedisPool.getResource();
     }
 }

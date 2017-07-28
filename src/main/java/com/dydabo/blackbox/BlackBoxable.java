@@ -16,12 +16,14 @@
  */
 package com.dydabo.blackbox;
 
+import java.io.Serializable;
+
 /**
  * The interface that needs to be implemented by the POJO that needs to be saved into the Database.
  *
  * @author viswadas leher
  */
-public interface BlackBoxable {
+public interface BlackBoxable extends Serializable {
 
     /**
      * A Json representation of the POJO

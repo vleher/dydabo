@@ -99,7 +99,7 @@ public class HBaseFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
      * @return
      * @throws BlackBoxException
      */
-    protected List<T> fetch(List<String> rowKeys) throws BlackBoxException {
+    private List<T> fetch(List<String> rowKeys) {
         if (isPartialKeys) {
             return fetchByPartialKeys(rowKeys);
         }
@@ -182,18 +182,14 @@ public class HBaseFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
 
     @Override
     protected List<T> compute() {
-        try {
             return fetch(rowKeys);
-        } catch (BlackBoxException ex) {
-            logger.log(Level.SEVERE, null, ex);
-        }
-        return new ArrayList<>();
+
     }
 
     /**
      * @return
      */
-    public Connection getConnection() {
+    private Connection getConnection() {
         return connection;
     }
 

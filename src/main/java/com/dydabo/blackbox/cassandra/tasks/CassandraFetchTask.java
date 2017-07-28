@@ -118,7 +118,7 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
      * @return
      * @throws BlackBoxException
      */
-    private List<T> fetch(String rowKey) throws BlackBoxException {
+    private List<T> fetch(String rowKey) {
 
         Select queryStmt = QueryBuilder.select().from(utils.getTableName(bean)).allowFiltering();
         if (!isPartialKeys) {
