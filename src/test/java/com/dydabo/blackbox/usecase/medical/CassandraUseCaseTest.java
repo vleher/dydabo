@@ -18,10 +18,12 @@ package com.dydabo.blackbox.usecase.medical;
 
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxFactory;
-import org.testng.annotations.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.logging.Logger;
+
+import static com.dydabo.blackbox.BlackBoxFactory.Databases.CASSANDRA;
 
 /**
  * @author viswadas leher
@@ -36,7 +38,7 @@ public class CassandraUseCaseTest extends MedicalUseCaseTest {
      */
     public CassandraUseCaseTest() throws BlackBoxException, IOException {
         super();
-        if (utils.dbToTest.contains(BlackBoxFactory.CASSANDRA)) {
+        if (utils.dbToTest.contains(CASSANDRA)) {
             instance = BlackBoxFactory.getCassandraDatabase("127.0.0.1");
             // Pre-populate with some dynamic data.
             utils.generatePatients(random.nextInt(98765) % 10, instance);

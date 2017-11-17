@@ -42,7 +42,7 @@ import java.util.Random;
  */
 public class DyDaBoTestUtils {
 
-    public final List<String> dbToTest = Arrays.asList(BlackBoxFactory.HBASE);
+    public final List<BlackBoxFactory.Databases> dbToTest = Arrays.asList(BlackBoxFactory.Databases.REDIS);
 
     /**
      * Random first names

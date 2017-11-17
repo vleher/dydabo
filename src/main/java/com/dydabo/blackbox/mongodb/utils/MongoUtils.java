@@ -17,7 +17,7 @@
 package com.dydabo.blackbox.mongodb.utils;
 
 import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.common.DBUtils;
+import com.dydabo.blackbox.common.utils.DBUtils;
 import org.bson.Document;
 
 /**

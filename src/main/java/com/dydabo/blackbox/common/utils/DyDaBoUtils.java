@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package com.dydabo.blackbox.common;
+package com.dydabo.blackbox.common.utils;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
@@ -82,8 +82,7 @@ public class DyDaBoUtils {
         return false;
     }
 
-
-    public static boolean isNotBlankOrNull(String s) {
+    public static boolean isNotBlankOrNull(String... s) {
         return !isBlankOrNull(s);
     }
 

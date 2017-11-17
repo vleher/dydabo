@@ -32,23 +32,9 @@ import java.io.IOException;
  */
 public class BlackBoxFactory {
 
-    /**
-     * Constant specifying the HBase database
-     */
-    public final static String HBASE = "hbase";
-
-    /**
-     * Constant specifying the Cassandra database
-     */
-    public final static String CASSANDRA = "cassandra";
-
-    /**
-     * Constant specifying the MongoDB database
-     */
-    public final static String MONGODB = "mongodb";
-
-    public final static String REDIS = "redis";
-
+    public enum Databases {
+        HBASE, CASSANDRA, MONGODB, REDIS
+    }
 
     private BlackBoxFactory() {
         // No instance of this factory class
@@ -61,7 +47,7 @@ public class BlackBoxFactory {
      * @return a Blackbox instance
      * @throws java.io.IOException
      */
-    public static BlackBox<BlackBoxable> getDatabase(String databaseType) throws IOException {
+    public static BlackBox<BlackBoxable> getDatabase(Databases databaseType) throws IOException {
         BlackBox<BlackBoxable> db = null;
         switch (databaseType) {
             case HBASE:

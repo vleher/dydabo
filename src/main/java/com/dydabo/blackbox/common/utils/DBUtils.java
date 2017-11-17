@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package com.dydabo.blackbox.common;
+package com.dydabo.blackbox.common.utils;
 
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;

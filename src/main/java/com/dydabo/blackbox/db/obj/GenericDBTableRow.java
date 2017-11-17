@@ -16,7 +16,7 @@
  */
 package com.dydabo.blackbox.db.obj;
 
-import com.dydabo.blackbox.common.DyDaBoUtils;
+import com.dydabo.blackbox.common.utils.DyDaBoUtils;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -148,18 +148,6 @@ public class GenericDBTableRow {
          */
         public void addColumn(String columnName, Object columnValue) {
             getColumns().put(columnName, new Column(columnName, columnValue));
-//            if (columnValue instanceof Map) {
-//                Map<Object, Object> thisMap = (Map) columnValue;
-//                for (Map.Entry<Object, Object> entry : thisMap.entrySet()) {
-//                    String key = String.valueOf(entry.getKey());
-//                    Object value = entry.getValue();
-//                    if (value != null) {
-//                        getColumns().put(key, new Column(key, value));
-//                    }
-//                }
-//            } else {
-//            getColumns().put(columnName, new Column(columnName, columnValue));
-//            }
         }
 
         /**
@@ -192,12 +180,6 @@ public class GenericDBTableRow {
             return columns;
         }
 
-        /**
-         * @param columns
-         */
-        public void setColumns(Map<String, Column> columns) {
-            this.columns = columns;
-        }
 
         /**
          * @return
@@ -278,18 +260,23 @@ public class GenericDBTableRow {
             if (columnValue == null) {
                 return null;
             }
+
+            String colStringValue = "";
+
             if (DyDaBoUtils.isPrimitiveOrPrimitiveWrapperOrString(columnValue)) {
                 if (columnValue instanceof Number) {
                     DecimalFormat df = new DecimalFormat("#");
                     df.setMaximumFractionDigits(18);
                     df.setMaximumIntegerDigits(64);
-                    return df.format(columnValue);
+                    colStringValue = df.format(columnValue);
                 } else {
-                    return String.valueOf(columnValue);
+                    colStringValue = String.valueOf(columnValue);
                 }
             } else {
-                return (new Gson().toJson(columnValue));
+                colStringValue = (new Gson().toJson(columnValue));
             }
+
+            return colStringValue;
         }
 
         @Override

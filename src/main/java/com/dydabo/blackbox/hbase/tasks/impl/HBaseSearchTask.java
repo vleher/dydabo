@@ -14,14 +14,14 @@
  * limitations under the License.
  *
  */
-package com.dydabo.blackbox.hbase.tasks;
+package com.dydabo.blackbox.hbase.tasks.impl;
 
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.common.DyDaBoUtils;
+import com.dydabo.blackbox.common.utils.DyDaBoUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.dydabo.blackbox.hbase.HBaseBlackBoxImpl;
-import com.dydabo.blackbox.hbase.utils.HBaseUtils;
+import com.dydabo.blackbox.hbase.tasks.HBaseTask;
 import com.google.gson.Gson;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Connection;
@@ -42,7 +42,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.RecursiveTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -50,12 +49,10 @@ import java.util.logging.Logger;
  * @param <T>
  * @author viswadas leher
  */
-public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
+public class HBaseSearchTask<T extends BlackBoxable> extends HBaseTask<T> {
 
-    private final Connection connection;
     private final Logger logger = Logger.getLogger(HBaseBlackBoxImpl.class.getName());
     private final List<T> rows;
-    private final HBaseUtils<T> utils;
     private final long maxResults;
 
     /**
@@ -73,9 +70,8 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
      * @param maxResults
      */
     public HBaseSearchTask(Connection connection, List<T> rows, long maxResults) {
-        this.connection = connection;
+        super(connection);
         this.rows = rows;
-        this.utils = new HBaseUtils<>();
         this.maxResults = maxResults;
     }
 
@@ -87,13 +83,6 @@ public class HBaseSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
             logger.log(Level.SEVERE, null, ex);
         }
         return new ArrayList<>();
-    }
-
-    /**
-     * @return
-     */
-    private Connection getConnection() {
-        return connection;
     }
 
     /**

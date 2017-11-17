@@ -14,11 +14,11 @@
  * limitations under the License.
  *
  */
-package com.dydabo.blackbox.hbase.tasks;
+package com.dydabo.blackbox.hbase.tasks.impl;
 
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.hbase.utils.HBaseUtils;
+import com.dydabo.blackbox.hbase.tasks.HBaseTask;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Delete;
@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.RecursiveTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,11 +37,9 @@ import java.util.logging.Logger;
  * @param <T>
  * @author viswadas leher
  */
-public class HBaseDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boolean> {
+public class HBaseDeleteTask<T extends BlackBoxable> extends HBaseTask<T> {
 
-    private final Connection connection;
     private final Logger logger = Logger.getLogger(HBaseDeleteTask.class.getName());
-    private final HBaseUtils<T> utils;
     private final List<T> rows;
 
     /**
@@ -58,19 +55,18 @@ public class HBaseDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
      * @param rows
      */
     public HBaseDeleteTask(Connection connection, List<T> rows) {
-        this.connection = connection;
+        super(connection);
         this.rows = rows;
-        this.utils = new HBaseUtils<>();
     }
 
     @Override
-    protected Boolean compute() {
+    protected List<T> compute() {
         try {
             return delete(rows);
         } catch (BlackBoxException ex) {
             logger.log(Level.SEVERE, null, ex);
         }
-        return false;
+        return Collections.EMPTY_LIST;
     }
 
     /**
@@ -78,28 +74,34 @@ public class HBaseDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
      * @return
      * @throws BlackBoxException
      */
-    private Boolean delete(List<T> rows) throws BlackBoxException {
+    private List<T> delete(List<T> rows) throws BlackBoxException {
         if (rows.size() < 2) {
             Boolean successFlag = true;
             for (T t : rows) {
                 successFlag = successFlag && delete(t);
             }
-            return successFlag;
+            if (successFlag) {
+                return rows;
+            }
         }
 
         Boolean successFlag = Boolean.TRUE;
         // create a task for each element or row in the list
-        List<ForkJoinTask<Boolean>> taskList = new ArrayList<>();
+        List<ForkJoinTask<List<T>>> taskList = new ArrayList<>();
         for (T row : rows) {
-            ForkJoinTask<Boolean> fjTask = new HBaseDeleteTask<>(getConnection(), Collections.singletonList(row)).fork();
+            ForkJoinTask<List<T>> fjTask = new HBaseDeleteTask<>(getConnection(), Collections.singletonList(row)).fork();
             taskList.add(fjTask);
         }
         // wait for all to join
-        for (ForkJoinTask<Boolean> forkJoinTask : taskList) {
-            successFlag = successFlag && forkJoinTask.join();
+        for (ForkJoinTask<List<T>> forkJoinTask : taskList) {
+            successFlag = successFlag && !forkJoinTask.join().isEmpty();
         }
 
-        return successFlag;
+        if (successFlag) {
+            return rows;
+        }
+
+        return Collections.EMPTY_LIST;
 
     }
 
@@ -108,11 +110,11 @@ public class HBaseDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
      * @return
      * @throws BlackBoxException
      */
-    private Boolean delete(T row) {
+    private boolean delete(T row) {
         try (Admin admin = getConnection().getAdmin()) {
             // consider create to be is nothing but alter...so
-            try (Table hTable = admin.getConnection().getTable(utils.getTableName(row))) {
-                if (utils.isValidRowKey(row)) {
+            try (Table hTable = admin.getConnection().getTable(getUtils().getTableName(row))) {
+                if (getUtils().isValidRowKey(row)) {
                     Delete delete = new Delete(Bytes.toBytes(row.getBBRowKey()));
                     // delete.addFamily(Bytes.toBytes(HBaseTable.DEFAULT_FAMILY));
                     hTable.delete(delete);
@@ -127,7 +129,4 @@ public class HBaseDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
         return false;
     }
 
-    private Connection getConnection() {
-        return this.connection;
-    }
 }

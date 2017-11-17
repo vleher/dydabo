@@ -18,8 +18,8 @@ package com.dydabo.blackbox.hbase.utils;
 
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.common.DBUtils;
-import com.dydabo.blackbox.common.DyDaBoUtils;
+import com.dydabo.blackbox.common.utils.DBUtils;
+import com.dydabo.blackbox.common.utils.DyDaBoUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.google.gson.Gson;
 import org.apache.hadoop.hbase.HColumnDescriptor;

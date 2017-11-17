@@ -17,7 +17,7 @@
 package com.dydabo.blackbox.mongodb.tasks;
 
 import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.common.DyDaBoUtils;
+import com.dydabo.blackbox.common.utils.DyDaBoUtils;
 import com.dydabo.blackbox.mongodb.utils.MongoUtils;
 import com.google.gson.Gson;
 import com.mongodb.client.FindIterable;

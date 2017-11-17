@@ -16,7 +16,7 @@
  */
 package com.dydabo.blackbox.db;
 
-import com.dydabo.blackbox.common.DyDaBoUtils;
+import com.dydabo.blackbox.common.utils.DyDaBoUtils;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoCollection;

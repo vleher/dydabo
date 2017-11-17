@@ -18,7 +18,7 @@
 package com.dydabo.blackbox.redis.tasks;
 
 import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.common.DyDaBoUtils;
+import com.dydabo.blackbox.common.utils.DyDaBoUtils;
 import com.dydabo.blackbox.db.RedisConnectionManager;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.dydabo.blackbox.redis.utils.RedisUtils;
@@ -97,7 +97,7 @@ public class RedisRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
                 GenericDBTableRow.Column startColValue = startTableRow.getColumnFamily(colFamily.getFamilyName()).getColumn(columnName);
                 GenericDBTableRow.Column endColValue = endTableRow.getColumnFamily(colFamily.getFamilyName()).getColumn(columnName);
 
-                if (!compare(startColValue, columnValue, endColValue)) {
+                if (!compareInRange(startColValue, columnValue, endColValue)) {
                     return false;
                 }
 
@@ -107,7 +107,8 @@ public class RedisRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
         return true;
     }
 
-    private boolean compare(GenericDBTableRow.Column startColValue, GenericDBTableRow.Column columnValue, GenericDBTableRow.Column endColValue) {
+    // TODO : refactor this
+    private boolean compareInRange(GenericDBTableRow.Column startColValue, GenericDBTableRow.Column columnValue, GenericDBTableRow.Column endColValue) {
         Object s1 = null;
         Object s2 = null;
         Object s3 = null;
@@ -142,34 +143,27 @@ public class RedisRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
             return flag;
         }
 
-        if (s1 != null && s2 != null) {
-            if (s1 instanceof Number && s2 instanceof Number) {
-                if (compareTo((Number) s1, (Number) s2) <= 0) {
+        flag = compareNumbersAndStrings(s1, s2) && compareNumbersAndStrings(s2, s3);
+
+        return flag;
+    }
+
+    private boolean compareNumbersAndStrings(Object first, Object second) {
+        boolean flag = false;
+        if (first != null && second != null) {
+            if (first instanceof Number && second instanceof Number) {
+                if (compareTo((Number) first, (Number) second) <= 0) {
                     flag = true;
                 }
-            } else if (s1 instanceof String && s2 instanceof String) {
-                if (DyDaBoUtils.isARegex((String) s1)) {
-                    flag = ((String) s2).matches((String) s1);
-                } else if (((String) s1).compareTo((String) s2) <= 0) {
+            } else if (first instanceof String && second instanceof String) {
+                if (DyDaBoUtils.isARegex((String) first)) {
+                    flag = ((String) second).matches((String) first);
+                } else if (((String) first).compareTo((String) second) <= 0) {
                     flag = true;
                 }
             }
         }
-
-        if (flag && s2 != null && s3 != null) {
-            if (s2 instanceof Number && s3 instanceof Number) {
-                if (compareTo((Number) s2, (Number) s3) > 0) {
-                    flag = false;
-                }
-            } else if (s2 instanceof String && s3 instanceof String) {
-                if (DyDaBoUtils.isARegex((String) s3)) {
-                    flag = ((String) s2).matches((String) s3);
-                } else if (((String) s2).compareTo((String) s3) > 0) {
-                    flag = false;
-                }
-            }
-        }
-
+        //logger.info("comparing "+first+" : "+second+" :"+flag);
         return flag;
     }
 

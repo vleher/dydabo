@@ -18,7 +18,7 @@
 package com.dydabo.blackbox.redis.utils;
 
 import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.common.DBUtils;
+import com.dydabo.blackbox.common.utils.DBUtils;
 
 /**
  * @author viswadas leher

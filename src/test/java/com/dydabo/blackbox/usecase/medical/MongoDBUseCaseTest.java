@@ -18,7 +18,7 @@ package com.dydabo.blackbox.usecase.medical;
 
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxFactory;
-import org.testng.annotations.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
@@ -33,7 +33,7 @@ public class MongoDBUseCaseTest extends MedicalUseCaseTest {
      */
     public MongoDBUseCaseTest() throws BlackBoxException, IOException {
         super();
-        if (utils.dbToTest.contains(BlackBoxFactory.MONGODB)) {
+        if (utils.dbToTest.contains(BlackBoxFactory.Databases.MONGODB)) {
             instance = BlackBoxFactory.getMongoDatabase();
             // Pre-populate with some dynamic data.
             utils.generatePatients(random.nextInt(98765) % 10, instance);

@@ -14,12 +14,12 @@
  * limitations under the License.
  *
  */
-package com.dydabo.blackbox.hbase.tasks;
+package com.dydabo.blackbox.hbase.tasks.impl;
 
 import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.common.DyDaBoUtils;
+import com.dydabo.blackbox.common.utils.DyDaBoUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
-import com.dydabo.blackbox.hbase.utils.HBaseUtils;
+import com.dydabo.blackbox.hbase.tasks.HBaseTask;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import org.apache.hadoop.hbase.client.Admin;
@@ -39,7 +39,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.RecursiveTask;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -47,14 +47,12 @@ import java.util.logging.Logger;
  * @param <T>
  * @author viswadas leher
  */
-public class HBaseRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
+public class HBaseRangeSearchTask<T extends BlackBoxable> extends HBaseTask<T> {
 
-    private final Connection connection;
     private final T endRow;
     private final Logger logger = Logger.getLogger(HBaseRangeSearchTask.class.getName());
     private final long maxResults;
     private final T startRow;
-    private final HBaseUtils<T> utils;
 
     /**
      * @param connection
@@ -63,10 +61,9 @@ public class HBaseRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
      * @param maxResults
      */
     public HBaseRangeSearchTask(Connection connection, T startRow, T endRow, long maxResults) {
-        this.connection = connection;
+        super(connection);
         this.startRow = startRow;
         this.endRow = endRow;
-        this.utils = new HBaseUtils<>();
         this.maxResults = maxResults;
     }
 
@@ -100,7 +97,6 @@ public class HBaseRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
                                 } else {
                                     break;
                                 }
-
                             }
                         }
                     }
@@ -108,18 +104,10 @@ public class HBaseRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
             } catch (IOException ex) {
                 logger.log(Level.SEVERE, null, ex);
             }
-
         } catch (JsonSyntaxException ex) {
             logger.log(Level.SEVERE, null, ex);
         }
         return results;
-    }
-
-    /**
-     * @return
-     */
-    private Connection getConnection() {
-        return connection;
     }
 
     /**
@@ -128,50 +116,56 @@ public class HBaseRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
      * @param filterList the value of filterList
      */
     private boolean parseForFilters(GenericDBTableRow startTable, GenericDBTableRow endTable, FilterList filterList) {
-        final boolean[] hasFilters = {false};
+        final AtomicBoolean hasFilters = new AtomicBoolean(false);
 
         startTable.forEach((familyName, columnName, columnValue, columnValueAsString) -> {
             if (columnValue != null && DyDaBoUtils.isNumber(columnValue)) {
                 // Binary Comparator Filter
-                BinaryComparator binaryComp = new BinaryComparator(utils.getAsByteArray(columnValue));
-                SingleColumnValueFilter startFilter = new SingleColumnValueFilter(Bytes.toBytes(familyName),
-                        Bytes.toBytes(columnName), CompareFilter.CompareOp.GREATER_OR_EQUAL, binaryComp);
-                GenericDBTableRow.Column endValue = endTable.getColumnFamily(familyName).getColumn(columnName);
-                if (endValue != null && endValue.getColumnValue() != null) {
-                    BinaryComparator endBinaryComp = new BinaryComparator(utils.getAsByteArray(endValue.getColumnValue()));
-                    SingleColumnValueFilter endFilter = new SingleColumnValueFilter(Bytes.toBytes(familyName),
-                            Bytes.toBytes(columnName), CompareFilter.CompareOp.LESS, endBinaryComp);
-                    filterList.addFilter(endFilter);
-                }
-
-                filterList.addFilter(startFilter);
-                hasFilters[0] = true;
+                parseBinaryFilters(endTable, filterList, familyName, columnName, columnValue);
+                hasFilters.set(true);
             } else {
                 // Regular expression filter
                 String regexValue = utils.sanitizeRegex(columnValueAsString);
                 if (regexValue != null && DyDaBoUtils.isValidRegex(regexValue)) {
-                    RegexStringComparator regexComp = new RegexStringComparator(regexValue);
-                    SingleColumnValueFilter startFilter = new SingleColumnValueFilter(Bytes.toBytes(familyName),
-                            Bytes.toBytes(columnName), CompareFilter.CompareOp.GREATER_OR_EQUAL, regexComp);
-                    GenericDBTableRow.Column endValue = endTable.getColumnFamily(familyName).getColumn(columnName);
-                    if (endValue != null) {
-                        String endRegexValue = endValue.getColumnValueAsString();
-                        endRegexValue = utils.sanitizeRegex(endRegexValue);
-                        if (endRegexValue != null && DyDaBoUtils.isValidRegex(endRegexValue)) {
-                            RegexStringComparator endRegexComp = new RegexStringComparator(endRegexValue);
-                            SingleColumnValueFilter endFilter = new SingleColumnValueFilter(Bytes.toBytes(familyName),
-                                    Bytes.toBytes(columnName), CompareFilter.CompareOp.LESS, endRegexComp);
-                            filterList.addFilter(endFilter);
-                        }
-                    }
-                    filterList.addFilter(startFilter);
-                    hasFilters[0] = true;
+                    filterList.addFilter(parseRegexFilters(endTable, filterList, familyName, columnName, regexValue));
+                    hasFilters.set(true);
                 }
             }
         });
 
-
-        return hasFilters[0];
+        return hasFilters.get();
     }
 
+    private SingleColumnValueFilter parseRegexFilters(GenericDBTableRow endTable, FilterList filterList, String familyName, String columnName, String regexValue) {
+        RegexStringComparator regexComp = new RegexStringComparator(regexValue);
+        SingleColumnValueFilter startFilter = new SingleColumnValueFilter(Bytes.toBytes(familyName),
+                Bytes.toBytes(columnName), CompareFilter.CompareOp.GREATER_OR_EQUAL, regexComp);
+        GenericDBTableRow.Column endValue = endTable.getColumnFamily(familyName).getColumn(columnName);
+        if (endValue != null) {
+            String endRegexValue = endValue.getColumnValueAsString();
+            endRegexValue = utils.sanitizeRegex(endRegexValue);
+            if (endRegexValue != null && DyDaBoUtils.isValidRegex(endRegexValue)) {
+                RegexStringComparator endRegexComp = new RegexStringComparator(endRegexValue);
+                SingleColumnValueFilter endFilter = new SingleColumnValueFilter(Bytes.toBytes(familyName),
+                        Bytes.toBytes(columnName), CompareFilter.CompareOp.LESS, endRegexComp);
+                filterList.addFilter(endFilter);
+            }
+        }
+        return startFilter;
+    }
+
+    private void parseBinaryFilters(GenericDBTableRow endTable, FilterList filterList, String familyName, String columnName, Object columnValue) {
+        BinaryComparator binaryComp = new BinaryComparator(utils.getAsByteArray(columnValue));
+        SingleColumnValueFilter startFilter = new SingleColumnValueFilter(Bytes.toBytes(familyName),
+                Bytes.toBytes(columnName), CompareFilter.CompareOp.GREATER_OR_EQUAL, binaryComp);
+        GenericDBTableRow.Column endValue = endTable.getColumnFamily(familyName).getColumn(columnName);
+        if (endValue != null && endValue.getColumnValue() != null) {
+            BinaryComparator endBinaryComp = new BinaryComparator(utils.getAsByteArray(endValue.getColumnValue()));
+            SingleColumnValueFilter endFilter = new SingleColumnValueFilter(Bytes.toBytes(familyName),
+                    Bytes.toBytes(columnName), CompareFilter.CompareOp.LESS, endBinaryComp);
+            filterList.addFilter(endFilter);
+        }
+
+        filterList.addFilter(startFilter);
+    }
 }

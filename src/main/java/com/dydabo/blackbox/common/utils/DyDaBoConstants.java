@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package com.dydabo.blackbox.common;
+package com.dydabo.blackbox.common.utils;
 
 /**
  * @author viswadas leher

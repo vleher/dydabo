@@ -19,55 +19,20 @@ package com.dydabo.blackbox.db;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.Connection;
-import org.junit.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
+import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 /**
  * @author viswadas leher
  */
-public class HBaseConnectionManagerNGTest {
+public class HBaseConnectionManagerTest {
 
-    /**
-     *
-     */
-    public HBaseConnectionManagerNGTest() {
-    }
 
-    /**
-     * @throws Exception
-     */
-    @BeforeClass
-    public static void setUpClass() throws Exception {
-    }
-
-    /**
-     * @throws Exception
-     */
-    @AfterClass
-    public static void tearDownClass() throws Exception {
-    }
-
-    /**
-     * @throws Exception
-     */
-    @BeforeMethod
-    public void setUpMethod() throws Exception {
-    }
-
-    /**
-     * @throws Exception
-     */
-    @AfterMethod
-    public void tearDownMethod() throws Exception {
-    }
 
     /**
      * Test of getConnection method, of class HBaseConnectionManager.
@@ -78,13 +43,13 @@ public class HBaseConnectionManagerNGTest {
     public void testGetConnection() throws Exception {
 
         Connection result = HBaseConnectionManager.getConnection();
-        Assert.assertNotNull(result);
+        assertNotNull(result);
 
         // close the connection and test
         result.close();
         Connection resultOne = HBaseConnectionManager.getConnection();
-        Assert.assertNotNull(resultOne);
-        Assert.assertNotEquals(result, resultOne);
+        assertNotNull(resultOne);
+        assertNotEquals(result, resultOne);
     }
 
     /**
@@ -96,7 +61,7 @@ public class HBaseConnectionManagerNGTest {
     public void testGetConnection_Configuration() throws Exception {
         Configuration config = HBaseConfiguration.create();
         Connection result = HBaseConnectionManager.getConnection(config);
-        Assert.assertNotNull(result);
+        assertNotNull(result);
     }
 
     /**
@@ -108,7 +73,7 @@ public class HBaseConnectionManagerNGTest {
     @Test
     public void testConstructorIsPrivate() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
         Constructor<HBaseConnectionManager> constructor = HBaseConnectionManager.class.getDeclaredConstructor();
-        Assert.assertTrue(Modifier.isPrivate(constructor.getModifiers()));
+        assertTrue(Modifier.isPrivate(constructor.getModifiers()));
         constructor.setAccessible(true);
         constructor.newInstance();
     }

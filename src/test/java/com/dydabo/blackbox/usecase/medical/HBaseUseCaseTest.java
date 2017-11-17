@@ -18,9 +18,11 @@ package com.dydabo.blackbox.usecase.medical;
 
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxFactory;
-import org.testng.annotations.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+
+import static com.dydabo.blackbox.BlackBoxFactory.Databases.HBASE;
 
 /**
  * @author viswadas leher
@@ -33,8 +35,8 @@ public class HBaseUseCaseTest extends MedicalUseCaseTest {
      */
     public HBaseUseCaseTest() throws BlackBoxException, IOException {
         super();
-        if (utils.dbToTest.contains(BlackBoxFactory.HBASE)) {
-            instance = BlackBoxFactory.getDatabase(BlackBoxFactory.HBASE);
+        if (utils.dbToTest.contains(HBASE)) {
+            instance = BlackBoxFactory.getDatabase(HBASE);
             // Pre-populate with some dynamic data.
             utils.generatePatients(random.nextInt(98765) % 10, instance);
             utils.generateEncounters(random.nextInt(98765) % 10, instance);

@@ -19,23 +19,25 @@ package com.dydabo.blackbox.usecase.company;
 
 import com.dydabo.blackbox.BlackBox;
 import com.dydabo.blackbox.BlackBoxFactory;
-import org.testng.annotations.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+
+import static com.dydabo.blackbox.BlackBoxFactory.Databases.HBASE;
 
 /**
  * @author viswadas leher
  */
-public class HBaseNGTest extends SimpleUseCase {
+public class HBaseTest extends SimpleUseCase {
     protected BlackBox instance;
 
     /**
      * @throws IOException
      */
-    public HBaseNGTest() throws IOException {
+    public HBaseTest() throws IOException {
         super();
-        if (utils.dbToTest.contains(BlackBoxFactory.HBASE)) {
-            this.instance = BlackBoxFactory.getDatabase(BlackBoxFactory.HBASE);
+        if (utils.dbToTest.contains(HBASE)) {
+            this.instance = BlackBoxFactory.getDatabase(HBASE);
         }
     }
 

@@ -27,7 +27,7 @@ import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.cassandra.utils.CassandraConstants;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
-import com.dydabo.blackbox.common.DyDaBoUtils;
+import com.dydabo.blackbox.common.utils.DyDaBoUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.google.gson.Gson;
 

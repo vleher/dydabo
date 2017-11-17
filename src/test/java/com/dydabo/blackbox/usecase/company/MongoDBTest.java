@@ -19,24 +19,25 @@ package com.dydabo.blackbox.usecase.company;
 
 import com.dydabo.blackbox.BlackBox;
 import com.dydabo.blackbox.BlackBoxFactory;
-import org.testng.annotations.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+
+import static com.dydabo.blackbox.BlackBoxFactory.Databases.MONGODB;
 
 /**
  * @author viswadas leher
  */
-public class CassandraNGTest extends SimpleUseCase {
-
+public class MongoDBTest extends SimpleUseCase {
     protected BlackBox instance;
 
     /**
      * @throws IOException
      */
-    public CassandraNGTest() throws IOException {
+    public MongoDBTest() throws IOException {
         super();
-        if (utils.dbToTest.contains(BlackBoxFactory.CASSANDRA)) {
-            instance = BlackBoxFactory.getCassandraDatabase("127.0.0.1");
+        if (utils.dbToTest.contains(MONGODB)) {
+            this.instance = BlackBoxFactory.getMongoDatabase();
         }
     }
 
@@ -44,8 +45,8 @@ public class CassandraNGTest extends SimpleUseCase {
     public void testInsert() {
         int testSize = 10;
 
-        if (instance != null) {
-            insertionTest(testSize, instance);
+        if (this.instance != null) {
+            insertionTest(testSize, this.instance);
         }
     }
 
@@ -53,40 +54,40 @@ public class CassandraNGTest extends SimpleUseCase {
     public void testUpdate() {
         int testSize = 10;
 
-        if (instance != null) {
-            updateTest(testSize, instance);
+        if (this.instance != null) {
+            updateTest(testSize, this.instance);
         }
     }
 
     @Test
     public void testDelete() {
         int testSize = 10;
-        if (instance != null) {
-            deleteTest(testSize, instance);
+        if (this.instance != null) {
+            deleteTest(testSize, this.instance);
         }
     }
 
     @Test
     public void testFetchByPartialKey() {
         int testSize = 2;
-        if (instance != null) {
-            fetchPartialKey(testSize, instance);
+        if (this.instance != null) {
+            fetchPartialKey(testSize, this.instance);
         }
     }
 
     @Test
     public void testSearchByName() {
         int testSize = 5;
-        if (instance != null) {
-            searchTestByName(testSize, instance);
+        if (this.instance != null) {
+            searchTestByName(testSize, this.instance);
         }
     }
 
     @Test
     public void testSearchMultipleTypes() {
         int testSize = 2;
-        if (instance != null) {
-            searchMultipleTypes(testSize, instance);
+        if (this.instance != null) {
+            searchMultipleTypes(testSize, this.instance);
         }
     }
 
@@ -113,5 +114,4 @@ public class CassandraNGTest extends SimpleUseCase {
             rangeSearchDouble(testSize, instance);
         }
     }
-
 }

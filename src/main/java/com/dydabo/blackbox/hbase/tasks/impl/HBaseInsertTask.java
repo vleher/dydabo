@@ -14,11 +14,12 @@
  * limitations under the License.
  *
  */
-package com.dydabo.blackbox.hbase.tasks;
+package com.dydabo.blackbox.hbase.tasks.impl;
 
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
+import com.dydabo.blackbox.hbase.tasks.HBaseTask;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Connection;
@@ -32,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.RecursiveTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,12 +40,10 @@ import java.util.logging.Logger;
  * @param <T>
  * @author viswadas leher
  */
-public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boolean> {
+public class HBaseInsertTask<T extends BlackBoxable> extends HBaseTask<T> {
 
     private static final Logger logger = Logger.getLogger(HBaseInsertTask.class.getName());
 
-    private final Connection connection;
-    private final HBaseUtils<T> utils;
     private final boolean checkExisting;
     private final List<T> rows;
 
@@ -64,7 +62,7 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
      * @param checkExisting
      */
     public HBaseInsertTask(Connection connection, List<T> rows, boolean checkExisting) {
-        this.connection = connection;
+        super(connection);
         this.rows = rows;
         this.checkExisting = checkExisting;
         this.utils = new HBaseUtils<>();
@@ -76,27 +74,32 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
      * @return
      * @throws BlackBoxException
      */
-    private Boolean insert(List<T> rows, boolean checkExisting) throws BlackBoxException {
+    private List<T> insert(List<T> rows, boolean checkExisting) throws BlackBoxException {
         Boolean successFlag = Boolean.TRUE;
         if (rows.size() < 2) {
             for (T t : rows) {
                 successFlag = successFlag && insert(t, checkExisting);
             }
-            return successFlag;
+            if (successFlag) {
+                return rows;
+            }
         }
 
         // create a task for each element or row in the list
-        List<ForkJoinTask<Boolean>> taskList = new ArrayList<>();
+        List<ForkJoinTask<List<T>>> taskList = new ArrayList<>();
         for (T row : rows) {
-            ForkJoinTask<Boolean> fjTask = new HBaseInsertTask<>(getConnection(), Collections.singletonList(row), checkExisting).fork();
+            ForkJoinTask<List<T>> fjTask = new HBaseInsertTask<>(getConnection(), Collections.singletonList(row), checkExisting).fork();
             taskList.add(fjTask);
         }
         // wait for all to join
-        for (ForkJoinTask<Boolean> forkJoinTask : taskList) {
-            successFlag = successFlag && forkJoinTask.join();
+        for (ForkJoinTask<List<T>> forkJoinTask : taskList) {
+            successFlag = successFlag && !forkJoinTask.join().isEmpty();
         }
 
-        return successFlag;
+        if (successFlag) {
+            return rows;
+        }
+        return Collections.EMPTY_LIST;
     }
 
     /**
@@ -153,19 +156,13 @@ public class HBaseInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
     }
 
     @Override
-    protected Boolean compute() {
+    protected List<T> compute() {
         try {
             return insert(rows, checkExisting);
         } catch (BlackBoxException ex) {
             logger.log(Level.SEVERE, null, ex);
         }
-        return false;
+        return Collections.EMPTY_LIST;
     }
 
-    /**
-     * @return
-     */
-    private Connection getConnection() {
-        return connection;
-    }
 }

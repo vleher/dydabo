@@ -19,8 +19,7 @@ package com.dydabo.blackbox;
 import com.dydabo.blackbox.hbase.HBaseBlackBoxImpl;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -29,62 +28,30 @@ import java.lang.reflect.Modifier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static com.dydabo.blackbox.BlackBoxFactory.Databases.HBASE;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
 /**
  * @author viswadas leher
  */
-public class BlackBoxFactoryNGTest {
+public class BlackBoxFactoryTest {
 
-    private final Logger logger = Logger.getLogger(BlackBoxFactoryNGTest.class.getName());
+    private final Logger logger = Logger.getLogger(BlackBoxFactoryTest.class.getName());
 
-    /**
-     *
-     */
-    public BlackBoxFactoryNGTest() {
-    }
-
-    /**
-     * @throws Exception
-     */
-    @org.testng.annotations.BeforeClass
-    public static void setUpClass() throws Exception {
-    }
-
-    /**
-     * @throws Exception
-     */
-    @org.testng.annotations.AfterClass
-    public static void tearDownClass() throws Exception {
-    }
-
-    /**
-     * @throws Exception
-     */
-    @org.testng.annotations.BeforeMethod
-    public void setUpMethod() throws Exception {
-    }
-
-    /**
-     * @throws Exception
-     */
-    @org.testng.annotations.AfterMethod
-    public void tearDownMethod() throws Exception {
-    }
 
     /**
      * Test of getDatabase method, of class BlackBoxFactory.
      */
-    @org.testng.annotations.Test
+    @Test
     public void testGetDatabase() {
         try {
             // Test Hbase
-            BlackBox<BlackBoxable> result = BlackBoxFactory.getDatabase(BlackBoxFactory.HBASE);
-            Assert.assertTrue(result instanceof HBaseBlackBoxImpl);
-
-            result = BlackBoxFactory.getDatabase("Dummy");
-            Assert.assertNull(result);
+            BlackBox<BlackBoxable> result = BlackBoxFactory.getDatabase(HBASE);
+            assertTrue(result instanceof HBaseBlackBoxImpl);
         } catch (IOException ex) {
             logger.log(Level.SEVERE, null, ex);
-            Assert.fail(ex.getMessage(), ex);
+            fail(ex.getMessage(), ex);
         }
 
     }
@@ -98,7 +65,7 @@ public class BlackBoxFactoryNGTest {
     public void testGetHBaseDatabase() throws Exception {
         Configuration config = HBaseConfiguration.create();
         BlackBox<BlackBoxable> result = BlackBoxFactory.getHBaseDatabase(config);
-        Assert.assertTrue(result instanceof HBaseBlackBoxImpl);
+        assertTrue(result instanceof HBaseBlackBoxImpl);
     }
 
     /**
@@ -111,7 +78,7 @@ public class BlackBoxFactoryNGTest {
     public void testConstructorIsPrivate()
             throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
         Constructor<BlackBoxFactory> constructor = BlackBoxFactory.class.getDeclaredConstructor();
-        org.junit.Assert.assertTrue(Modifier.isPrivate(constructor.getModifiers()));
+        assertTrue(Modifier.isPrivate(constructor.getModifiers()));
         constructor.setAccessible(true);
         constructor.newInstance();
     }

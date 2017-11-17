@@ -23,13 +23,16 @@ import com.dydabo.blackbox.usecase.company.beans.Customer;
 import com.dydabo.blackbox.usecase.company.beans.Employee;
 import com.dydabo.blackbox.usecase.company.beans.User;
 import com.dydabo.blackbox.utils.DyDaBoTestUtils;
-import org.testng.Assert;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author viswadas leher
@@ -54,20 +57,20 @@ public abstract class SimpleUseCase {
 
         try {
             boolean flag = blackBox.insert(customers);
-            Assert.assertTrue(flag);
+            assertTrue(flag);
         } catch (BlackBoxException e) {
-            Assert.fail(e.getMessage(), e);
+            fail(e.getMessage(), e);
         }
 
         // do some fetch to verify that they are inserted
         for (Customer customer : customers) {
             try {
                 List<Customer> result = blackBox.fetch(customer.getBBRowKey(), new Customer(null, null));
-                Assert.assertTrue(result.size() == 1, result.size() + "");
-                Assert.assertTrue(customer.getBBRowKey().equals(result.get(0).getBBRowKey()));
-                Assert.assertTrue(customer.getUserName().equals(result.get(0).getUserName()));
+                assertTrue(result.size() == 1, result.size() + "");
+                assertTrue(customer.getBBRowKey().equals(result.get(0).getBBRowKey()));
+                assertTrue(customer.getUserName().equals(result.get(0).getUserName()));
             } catch (BlackBoxException e) {
-                Assert.fail(e.getMessage(), e);
+                fail(e.getMessage(), e);
             }
         }
     }
@@ -76,15 +79,15 @@ public abstract class SimpleUseCase {
         List<Customer> customers = utils.generateCustomers(testSize);
         try {
             boolean flag = blackBox.update(customers);
-            Assert.assertTrue(flag);
+            assertTrue(flag);
 
             for (Customer customer : customers) {
                 List<Customer> results = blackBox.fetch(customer.getBBRowKey(), new Customer(null, null));
 
-                Assert.assertTrue(results.size() == 1, results.size() + "");
+                assertTrue(results.size() == 1, results.size() + "");
             }
         } catch (BlackBoxException e) {
-            Assert.fail();
+            fail(e);
         }
 
     }
@@ -97,10 +100,10 @@ public abstract class SimpleUseCase {
             boolean flag = blackBox.update(customers);
             if (flag) {
                 flag = blackBox.delete(customers);
-                Assert.assertTrue(flag);
+                assertTrue(flag);
             }
         } catch (BlackBoxException e) {
-            Assert.fail();
+            fail(e);
         }
 
     }
@@ -116,11 +119,11 @@ public abstract class SimpleUseCase {
                     String key = rowKey.substring(0, rowKey.length() / 2) + ".*";
 
                     List<Customer> results = blackBox.fetchByPartialKey(key, new Customer(null, null));
-                    Assert.assertTrue(results.size() > 0, results.size() + "");
+                    assertTrue(results.size() > 0, results.size() + "");
                 }
             }
         } catch (BlackBoxException e) {
-            Assert.fail(e.getMessage(), e);
+            fail(e.getMessage(), e);
         }
     }
 
@@ -133,14 +136,14 @@ public abstract class SimpleUseCase {
                 for (Customer customer : customers) {
                     Customer sCust = new Customer(null, customer.getUserName());
                     List<Customer> results = blackBox.search(sCust);
-                    Assert.assertTrue(results.size() > 0);
+                    assertTrue(results.size() > 0);
                     for (Customer result : results) {
-                        Assert.assertEquals(result.getUserName(), sCust.getUserName());
+                        assertEquals(result.getUserName(), sCust.getUserName());
                     }
                 }
             }
         } catch (BlackBoxException e) {
-            Assert.fail();
+            fail(e);
         }
     }
 
@@ -157,21 +160,21 @@ public abstract class SimpleUseCase {
         searchList.add(new Customer(null, userName));
         try {
             boolean success = blackBox.update(userList);
-            Assert.assertTrue(success);
+            assertTrue(success);
 
             List<BlackBoxable> searchResult = blackBox.search(searchList);
 
-            Assert.assertTrue(searchResult.size() > 0);
+            assertTrue(searchResult.size() > 0);
             for (BlackBoxable res : searchResult) {
                 if (res instanceof User) {
                     final String uName = ((User) res).getUserName();
                     if (uName == null || !uName.contains(userName)) {
-                        Assert.fail("Does not contain  " + userName + " :" + res);
+                        fail("Does not contain  " + userName + " :" + res);
                     }
                 }
             }
         } catch (Exception e) {
-            Assert.fail();
+            fail(e);
         }
     }
 
@@ -191,17 +194,17 @@ public abstract class SimpleUseCase {
             searchList.add(new Customer(null, "^" + userPrefix + ".*"));
 
             List<BlackBoxable> searchResult = blackBox.search(searchList);
-            Assert.assertTrue(searchResult.size() > 0);
+            assertTrue(searchResult.size() > 0);
             for (BlackBoxable res : searchResult) {
                 if (res instanceof User) {
                     final String uName = ((User) res).getUserName();
                     if (uName == null || !uName.startsWith(userPrefix)) {
-                        Assert.fail(" Does not start with  " + userPrefix + " :" + res);
+                        fail(" Does not start with  " + userPrefix + " :" + res);
                     }
                 }
             }
         } catch (Exception e) {
-            Assert.fail(e.getMessage(), e);
+            fail(e.getMessage(), e);
         }
     }
 
@@ -218,29 +221,29 @@ public abstract class SimpleUseCase {
             Customer searchCust = new Customer(null, name);
 
             List<Customer> searchResult = blackBox.search(searchCust);
-            Assert.assertTrue(!searchResult.isEmpty());
+            assertTrue(!searchResult.isEmpty());
             for (Customer customer : searchResult) {
-                Assert.assertTrue(customer.getUserName().equals(name), customer.getUserName());
+                assertTrue(customer.getUserName().equals(name), customer.getUserName());
             }
 
             searchCust = new Customer(id, null);
 
             searchResult = blackBox.search(searchCust);
-            Assert.assertTrue(!searchResult.isEmpty());
+            assertTrue(!searchResult.isEmpty());
             for (Customer customer : searchResult) {
-                Assert.assertTrue(customer.getUserId().equals(id), customer.getUserId().toString());
+                assertTrue(customer.getUserId().equals(id), customer.getUserId().toString());
             }
 
             searchCust = new Customer(id, name);
             searchCust.setTaxRate(taxRate);
 
             searchResult = blackBox.search(searchCust);
-            Assert.assertTrue(!searchResult.isEmpty());
+            assertTrue(!searchResult.isEmpty());
             for (Customer customer : searchResult) {
-                Assert.assertTrue(customer.getTaxRate().equals(taxRate), customer.getTaxRate().toString());
+                assertTrue(customer.getTaxRate().equals(taxRate), customer.getTaxRate().toString());
             }
         } catch (BlackBoxException e) {
-            Assert.fail(e.getMessage(), e);
+            fail(e.getMessage(), e);
         }
     }
 
@@ -257,16 +260,16 @@ public abstract class SimpleUseCase {
             Customer endCustomer = new Customer(null, null);
             endCustomer.setTaxRate(maxTaxRate);
             List<Customer> taxRateCust = blackBox.search(startCustomer, endCustomer);
-            Assert.assertTrue(taxRateCust.size() > 0);
+            assertTrue(taxRateCust.size() > 0);
             for (Customer customer : taxRateCust) {
                 if (customer.getTaxRate() != null) {
-                    Assert.assertTrue(customer.getTaxRate() >= minTaxRate, "Min :" + minTaxRate + " :" + customer.getTaxRate());
-                    Assert.assertTrue(customer.getTaxRate() < maxTaxRate, "Max :" + maxTaxRate + " :" + customer.getTaxRate());
+                    assertTrue(customer.getTaxRate() >= minTaxRate, "Min :" + minTaxRate + " :" + customer.getTaxRate());
+                    assertTrue(customer.getTaxRate() < maxTaxRate, "Max :" + maxTaxRate + " :" + customer.getTaxRate());
                 }
             }
 
         } catch (BlackBoxException e) {
-            Assert.fail(e.getMessage(), e);
+            fail(e.getMessage(), e);
         }
 
     }

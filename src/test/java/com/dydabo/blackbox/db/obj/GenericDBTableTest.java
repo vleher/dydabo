@@ -17,19 +17,19 @@
 package com.dydabo.blackbox.db.obj;
 
 import com.dydabo.blackbox.db.obj.GenericDBTableRow.ColumnFamily;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author viswadas leher
  */
-public class GenericDBTableNGTest {
+public class GenericDBTableTest {
 
     /**
      *
@@ -40,40 +40,22 @@ public class GenericDBTableNGTest {
     /**
      *
      */
-    public GenericDBTableNGTest() {
+    public GenericDBTableTest() {
         instance = new GenericDBTableRow(KEY);
     }
 
     /**
      * @throws Exception
      */
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Exception {
         instance.createFamily("default");
         GenericDBTableRow.ColumnFamily fam = instance.getColumnFamilies().get("default");
         fam.addColumn("col1", "colVal1");
     }
 
-    /**
-     * @throws Exception
-     */
-    @AfterClass
-    public static void tearDownClass() throws Exception {
-    }
 
-    /**
-     * @throws Exception
-     */
-    @BeforeMethod
-    public void setUpMethod() throws Exception {
-    }
 
-    /**
-     * @throws Exception
-     */
-    @AfterMethod
-    public void tearDownMethod() throws Exception {
-    }
 
     /**
      * Test of getDefaultFamily method, of class GenericDBTableRow.
@@ -81,7 +63,7 @@ public class GenericDBTableNGTest {
     @Test
     public void testGetDefaultFamily() {
         GenericDBTableRow.ColumnFamily result = instance.getDefaultFamily();
-        Assert.assertNotNull(result);
+        assertNotNull(result);
     }
 
     /**
@@ -91,7 +73,7 @@ public class GenericDBTableNGTest {
     public void testCreateFamily() {
         String familyName = "testFamily";
         GenericDBTableRow.ColumnFamily result = instance.createFamily(familyName);
-        Assert.assertNotNull(result);
+        assertNotNull(result);
     }
 
     /**
@@ -100,7 +82,7 @@ public class GenericDBTableNGTest {
     @Test
     public void testGetRowKey() {
         String result = instance.getRowKey();
-        Assert.assertEquals(result, KEY);
+        assertEquals(result, KEY);
     }
 
     /**
@@ -111,7 +93,7 @@ public class GenericDBTableNGTest {
         String rowKey = "newKey";
         instance.setRowKey(rowKey);
 
-        Assert.assertEquals(instance.getRowKey(), rowKey);
+        assertEquals(instance.getRowKey(), rowKey);
         // reset the key
         instance.setRowKey(KEY);
     }
@@ -122,8 +104,8 @@ public class GenericDBTableNGTest {
     @Test
     public void testGetColumnFamilies() {
         Map<String, ColumnFamily> result = instance.getColumnFamilies();
-        Assert.assertNotNull(result);
-        Assert.assertTrue(result.size() > 0);
+        assertNotNull(result);
+        assertTrue(result.size() > 0);
     }
 
     /**
@@ -132,7 +114,7 @@ public class GenericDBTableNGTest {
     @Test
     public void testToString() {
         String result = instance.toString();
-        Assert.assertNotNull(result);
+        assertNotNull(result);
     }
 
 }

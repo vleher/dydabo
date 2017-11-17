@@ -18,9 +18,11 @@ package com.dydabo.blackbox.usecase.medical;
 
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxFactory;
-import org.testng.annotations.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+
+import static com.dydabo.blackbox.BlackBoxFactory.Databases.REDIS;
 
 /**
  * @author viswadas leher
@@ -32,7 +34,7 @@ public class RedisUseCaseTest extends MedicalUseCaseTest {
      * @throws IOException
      */
     public RedisUseCaseTest() throws BlackBoxException, IOException {
-        if (utils.dbToTest.contains(BlackBoxFactory.REDIS)) {
+        if (utils.dbToTest.contains(REDIS)) {
             instance = BlackBoxFactory.getRedisDatabase();
             // Pre-populate with some dynamic data.
             utils.generatePatients(random.nextInt(98765) % 10, instance);

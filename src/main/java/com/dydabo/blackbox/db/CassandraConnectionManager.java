@@ -41,7 +41,6 @@ public class CassandraConnectionManager {
     // TODO: clean this up
 
     /**
-     * @param CassandraConstants.KEYSPACE
      * @param address
      * @return
      */
@@ -74,9 +73,7 @@ public class CassandraConnectionManager {
     }
 
     /**
-     * @param clusterName
-     * @param CassandraConstants.KEYSPACE
-     * @param address
+     *
      * @return
      */
     public static synchronized Cluster getCluster() {

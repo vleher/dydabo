@@ -16,7 +16,6 @@
  */
 package com.dydabo.blackbox.cassandra.tasks;
 
-import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
@@ -24,8 +23,7 @@ import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.cassandra.utils.CassandraConstants;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
-import com.dydabo.blackbox.common.DyDaBoUtils;
-import com.dydabo.blackbox.db.CassandraConnectionManager;
+import com.dydabo.blackbox.common.utils.DyDaBoUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 
 import java.util.ArrayList;
@@ -146,10 +144,11 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
             }
         });
 
-        Session session = CassandraConnectionManager.getSession();
+        //try (Session session = CassandraConnectionManager.getSession()) {
         logger.info("Executing " + insStmt.toString());
         // execute query, might throw exception
-        ResultSet resultSet = session.execute(insStmt);
+        session.execute(insStmt);
+        //}
 
         return successFlag;
     }

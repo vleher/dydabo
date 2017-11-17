@@ -18,7 +18,7 @@
 package com.dydabo.blackbox.redis.tasks;
 
 import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.common.DyDaBoUtils;
+import com.dydabo.blackbox.common.utils.DyDaBoUtils;
 import com.dydabo.blackbox.db.RedisConnectionManager;
 import com.google.gson.Gson;
 import redis.clients.jedis.Jedis;

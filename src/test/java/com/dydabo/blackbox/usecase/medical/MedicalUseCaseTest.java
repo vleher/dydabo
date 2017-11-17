@@ -24,8 +24,7 @@ import com.dydabo.blackbox.usecase.medical.db.Encounter;
 import com.dydabo.blackbox.usecase.medical.db.Medication;
 import com.dydabo.blackbox.usecase.medical.db.Patient;
 import com.dydabo.blackbox.utils.DyDaBoTestUtils;
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -34,6 +33,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author viswadas leher
@@ -73,7 +75,6 @@ public abstract class MedicalUseCaseTest {
         instance = null;
     }
 
-
     /**
      * @throws BlackBoxException
      */
@@ -84,7 +85,7 @@ public abstract class MedicalUseCaseTest {
         String pIDKey = "123456P:.*";
         List<Patient> pList2 = instance.fetchByPartialKey(pIDKey, p);
         for (Patient pat : pList2) {
-            Assert.assertEquals(pat.getpId(), "123456P");
+            assertEquals(pat.getpId(), "123456P");
         }
     }
 
@@ -93,13 +94,13 @@ public abstract class MedicalUseCaseTest {
         // All Encounters
         Encounter pe = new Encounter();
         List<Encounter> peL1 = instance.search(Collections.singletonList(pe));
-        Assert.assertTrue(peL1.size() > 0, "" + peL1.size());
+        assertTrue(peL1.size() > 0, "" + peL1.size());
 
         List<Encounter> peL2 = instance.search(pe, 7);
-        Assert.assertTrue((peL2.size() <= 7), "" + peL2.size());
+        assertTrue((peL2.size() <= 7), "" + peL2.size());
 
         List<Encounter> peL3 = instance.search(pe, 23);
-        Assert.assertTrue(peL3.size() <= 23, "" + peL3.size());
+        assertTrue(peL3.size() <= 23, "" + peL3.size());
     }
 
     @Test
@@ -107,7 +108,7 @@ public abstract class MedicalUseCaseTest {
         // All Patients
         Patient p = new Patient();
         List<Patient> pList1 = instance.search(Collections.singletonList(p));
-        Assert.assertTrue(pList1.size() > 0);
+        assertTrue(pList1.size() > 0);
     }
 
     @Test
@@ -142,16 +143,15 @@ public abstract class MedicalUseCaseTest {
         p.setfN("Tina");
         List<Patient> pList3 = instance.search(Collections.singletonList(p));
         for (Patient pat : pList3) {
-            Assert.assertEquals(pat.getfN(), "Tina");
+            assertEquals(pat.getfN(), "Tina");
         }
 
         // All Patients with specific first name (row key search)
         String fNameKey = ".*:Cyndi:.*";
         List<Patient> pList4 = instance.fetchByPartialKey(Collections.singletonList(fNameKey), p);
         for (Patient pat : pList4) {
-            Assert.assertEquals(pat.getfN(), "Cyndi");
+            assertEquals(pat.getfN(), "Cyndi");
         }
-
     }
 
     @Test
@@ -161,9 +161,8 @@ public abstract class MedicalUseCaseTest {
         List<String> query = Collections.singletonList(knownPatientId + "P:.*");
         List<Encounter> peL2 = instance.fetchByPartialKey(query, pe);
         for (Encounter penc : peL2) {
-            Assert.assertEquals(penc.getpId(), knownPatientId + "P");
+            assertEquals(penc.getpId(), knownPatientId + "P");
         }
-
     }
 
     @Test
@@ -177,9 +176,9 @@ public abstract class MedicalUseCaseTest {
 
             List<Encounter> encs = instance.search(pe2);
             for (Encounter enc : encs) {
-                Assert.assertTrue(enc.getMedIds().contains(randMedId), enc.getMedIds());
+                assertTrue(enc.getMedIds().contains(randMedId), enc.getMedIds());
                 if (enc.getPatient() != null) {
-                    Assert.assertTrue(!enc.getPatient().getfN().isEmpty(), enc.getPatient().toString());
+                    assertTrue(!enc.getPatient().getfN().isEmpty(), enc.getPatient().toString());
                 }
             }
         }
@@ -189,7 +188,7 @@ public abstract class MedicalUseCaseTest {
     public void testPatientEncountersByMedIdAndPFName() throws BlackBoxException {
         // get a patient
         List<Patient> allPatients = instance.search(new Patient());
-        Assert.assertTrue(allPatients.size() > 0);
+        assertTrue(allPatients.size() > 0);
 
         // random patient first name
         String firstName = allPatients.get(Math.abs(random.nextInt() % allPatients.size())).getfN();
@@ -205,10 +204,10 @@ public abstract class MedicalUseCaseTest {
 
         for (Encounter r : results) {
             if (r.getPatient() != null) {
-                Assert.assertEquals(r.getPatient().getfN(), firstName, r.getPatient().toString());
+                assertEquals(r.getPatient().getfN(), firstName, r.getPatient().toString());
             }
-            Assert.assertEquals(r.getpFN(), firstName, r.toString());
-            Assert.assertTrue(r.getMedIds().contains(medId), r.getMedIds());
+            assertEquals(r.getpFN(), firstName, r.toString());
+            assertTrue(r.getMedIds().contains(medId), r.getMedIds());
         }
     }
 
@@ -222,9 +221,8 @@ public abstract class MedicalUseCaseTest {
 
         List<Encounter> peList = instance.search(pe);
         for (Encounter enc : peList) {
-            Assert.assertTrue(enc.getDiagIds().contains(diagId));
+            assertTrue(enc.getDiagIds().contains(diagId));
         }
-
     }
 
     @Test
@@ -241,48 +239,47 @@ public abstract class MedicalUseCaseTest {
         Encounter pe1 = new Encounter();
         // All encounters for patient names
         List<Patient> p2 = instance.fetchByPartialKey(".*:" + firstName + ":" + lastName, new Patient());
-        Assert.assertTrue(p2.size() > 0, "Size :" + p2.size());
+        assertTrue(p2.size() > 0, "Size :" + p2.size());
         List<Encounter> peL3 = new ArrayList<>();
         for (Patient patient : p2) {
             List<Encounter> temp = instance.fetchByPartialKey(".*" + patient.getpId() + ":.*", pe1);
             peL3.addAll(temp);
         }
 
-        Assert.assertTrue(peL3.size() > 0, "Size:" + peL3.size());
+        assertTrue(peL3.size() > 0, "Size:" + peL3.size());
         for (Encounter pe : peL3) {
             logger.info(" ENc " + pe);
-            Assert.assertEquals(pe.getpFN(), firstName);
-            Assert.assertEquals(pe.getpLN(), lastName);
+            assertEquals(pe.getpFN(), firstName);
+            assertEquals(pe.getpLN(), lastName);
             if (pe.getPatient() != null) {
-                Assert.assertEquals(pe.getPatient().getfN(), firstName, pe.getPatient().toString());
-                Assert.assertEquals(pe.getPatient().getlN(), lastName, pe.getPatient().toString());
+                assertEquals(pe.getPatient().getfN(), firstName, pe.getPatient().toString());
+                assertEquals(pe.getPatient().getlN(), lastName, pe.getPatient().toString());
             }
         }
 
         Encounter pe2 = new Encounter(null, null, firstName, lastName);
         List<Encounter> peL4 = instance.search(pe2);
-        Assert.assertTrue(peL4.size() > 0);
-        Assert.assertEquals(peL4.size(), peL3.size());
+        assertTrue(peL4.size() > 0);
+        assertEquals(peL4.size(), peL3.size());
 
         for (Encounter pe : peL4) {
-            Assert.assertEquals(pe.getpFN(), firstName);
-            Assert.assertEquals(pe.getpLN(), lastName);
+            assertEquals(pe.getpFN(), firstName);
+            assertEquals(pe.getpLN(), lastName);
             if (pe.getPatient() != null) {
-                Assert.assertEquals(pe.getPatient().getfN(), firstName);
-                Assert.assertEquals(pe.getPatient().getlN(), lastName);
+                assertEquals(pe.getPatient().getfN(), firstName);
+                assertEquals(pe.getPatient().getlN(), lastName);
             }
         }
 
         Encounter pe3 = new Encounter(null, new Patient(null, firstName, null));
         List<Encounter> peL5 = instance.search(pe3);
-        Assert.assertTrue(peL5.size() > 0);
+        assertTrue(peL5.size() > 0);
         for (Encounter pe : peL5) {
             if (pe.getPatient() != null) {
-                Assert.assertEquals(pe.getPatient().getfN(), firstName);
+                assertEquals(pe.getPatient().getfN(), firstName);
             }
-            Assert.assertEquals(pe.getpFN(), firstName);
+            assertEquals(pe.getpFN(), firstName);
         }
-
     }
 
     /**
@@ -302,16 +299,15 @@ public abstract class MedicalUseCaseTest {
         List<Patient> pList5 = instance.fetchByPartialKey(queryKeys, p);
         for (Patient pat : pList5) {
             boolean result = firstName.equals(pat.getfN()) || lastName.equals(pat.getlN());
-            Assert.assertTrue(result);
+            assertTrue(result);
         }
 
         if (pList5.size() > 0) {
             int maxCount = pList5.size() / 3 + 1;
             List<Patient> pList6 = instance.fetchByPartialKey(queryKeys, p, maxCount);
             logger.info("" + pList5.size() + ":" + pList6.size() + ":" + maxCount);
-            Assert.assertTrue(pList6.size() <= maxCount * 2, pList5.size() + ":" + pList6.size() + ":" + maxCount);
+            assertTrue(pList6.size() <= maxCount * 2, pList5.size() + ":" + pList6.size() + ":" + maxCount);
         }
-
     }
 
     /**
@@ -334,7 +330,7 @@ public abstract class MedicalUseCaseTest {
         double totalAmount = 0;
         for (Claim thisClaim : allClaims) {
             logger.info("Claim :" + thisClaim + " :" + thisClaim.getpId());
-            Assert.assertEquals(thisClaim.getpId(), p.getpId(), thisClaim.toString());
+            assertEquals(thisClaim.getpId(), p.getpId(), thisClaim.toString());
             if (thisClaim.getcCharges() != null) {
                 for (ClaimCharges cCharge : thisClaim.getcCharges()) {
                     totalAmount += cCharge.getAmount();
@@ -342,7 +338,7 @@ public abstract class MedicalUseCaseTest {
             }
         }
         if (allClaims.size() > 0) {
-            Assert.assertTrue(totalAmount > 0, totalAmount + "");
+            assertTrue(totalAmount > 0, totalAmount + "");
         }
     }
 
@@ -360,7 +356,7 @@ public abstract class MedicalUseCaseTest {
 
         List<Encounter> encList = instance.search(encounter);
         for (Encounter enc : encList) {
-            Assert.assertEquals(p.getfN(), enc.getpFN());
+            assertEquals(p.getfN(), enc.getpFN());
         }
     }
 
@@ -382,7 +378,7 @@ public abstract class MedicalUseCaseTest {
         long execTime = endTime - startTime;
         logger.info("1 :" + resultOne.size() + ":" + execTime);
         if (resultOne.size() > 0) {
-            Assert.assertTrue(execTime / resultOne.size() < 1e7, "" + (execTime / resultOne.size()));
+            assertTrue(execTime / resultOne.size() < 1e7, "" + (execTime / resultOne.size()));
         }
 
         startTime = System.nanoTime();
@@ -391,7 +387,7 @@ public abstract class MedicalUseCaseTest {
         execTime = endTime - startTime;
         logger.info("2 :" + resultTwo.size() + ":" + execTime);
         if (resultTwo.size() > 0) {
-            Assert.assertTrue(execTime / resultTwo.size() < 1e7, "" + (execTime / resultTwo.size()));
+            assertTrue(execTime / resultTwo.size() < 1e7, "" + (execTime / resultTwo.size()));
         }
 
         startTime = System.nanoTime();
@@ -400,7 +396,7 @@ public abstract class MedicalUseCaseTest {
         execTime = endTime - startTime;
         logger.info("3 :" + resultThree.size() + ":" + execTime);
         if (resultThree.size() > 0) {
-            Assert.assertTrue(execTime / resultThree.size() < 1e8, "" + (execTime / resultThree.size()));
+            assertTrue(execTime / resultThree.size() < 1e8, "" + (execTime / resultThree.size()));
         }
 
         startTime = System.nanoTime();
@@ -409,7 +405,7 @@ public abstract class MedicalUseCaseTest {
         execTime = endTime - startTime;
         logger.info("4 :" + resultFour.size() + ":" + execTime);
         if (resultFour.size() > 0) {
-            Assert.assertTrue(execTime / resultFour.size() < 1e8, "" + (execTime / resultFour.size()));
+            assertTrue(execTime / resultFour.size() < 1e8, "" + (execTime / resultFour.size()));
         }
 
         startTime = System.nanoTime();
@@ -418,9 +414,8 @@ public abstract class MedicalUseCaseTest {
         execTime = endTime - startTime;
         logger.info("5 :" + resultFive.size() + ":" + execTime);
         if (resultFive.size() > 0) {
-            Assert.assertTrue(execTime / resultFive.size() < 1e7, "" + (execTime / resultFive.size()));
+            assertTrue(execTime / resultFive.size() < 1e7, "" + (execTime / resultFive.size()));
         }
-
     }
 
     /**
@@ -444,20 +439,21 @@ public abstract class MedicalUseCaseTest {
 
         List<ClaimCharges> resultOne = instance.search(startClaimCharge, endClaimCharge);
         logger.info("Hbase Charges :" + count + " :" + resultOne.size());
-        Assert.assertEquals(resultOne.size(), count);
+        assertEquals(resultOne.size(), count);
         for (ClaimCharges claimCharges : resultOne) {
-            Assert.assertTrue(claimCharges.getAmount() >= minVal);
-            Assert.assertTrue(claimCharges.getAmount() < maxVal);
+            assertTrue(claimCharges.getAmount() >= minVal);
+            assertTrue(claimCharges.getAmount() < maxVal);
         }
 
         // For only patients with id starting with 1
         startClaimCharge = new ClaimCharges("^1.*", minVal);
-        endClaimCharge = new ClaimCharges(null, maxVal);
+        endClaimCharge = new ClaimCharges("^1.*", maxVal);
         logger.info("Search Charges:" + minVal + " to " + maxVal);
-        all = instance.search(new ClaimCharges(null, null));
+
         count = 0;
         for (ClaimCharges cc : all) {
-            if (cc.getAmount() != null && cc.getCcId().startsWith("1") && cc.getAmount() >= minVal && cc.getAmount() < maxVal) {
+            if (cc.getAmount() != null && cc.getCcId().startsWith("1")
+                    && cc.getAmount() >= minVal && cc.getAmount() < maxVal) {
                 count++;
             }
         }
@@ -465,11 +461,10 @@ public abstract class MedicalUseCaseTest {
         resultOne = instance.search(startClaimCharge, endClaimCharge);
 
         logger.info("Charges :" + count + " :" + resultOne.size());
-        Assert.assertEquals(resultOne.size(), count);
+        assertEquals(resultOne.size(), count);
         for (ClaimCharges claimCharges : resultOne) {
-            Assert.assertTrue(claimCharges.getAmount() >= minVal);
-            Assert.assertTrue(claimCharges.getAmount() < maxVal);
+            assertTrue(claimCharges.getAmount() >= minVal);
+            assertTrue(claimCharges.getAmount() < maxVal);
         }
-
     }
 }

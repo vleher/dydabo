@@ -19,29 +19,31 @@ package com.dydabo.blackbox.usecase.company;
 
 import com.dydabo.blackbox.BlackBox;
 import com.dydabo.blackbox.BlackBoxFactory;
-import org.testng.annotations.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+
+import static com.dydabo.blackbox.BlackBoxFactory.Databases.REDIS;
 
 /**
  * @author viswadas leher
  */
-public class RedisNGTest extends SimpleUseCase {
+public class RedisTest extends SimpleUseCase {
     protected BlackBox instance;
 
     /**
      * @throws IOException
      */
-    public RedisNGTest() throws IOException {
+    public RedisTest() throws IOException {
         super();
-        if (utils.dbToTest.contains(BlackBoxFactory.REDIS)) {
+        if (utils.dbToTest.contains(REDIS)) {
             this.instance = BlackBoxFactory.getRedisDatabase();
         }
     }
 
     @Test
     public void testInsert() {
-        int testSize = 10;
+        int testSize = 1000;
 
         if (this.instance != null) {
             insertionTest(testSize, this.instance);
@@ -50,7 +52,7 @@ public class RedisNGTest extends SimpleUseCase {
 
     @Test
     public void testUpdate() {
-        int testSize = 10;
+        int testSize = 1000;
 
         if (this.instance != null) {
             updateTest(testSize, this.instance);
@@ -59,7 +61,7 @@ public class RedisNGTest extends SimpleUseCase {
 
     @Test
     public void testDelete() {
-        int testSize = 10;
+        int testSize = 1000;
         if (this.instance != null) {
             deleteTest(testSize, this.instance);
         }
@@ -67,7 +69,7 @@ public class RedisNGTest extends SimpleUseCase {
 
     @Test
     public void testFetchByPartialKey() {
-        int testSize = 2;
+        int testSize = 200;
         if (this.instance != null) {
             fetchPartialKey(testSize, this.instance);
         }
@@ -83,7 +85,7 @@ public class RedisNGTest extends SimpleUseCase {
 
     @Test
     public void testSearchMultipleTypes() {
-        int testSize = 2;
+        int testSize = 200;
         if (this.instance != null) {
             searchMultipleTypes(testSize, this.instance);
         }
@@ -91,7 +93,7 @@ public class RedisNGTest extends SimpleUseCase {
 
     @Test
     public void testSearchWithWildCards() {
-        int testSize = 2;
+        int testSize = 200;
         if (instance != null) {
             searchWithWildCards(testSize, instance);
         }
@@ -99,7 +101,7 @@ public class RedisNGTest extends SimpleUseCase {
 
     @Test
     public void testSearchWithDouble() {
-        int testSize = 2;
+        int testSize = 200;
         if (instance != null) {
             searchWithDouble(testSize, instance);
         }
@@ -107,7 +109,7 @@ public class RedisNGTest extends SimpleUseCase {
 
     @Test
     public void testRangeSearchDouble() {
-        int testSize = 2;
+        int testSize = 200;
         if (instance != null) {
             rangeSearchDouble(testSize, instance);
         }
