@@ -2,7 +2,7 @@
 
 ### Requirements 
 
-This is a use case that I got from [this blog post](https://sumitpal.wordpress.com/2016/07/03/hbase-schema-design-example/) and it seems to depict a real application scenario. 
+This is a use case that I got from [this blog post](https://sumitpal.wordpress.com/2016/07/03/com.dydabo.com.dydabo.blackbox.blackbox.hbase.hbase-schema-design-example/) and it seems to depict a real application scenario.
 
 A Patient has their own attributes with demographic info – first name, last name, address(es), phone number(s), date of birth etc. When a patient goes to the doctor, it is called as an encounter. An encounter can result in the patient having multiple procedures, medications, diagnosis, patient notes and so on. 
 
