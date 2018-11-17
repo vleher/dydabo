@@ -3,5 +3,5 @@ machine:
     version: oraclejdk8
 test:
   override:
-    - "true"
+  - "true"
 

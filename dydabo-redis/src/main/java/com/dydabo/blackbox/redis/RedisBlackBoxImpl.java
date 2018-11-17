@@ -22,11 +22,7 @@ import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.common.AbstractBlackBoxImpl;
 import com.dydabo.blackbox.redis.db.RedisConnectionManager;
-import com.dydabo.blackbox.redis.tasks.RedisDeleteTask;
-import com.dydabo.blackbox.redis.tasks.RedisFetchTask;
-import com.dydabo.blackbox.redis.tasks.RedisInsertTask;
-import com.dydabo.blackbox.redis.tasks.RedisRangeSearchTask;
-import com.dydabo.blackbox.redis.tasks.RedisSearchTask;
+import com.dydabo.blackbox.redis.tasks.*;
 import redis.clients.jedis.Jedis;
 
 import java.util.List;
@@ -43,14 +39,14 @@ public class RedisBlackBoxImpl<T extends BlackBoxable> extends AbstractBlackBoxI
     }
 
     @Override
-    public List<T> fetch(List<String> rowKeys, T bean) throws BlackBoxException {
-        RedisFetchTask<T> fetchJob = new RedisFetchTask<>(rowKeys, bean, false, -1);
+    public List<T> fetch(List<T> rows) throws BlackBoxException {
+        RedisFetchTask<T> fetchJob = new RedisFetchTask<>(rows, false, -1);
         return getForkJoinPool().invoke(fetchJob);
     }
 
     @Override
-    public List<T> fetchByPartialKey(List<String> rowKeys, T bean, long maxResults) throws BlackBoxException {
-        RedisFetchTask<T> fetchTask = new RedisFetchTask<>(rowKeys, bean, true, maxResults);
+    public List<T> fetchByPartialKey(List<T> rows, long maxResults) throws BlackBoxException {
+        RedisFetchTask<T> fetchTask = new RedisFetchTask<>(rows, true, maxResults);
         return getForkJoinPool().invoke(fetchTask);
     }
 

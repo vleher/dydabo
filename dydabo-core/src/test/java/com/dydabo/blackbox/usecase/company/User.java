@@ -16,6 +16,8 @@
  */
 package com.dydabo.blackbox.usecase.company;
 
+import java.util.Random;
+
 /**
  * @author viswadas leher
  */
@@ -32,6 +34,10 @@ public abstract class User {
     public User(Integer userId, String userName) {
         this.userId = userId;
         this.userName = userName;
+    }
+
+    public User(String userName) {
+        this(new Random().nextInt(), userName);
     }
 
     /**

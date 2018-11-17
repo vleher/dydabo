@@ -32,7 +32,7 @@ import java.util.List;
  * @param <T>
  * @author viswadas leher
  */
-public class CassandraBlackBoxImpl<T extends BlackBoxable> extends AbstractBlackBoxImpl<T> implements BlackBox<T> {
+public class CassandraBlackBox<T extends BlackBoxable> extends AbstractBlackBoxImpl<T> implements BlackBox<T> {
 
     CassandraUtils<T> utils = new CassandraUtils<>();
 
@@ -44,17 +44,15 @@ public class CassandraBlackBoxImpl<T extends BlackBoxable> extends AbstractBlack
     }
 
     @Override
-    public List<T> fetch(List<String> rowKeys, T bean) throws BlackBoxException {
-        createTable(Collections.singletonList(bean));
-        CassandraFetchTask<T> fetchTask = new CassandraFetchTask<>(getSession(), rowKeys, bean, false, -1);
+    public List<T> fetch(List<T> rows) throws BlackBoxException {
+        CassandraFetchTask<T> fetchTask = new CassandraFetchTask<T>(getSession(), rows, false, -1);
         return getForkJoinPool().invoke(fetchTask);
     }
 
     @Override
-    public List<T> fetchByPartialKey(List<String> rowKeys, T bean, long maxResults) throws BlackBoxException {
+    public List<T> fetchByPartialKey(List<T> rows, long maxResults) throws BlackBoxException {
         // TODO: really inefficient full table scan
-        createTable(Collections.singletonList(bean));
-        CassandraFetchTask<T> fetchTask = new CassandraFetchTask<>(getSession(), rowKeys, bean, true, maxResults);
+        CassandraFetchTask<T> fetchTask = new CassandraFetchTask<T>(getSession(), rows, true, maxResults);
         return getForkJoinPool().invoke(fetchTask);
     }
 
@@ -103,6 +101,6 @@ public class CassandraBlackBoxImpl<T extends BlackBoxable> extends AbstractBlack
      * @return
      */
     private Session getSession() {
-        return CassandraConnectionManager.getSession();
+        return new CassandraConnectionManager().getSession();
     }
 }

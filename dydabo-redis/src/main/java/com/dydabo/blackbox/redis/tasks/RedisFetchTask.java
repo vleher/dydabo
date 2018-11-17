@@ -37,30 +37,28 @@ import java.util.logging.Logger;
  */
 public class RedisFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
 
-    private final T bean;
-    private final List<String> keys;
+    private final List<T> rows;
     private final boolean isPartialKey;
     private final long maxResults;
     private Logger logger = Logger.getLogger(RedisFetchTask.class.getName());
 
 
-    public RedisFetchTask(List<String> rowKeys, T bean, boolean isPartialKey, long maxResults) {
-        this.keys = rowKeys;
-        this.bean = bean;
+    public RedisFetchTask(List<T> rows, boolean isPartialKey, long maxResults) {
+        this.rows = rows;
         this.isPartialKey = isPartialKey;
         this.maxResults = maxResults;
     }
 
     @Override
     protected List<T> compute() {
-        return fetch(keys, bean);
+        return fetch(rows);
     }
 
-    private List<T> fetch(List<String> keys, T bean) {
-        if (keys.size() < 2) {
+    private List<T> fetch(List<T> rows) {
+        if (rows.size() < 2) {
             List<T> fullResult = new ArrayList<>();
-            for (String k : keys) {
-                fullResult.addAll(fetch(k, bean));
+            for (T row : rows) {
+                fullResult.addAll(fetch(row));
             }
             return fullResult;
         }
@@ -68,8 +66,8 @@ public class RedisFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
         List<T> fullResult = new ArrayList<>();
 
         List<ForkJoinTask<List<T>>> taskList = new ArrayList<>();
-        for (String rowKey : keys) {
-            ForkJoinTask<List<T>> fjTask = new RedisFetchTask<>(Collections.singletonList(rowKey), bean, isPartialKey, maxResults).fork();
+        for (T row : rows) {
+            ForkJoinTask<List<T>> fjTask = new RedisFetchTask<>(Collections.singletonList(row), isPartialKey, maxResults).fork();
             taskList.add(fjTask);
         }
 
@@ -80,24 +78,24 @@ public class RedisFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
         return fullResult;
     }
 
-    private List<T> fetch(String key, T bean) {
+    private List<T> fetch(T row) {
         List<T> fullResults = Collections.synchronizedList(new ArrayList<>());
 
-        if (DyDaBoUtils.isBlankOrNull(key)) {
+        if (DyDaBoUtils.isBlankOrNull(row.getBBRowKey())) {
             return fullResults;
         }
 
-        String type = bean.getClass().getTypeName() + ":";
+        String type = row.getClass().getTypeName() + ":";
 
         try (Jedis connection = RedisConnectionManager.getConnection("localhost")) {
             if (isPartialKey) {
-                String partialKey = key.replaceAll("\\.\\*", "*");
+                String partialKey = row.getBBRowKey().replaceAll("\\.\\*", "*");
                 Set<String> newKeys = connection.keys(type + partialKey);
 
                 for (String newKey : newKeys) {
                     String result = connection.get(newKey);
                     if (!DyDaBoUtils.isBlankOrNull(result)) {
-                        T resultObj = new Gson().fromJson(result, (Type) bean.getClass());
+                        T resultObj = new Gson().fromJson(result, (Type) row.getClass());
                         fullResults.add(resultObj);
                         if (maxResults > 0 && fullResults.size() >= maxResults) {
                             return fullResults;
@@ -105,9 +103,9 @@ public class RedisFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
                     }
                 }
             } else {
-                String result = connection.get(type + key);
+                String result = connection.get(type + row.getBBRowKey());
                 if (!DyDaBoUtils.isBlankOrNull(result)) {
-                    T resultObj = new Gson().fromJson(result, (Type) bean.getClass());
+                    T resultObj = new Gson().fromJson(result, (Type) row.getClass());
                     fullResults.add(resultObj);
                 }
             }

@@ -1,14 +1,11 @@
 package com.dydabo.blackbox.db.obj;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author viswadas leher
@@ -20,10 +17,6 @@ public class GenericDBTRColumnFamilyTest {
     public void setUp() throws Exception {
         GenericDBTableRow instance = new GenericDBTableRow("rowKey");
         colFamily = instance.getDefaultFamily();
-    }
-
-    @BeforeAll
-    public void testAddColumn() throws Exception {
         colFamily.addColumn("col1", new Integer(12));
     }
 

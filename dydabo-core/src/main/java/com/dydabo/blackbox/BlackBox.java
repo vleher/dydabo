@@ -32,84 +32,86 @@ public interface BlackBox<T extends BlackBoxable> {
      *
      * @param rows a list of POJO
      * @return true if all deletes have been successful, false otherwise
-     * @throws com.dydabo.blackbox.BlackBoxException
+     * @throws BlackBoxException blackbox exception
      */
     boolean delete(List<T> rows) throws BlackBoxException;
 
     /**
-     * @param row
-     * @return
-     * @throws BlackBoxException
+     * @param row row to insert
+     * @return true if delete is successful
+     * @throws BlackBoxException blackbox exception
      */
     boolean delete(T row) throws BlackBoxException;
 
     /**
      * Get all matching rows given a list of row keys.
      *
-     * @param rowKeys list of row keys
-     * @param bean    the POJO to return
+     * @param  rows list of rows
      * @return a list of POJO that match the keys
-     * @throws BlackBoxException
+     * @throws BlackBoxException blackbox exception
      */
-    List<T> fetch(List<String> rowKeys, T bean) throws BlackBoxException;
+    List<T> fetch(List<T> rows) throws BlackBoxException;
 
     /**
-     * @param rowKey
-     * @param bean
-     * @return
-     * @throws BlackBoxException
+     * @param row the row to fetch
+     * @return list of POJO matching the key
+     * @throws BlackBoxException blackbox exception
      */
-    List<T> fetch(String rowKey, T bean) throws BlackBoxException;
+    List<T> fetch(T row) throws BlackBoxException;
 
     /**
      * Get all matching rows given a list of partial keys. This uses the fuzzy filter to search through keys
      *
-     * @param rowKeys list of partial keys in regex format
-     * @param bean    the POJO type to return
+     * @param rows list of partial keys in regex format
      * @return a list of POJO that match the keys
-     * @throws BlackBoxException
+     * @throws BlackBoxException black box exception
      */
-    List<T> fetchByPartialKey(List<String> rowKeys, T bean) throws BlackBoxException;
+    List<T> fetchByPartialKey(List<T> rows) throws BlackBoxException;
 
     /**
-     * @param rowKeys
-     * @param bean
-     * @param maxResults
-     * @return
-     * @throws BlackBoxException
+     * Get matching rows upto maxResults given a list of partial keys. This uses the fuzzy filter to search through keys
+     *
+     * @param rows    list of partial keys in regex format
+     * @param maxResults maximum number of results returned
+     * @return a list of POJO that match the keys
+     * @throws BlackBoxException blackbox exception
      */
-    List<T> fetchByPartialKey(List<String> rowKeys, T bean, long maxResults) throws BlackBoxException;
+    List<T> fetchByPartialKey(List<T> rows, long maxResults) throws BlackBoxException;
 
     /**
-     * @param rowKey
-     * @param bean
-     * @return
-     * @throws BlackBoxException
+     * Get all matching rows given a partial key.
+     *
+     * @param row key in regex format
+     * @return a list of POJO that match the key
+     * @throws BlackBoxException blackbox exception
      */
-    List<T> fetchByPartialKey(String rowKey, T bean) throws BlackBoxException;
+    List<T> fetchByPartialKey(T row) throws BlackBoxException;
 
     /**
-     * @param rowKey
-     * @param bean
-     * @param maxResults
-     * @return
-     * @throws BlackBoxException
+     * Get matching rows upto maxResults given a list of partial keys. This uses the fuzzy filter to search through keys
+     *
+     * @param row     a key in regex format
+     * @param maxResults maximum number of results returned
+     * @return a list of POJO that match the keys
+     * @throws BlackBoxException blackbox exception
      */
-    List<T> fetchByPartialKey(String rowKey, T bean, long maxResults) throws BlackBoxException;
+    List<T> fetchByPartialKey(T row, long maxResults) throws BlackBoxException;
 
     /**
-     * Inserts a list of rows into the table. The rows should not already exist in the table.
+     * Inserts a list of rows into the table. The rows should not exist in the table.
      *
      * @param rows a list of POJO
      * @return true if inserts are successful, false otherwise
-     * @throws com.dydabo.blackbox.BlackBoxException
+     * @throws BlackBoxException blackbox exception
      */
     boolean insert(List<T> rows) throws BlackBoxException;
 
     /**
-     * @param row
-     * @return
-     * @throws BlackBoxException
+     * Inserts a row into the table. The row should not exist in the table.
+     *
+     * @param row a list of POJO
+     * @return true if inserts are successful, false otherwise
+     * @throws BlackBoxException blackbox exception
      */
     boolean insert(T row) throws BlackBoxException;
 
@@ -122,47 +124,71 @@ public interface BlackBox<T extends BlackBoxable> {
      *
      * @param rows a list of POJO
      * @return list of POJO that match the criteria
-     * @throws com.dydabo.blackbox.BlackBoxException
+     * @throws BlackBoxException blackbox exception
      */
     List<T> search(List<T> rows) throws BlackBoxException;
 
     /**
-     * @param rows
-     * @param maxResults
-     * @return
-     * @throws BlackBoxException
+     * Search for all matching rows in the table, given a list of POJO. You can add known values to the POJO fields or regular
+     * expressions in the field.
+     * <p>
+     * Example: to search for all names starting with David, you can do obj.setName("David.*") and pass in the obj to the
+     * search method.
+     *
+     * @param rows       a list of POJO
+     * @param maxResults the maximum number of results to return
+     * @return list of POJO that match the criteria
+     * @throws BlackBoxException blackbox exception
      */
     List<T> search(List<T> rows, long maxResults) throws BlackBoxException;
 
     /**
-     * @param row
-     * @return
-     * @throws BlackBoxException
+     * Search for all matching rows in the table, given a POJO. You can add known values to the POJO fields or regular
+     * expressions in the field.
+     * <p>
+     * Example: to search for all names starting with David, you can do obj.setName("David.*") and pass in the obj to the
+     * search method.
+     *
+     * @param row a POJO
+     * @return list of POJO that match the criteria
+     * @throws BlackBoxException blackbox exception
      */
     List<T> search(T row) throws BlackBoxException;
 
     /**
-     * @param row
-     * @param maxResults
-     * @return
-     * @throws BlackBoxException
+     * Search for all matching rows in the table, given a POJO. You can add known values to the POJO fields or regular
+     * expressions in the field.
+     * <p>
+     * Example: to search for all names starting with David, you can do obj.setName("David.*") and pass in the obj to the
+     * search method.
+     *
+     * @param row        a POJO
+     * @param maxResults the maximum number of results to return
+     * @return list of POJO that match the criteria
+     * @throws BlackBoxException blackbox exception
      */
     List<T> search(T row, long maxResults) throws BlackBoxException;
 
     /**
-     * @param startRow
-     * @param endRow
-     * @return
-     * @throws BlackBoxException
+     * Search for all matching rows in the table, given a two POJOs. You can add known values to the POJO fields or regular
+     * expressions in the field. The two POJO act as the start and end filters for the results
+     *
+     * @param startRow the start filter POJO
+     * @param endRow   the end filter POJO
+     * @return a list of POJO matching the criteria
+     * @throws BlackBoxException blackbox exception
      */
     List<T> search(T startRow, T endRow) throws BlackBoxException;
 
     /**
-     * @param startRow
-     * @param endRow
-     * @param maxResults
-     * @return
-     * @throws BlackBoxException
+     * Search for all matching rows in the table, given a two POJOs. You can add known values to the POJO fields or regular
+     * expressions in the field. The two POJO act as the start and end filters for the results
+     *
+     * @param startRow   the start filter POJO
+     * @param endRow     the end filter POJO
+     * @param maxResults the maximum number of results
+     * @return a list of POJO matching the criteria
+     * @throws BlackBoxException blackbox exception
      */
     List<T> search(T startRow, T endRow, long maxResults) throws BlackBoxException;
 
@@ -172,14 +198,17 @@ public interface BlackBox<T extends BlackBoxable> {
      *
      * @param newRows a list of POJO
      * @return true if update is successful, false otherwise
-     * @throws com.dydabo.blackbox.BlackBoxException
+     * @throws BlackBoxException blackbox exception
      */
     boolean update(List<T> newRows) throws BlackBoxException;
 
     /**
-     * @param newRow
-     * @return
-     * @throws BlackBoxException
+     * Update or insert the row that match the POJO. If a row does not exist, then it will added otherwise the existing row
+     * is updated with the new values.
+     *
+     * @param newRow a POJO
+     * @return true if update is successful, false otherwise
+     * @throws BlackBoxException blackbox exception
      */
     boolean update(T newRow) throws BlackBoxException;
 

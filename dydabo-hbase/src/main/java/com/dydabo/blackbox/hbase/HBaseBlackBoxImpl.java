@@ -21,11 +21,7 @@ import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.common.AbstractBlackBoxImpl;
 import com.dydabo.blackbox.hbase.db.HBaseConnectionManager;
-import com.dydabo.blackbox.hbase.tasks.impl.HBaseDeleteTask;
-import com.dydabo.blackbox.hbase.tasks.impl.HBaseFetchTask;
-import com.dydabo.blackbox.hbase.tasks.impl.HBaseInsertTask;
-import com.dydabo.blackbox.hbase.tasks.impl.HBaseRangeSearchTask;
-import com.dydabo.blackbox.hbase.tasks.impl.HBaseSearchTask;
+import com.dydabo.blackbox.hbase.tasks.impl.*;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -92,9 +88,9 @@ public class HBaseBlackBoxImpl<T extends BlackBoxable> extends AbstractBlackBoxI
     }
 
     @Override
-    public List<T> fetch(List<String> rowKeys, T row) throws BlackBoxException {
+    public List<T> fetch(List<T> rows) throws BlackBoxException {
         try {
-            HBaseFetchTask<T> fetchTask = new HBaseFetchTask<>(getConnection(), rowKeys, row, false);
+            HBaseFetchTask<T> fetchTask = new HBaseFetchTask<T>(getConnection(), rows, false);
             return getForkJoinPool().invoke(fetchTask);
         } catch (IOException ex) {
             logger.log(Level.SEVERE, null, ex);
@@ -103,9 +99,9 @@ public class HBaseBlackBoxImpl<T extends BlackBoxable> extends AbstractBlackBoxI
     }
 
     @Override
-    public List<T> fetchByPartialKey(List<String> rowKeys, T bean, long maxResults) throws BlackBoxException {
+    public List<T> fetchByPartialKey(List<T> rows,  long maxResults) throws BlackBoxException {
         try {
-            HBaseFetchTask<T> fetchTask = new HBaseFetchTask<>(getConnection(), rowKeys, bean, true, maxResults);
+            HBaseFetchTask<T> fetchTask = new HBaseFetchTask<T>(getConnection(), rows, true, maxResults);
             return getForkJoinPool().invoke(fetchTask);
         } catch (IOException ex) {
             logger.log(Level.SEVERE, null, ex);
@@ -118,7 +114,7 @@ public class HBaseBlackBoxImpl<T extends BlackBoxable> extends AbstractBlackBoxI
      * @throws java.io.IOException
      */
     private Connection getConnection() throws IOException {
-        return HBaseConnectionManager.getConnection(config);
+        return new HBaseConnectionManager().getConnection(config);
     }
 
     @Override

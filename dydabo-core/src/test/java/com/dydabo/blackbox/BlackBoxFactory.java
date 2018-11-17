@@ -23,12 +23,12 @@ package com.dydabo.blackbox;
  */
 public class BlackBoxFactory {
 
-    public enum Databases {
-        HBASE, CASSANDRA, MONGODB, REDIS
-    }
-
     private BlackBoxFactory() {
         // No instance of this factory class
+    }
+
+    public enum Databases {
+        HBASE, CASSANDRA, MONGODB, REDIS
     }
 
     /**

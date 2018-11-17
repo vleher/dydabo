@@ -1,8 +1,0 @@
-rootProject.name = 'dynamicdatablackbox'
-include 'dydabo-core'
-include 'dydabo-cassandra'
-include 'dydabo-redis'
-include 'dydabo-hbase'
-include 'dydabo-mongodb'
-
-

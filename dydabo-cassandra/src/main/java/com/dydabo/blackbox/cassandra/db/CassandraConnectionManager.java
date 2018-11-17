@@ -22,6 +22,7 @@ import com.dydabo.blackbox.cassandra.utils.CassandraConstants;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 /**
@@ -30,12 +31,12 @@ import java.util.logging.Logger;
 public class CassandraConnectionManager {
 
     private static final Logger logger = Logger.getLogger(CassandraConnectionManager.class.getName());
-    private static final Map<String, Session> sessionPool = new HashMap<>();
-    private static final Map<String, Cluster> clusterPool = new HashMap<>();
+    private static final Map<String, Session> sessionPool = new ConcurrentHashMap<>();
+    private static final Map<String, Cluster> clusterPool = new ConcurrentHashMap<>();
 
     private static String address;
 
-    private CassandraConnectionManager() {
+    public CassandraConnectionManager() {
     }
 
     // TODO: clean this up
@@ -44,7 +45,7 @@ public class CassandraConnectionManager {
      * @param address
      * @return
      */
-    private static synchronized Session getSession(String address) {
+    private synchronized Session getSession(String address) {
 
         if (sessionPool.get(CassandraConstants.KEYSPACE) == null) {
             if (clusterPool.get(CassandraConstants.CLUSTER_NAME) == null) {
@@ -68,15 +69,14 @@ public class CassandraConnectionManager {
         return sessionPool.get(CassandraConstants.KEYSPACE);
     }
 
-    public static Session getSession() {
+    public Session getSession() {
         return getSession(address);
     }
 
     /**
-     *
      * @return
      */
-    public static synchronized Cluster getCluster() {
+    public synchronized Cluster getCluster() {
         if (clusterPool.get(CassandraConstants.CLUSTER_NAME) == null) {
             Cluster cluster = Cluster.builder()
                     .withClusterName(CassandraConstants.CLUSTER_NAME)
@@ -92,11 +92,11 @@ public class CassandraConnectionManager {
         return clusterPool.get(CassandraConstants.CLUSTER_NAME);
     }
 
-    public static String getAddress() {
+    public String getAddress() {
         return address;
     }
 
-    public static void setAddress(String address) {
+    public void setAddress(String address) {
         CassandraConnectionManager.address = address;
     }
 

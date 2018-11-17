@@ -47,50 +47,46 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
 
     private static final Logger logger = Logger.getLogger(CassandraFetchTask.class.getName());
 
-    private final T bean;
     private final boolean isPartialKeys;
     private final long maxResults;
-    private final List<String> rowKeys;
+    private final List<T> rowKeys;
     private final Session session;
     private final CassandraUtils<T> utils;
 
 
     /**
      * @param session
-     * @param rowKeys
-     * @param row
+     * @param rows
      * @param isPartialKeys
      */
-    private CassandraFetchTask(Session session, List<String> rowKeys, T row, boolean isPartialKeys) {
-        this(session, rowKeys, row, isPartialKeys, -1);
+    private CassandraFetchTask(Session session, List<T> rows, boolean isPartialKeys) {
+        this(session, rows, isPartialKeys, -1);
     }
 
     /**
      * @param session
-     * @param rowKeys
-     * @param row
+     * @param rows
      * @param isPartialKeys
      * @param maxResults
      */
-    public CassandraFetchTask(Session session, List<String> rowKeys, T row, boolean isPartialKeys, long maxResults) {
+    public CassandraFetchTask(Session session, List<T> rows, boolean isPartialKeys, long maxResults) {
         this.session = session;
-        this.rowKeys = rowKeys;
+        this.rowKeys = rows;
         this.utils = new CassandraUtils<>();
-        this.bean = row;
         this.isPartialKeys = isPartialKeys;
         this.maxResults = maxResults;
     }
 
     /**
-     * @param rowKeys
+     * @param rows
      * @return
      * @throws BlackBoxException
      */
-    private List<T> fetch(List<String> rowKeys) throws BlackBoxException {
-        if (rowKeys.size() < 2) {
+    private List<T> fetch(List<T> rows) throws BlackBoxException {
+        if (rows.size() < 2) {
             List<T> fullResult = new ArrayList<>();
-            for (String key : rowKeys) {
-                fullResult.addAll(fetch(key));
+            for (T row : rows) {
+                fullResult.addAll(fetch(row));
             }
             return fullResult;
         }
@@ -99,8 +95,8 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
 
         // create a task for each element or row in the list
         List<ForkJoinTask<List<T>>> taskList = new ArrayList<>();
-        for (String rowKey : rowKeys) {
-            ForkJoinTask<List<T>> fjTask = new CassandraFetchTask<>(getSession(), Collections.singletonList(rowKey), bean, isPartialKeys,
+        for (T row : rows) {
+            ForkJoinTask<List<T>> fjTask = new CassandraFetchTask<T>(getSession(), Collections.singletonList(row), isPartialKeys,
                     maxResults).fork();
             taskList.add(fjTask);
         }
@@ -114,15 +110,15 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
     }
 
     /**
-     * @param rowKey
+     * @param row
      * @return
      * @throws BlackBoxException
      */
-    private List<T> fetch(String rowKey) {
+    private List<T> fetch(T row) {
 
-        Select queryStmt = QueryBuilder.select().from(utils.getTableName(bean)).allowFiltering();
+        Select queryStmt = QueryBuilder.select().from(utils.getTableName(row)).allowFiltering();
         if (!isPartialKeys) {
-            queryStmt.where(QueryBuilder.eq(CassandraConstants.DEFAULT_ROWKEY, rowKey));
+            queryStmt.where(QueryBuilder.eq(CassandraConstants.DEFAULT_ROWKEY, row));
         }
 
         ResultSet resultSet = getSession().execute(queryStmt);
@@ -131,7 +127,7 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
             final String currRowKey = result.getString(CassandraConstants.DEFAULT_ROWKEY);
             boolean isResult = true;
             if (isPartialKeys) {
-                isResult = Pattern.matches(rowKey, currRowKey);
+                isResult = Pattern.matches(row.getBBRowKey(), currRowKey);
             }
             if (isResult) {
                 GenericDBTableRow ctr = new GenericDBTableRow(currRowKey);
@@ -139,7 +135,7 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
                     ctr.getDefaultFamily().addColumn(def.getName(), result.getObject(def.getName()));
                 }
 
-                T resultObject = new Gson().fromJson(ctr.toJsonObject(), (Type) bean.getClass());
+                T resultObject = new Gson().fromJson(ctr.toJsonObject(), (Type) row.getClass());
 
                 if (resultObject != null) {
                     results.add(resultObject);

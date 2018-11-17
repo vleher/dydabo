@@ -22,27 +22,17 @@ import com.dydabo.blackbox.BlackBoxFactory;
 import com.dydabo.blackbox.usecase.company.Customer;
 import com.dydabo.blackbox.usecase.company.Employee;
 import com.dydabo.blackbox.usecase.medical.MedicalUseCaseTest;
-import com.dydabo.blackbox.usecase.medical.db.Claim;
-import com.dydabo.blackbox.usecase.medical.db.ClaimCharges;
-import com.dydabo.blackbox.usecase.medical.db.ClaimDetails;
-import com.dydabo.blackbox.usecase.medical.db.Diagnosis;
-import com.dydabo.blackbox.usecase.medical.db.Encounter;
-import com.dydabo.blackbox.usecase.medical.db.Medication;
-import com.dydabo.blackbox.usecase.medical.db.Patient;
+import com.dydabo.blackbox.usecase.medical.db.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 /**
  * @author viswadas leher
  */
 public class DyDaBoTestUtils {
 
-    public final List<BlackBoxFactory.Databases> dbToTest = Arrays.asList(BlackBoxFactory.Databases.REDIS);
+    public final List<BlackBoxFactory.Databases> dbToTest = Arrays.asList();
 
     /**
      * Random first names

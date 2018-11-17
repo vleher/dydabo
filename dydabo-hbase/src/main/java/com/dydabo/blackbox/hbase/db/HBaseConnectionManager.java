@@ -22,8 +22,8 @@ import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,17 +35,17 @@ public class HBaseConnectionManager {
     private static final Object lockObject = new Object();
 
     private static final Configuration defaultConfig = HBaseConfiguration.create();
-    private static final Map<Integer, Connection> connectionPool = new HashMap<>();
+    private static final Map<Integer, Connection> connectionPool = new ConcurrentHashMap<>();
     private static final Logger logger = Logger.getLogger(HBaseConnectionManager.class.getName());
 
-    private HBaseConnectionManager() {
+    public HBaseConnectionManager() {
     }
 
     /**
      * @return
      * @throws IOException
      */
-    public static Connection getConnection() throws IOException {
+    public Connection getConnection() throws IOException {
         return getConnection(defaultConfig);
     }
 
@@ -54,11 +54,11 @@ public class HBaseConnectionManager {
      * @return
      * @throws IOException
      */
-    public static Connection getConnection(Configuration config) throws IOException {
+    public Connection getConnection(Configuration config) throws IOException {
         Connection thisConnection = connectionPool.get(config.hashCode());
         if (thisConnection == null || thisConnection.isAborted() || thisConnection.isClosed()) {
             synchronized (lockObject) {
-                thisConnection = ConnectionFactory.createConnection(config);
+                thisConnection = getConnectionFromHbase(config);
             }
         }
         if (thisConnection != null) {
@@ -67,10 +67,14 @@ public class HBaseConnectionManager {
         return thisConnection;
     }
 
+    private static Connection getConnectionFromHbase(Configuration config) throws IOException {
+        return ConnectionFactory.createConnection(config);
+    }
+
     /**
      * Close all open connections. This can be called by the client to do a graceful shutdown.
      */
-    public static synchronized void closeAllConnections() {
+    public synchronized void closeAllConnections() {
 
         connectionPool.forEach((integer, connection) -> {
             if (connection != null) {

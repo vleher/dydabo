@@ -18,7 +18,6 @@ package com.dydabo.blackbox.usecase.company;
 
 import com.dydabo.blackbox.BlackBox;
 import com.dydabo.blackbox.BlackBoxException;
-import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.utils.DyDaBoTestUtils;
 
 import java.io.IOException;
@@ -27,9 +26,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author viswadas leher
@@ -62,7 +59,7 @@ public abstract class SimpleUseCase {
         // do some fetch to verify that they are inserted
         for (Customer customer : customers) {
             try {
-                List<Customer> result = blackBox.fetch(customer.getBBRowKey(), new Customer(null, null));
+                List<Customer> result = blackBox.fetch(new Customer(customer.getUserName()));
                 assertTrue(result.size() == 1, result.size() + "");
                 assertTrue(customer.getBBRowKey().equals(result.get(0).getBBRowKey()));
                 assertTrue(customer.getUserName().equals(result.get(0).getUserName()));
@@ -79,7 +76,7 @@ public abstract class SimpleUseCase {
             assertTrue(flag);
 
             for (Customer customer : customers) {
-                List<Customer> results = blackBox.fetch(customer.getBBRowKey(), new Customer(null, null));
+                List<Customer> results = blackBox.fetch(new Customer(customer.getUserName()));
 
                 assertTrue(results.size() == 1, results.size() + "");
             }
@@ -112,10 +109,10 @@ public abstract class SimpleUseCase {
             boolean flag = blackBox.update(customers);
             if (flag) {
                 for (Customer customer : customers) {
-                    final String rowKey = customer.getBBRowKey();
+                    final String rowKey = customer.getUserName();
                     String key = rowKey.substring(0, rowKey.length() / 2) + ".*";
 
-                    List<Customer> results = blackBox.fetchByPartialKey(key, new Customer(null, null));
+                    List<Customer> results = blackBox.fetchByPartialKey(new Customer(key));
                     assertTrue(results.size() > 0, results.size() + "");
                 }
             }
@@ -146,28 +143,30 @@ public abstract class SimpleUseCase {
 
     protected void searchMultipleTypes(int testSize, BlackBox blackBox) {
         // Update new Users
-        List userList = utils.generateEmployees(testSize);
-        userList.addAll(utils.generateCustomers(testSize));
+        List<Employee> employeeList = utils.generateEmployees(testSize);
+        List<Customer> customerList = utils.generateCustomers(testSize);
+
         // select random key
-        String userName = ((User) userList.get(random.nextInt(99) % userList.size())).getUserName();
+        String userName = customerList.get(random.nextInt(99) % customerList.size()).getUserName();
 
         // Search
-        List<BlackBoxable> searchList = new ArrayList<>();
+        List<User> searchList = new ArrayList<>();
         searchList.add(new Employee(null, userName));
         searchList.add(new Customer(null, userName));
         try {
-            boolean success = blackBox.update(userList);
+            boolean success = blackBox.update(employeeList);
             assertTrue(success);
 
-            List<BlackBoxable> searchResult = blackBox.search(searchList);
+            success = blackBox.update(customerList);
+            assertTrue(success);
+
+            List<User> searchResult = blackBox.search(searchList);
 
             assertTrue(searchResult.size() > 0);
-            for (BlackBoxable res : searchResult) {
-                if (res instanceof User) {
-                    final String uName = ((User) res).getUserName();
-                    if (uName == null || !uName.contains(userName)) {
-                        fail("Does not contain  " + userName + " :" + res);
-                    }
+            for (User res : searchResult) {
+                final String uName = ((User) res).getUserName();
+                if (uName == null || !uName.contains(userName)) {
+                    fail("Does not contain  " + userName + " :" + res);
                 }
             }
         } catch (Exception e) {
@@ -190,15 +189,14 @@ public abstract class SimpleUseCase {
             searchList.add(new Employee(null, "^" + userPrefix + ".*"));
             searchList.add(new Customer(null, "^" + userPrefix + ".*"));
 
-            List<BlackBoxable> searchResult = blackBox.search(searchList);
+            List<User> searchResult = blackBox.search(searchList);
             assertTrue(searchResult.size() > 0);
-            for (BlackBoxable res : searchResult) {
-                if (res instanceof User) {
-                    final String uName = ((User) res).getUserName();
-                    if (uName == null || !uName.startsWith(userPrefix)) {
-                        fail(" Does not start with  " + userPrefix + " :" + res);
-                    }
+            for (User res : searchResult) {
+                final String uName = ((User) res).getUserName();
+                if (uName == null || !uName.startsWith(userPrefix)) {
+                    fail(" Does not start with  " + userPrefix + " :" + res);
                 }
+
             }
         } catch (Exception e) {
             fail(e.getMessage(), e);

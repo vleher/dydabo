@@ -38,8 +38,8 @@ public class CassandraTest extends SimpleUseCase {
     public CassandraTest() throws IOException {
         super();
         if (utils.dbToTest.contains(BlackBoxFactory.Databases.CASSANDRA)) {
-            CassandraConnectionManager.setAddress("127.0.0.1");
-            instance = new CassandraBlackBoxImpl();
+            new CassandraConnectionManager().setAddress("127.0.0.1");
+            instance = new CassandraBlackBox();
         }
     }
 

@@ -45,19 +45,16 @@ public class MongoFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
     private final MongoCollection<Document> collection;
     private final boolean isPartialKey;
     private final long maxResults;
-    private final T row;
-    private final List<String> rowKeys;
+    private final List<T> rows;
     private final MongoUtils<T> utils;
 
     /**
      * @param collection
-     * @param rowKeys
-     * @param row
+     * @param rows
      */
-    public MongoFetchTask(MongoCollection<Document> collection, List<String> rowKeys, T row, boolean isPartialKey, long maxResults) {
+    public MongoFetchTask(MongoCollection<Document> collection, List<T> rows, boolean isPartialKey, long maxResults) {
         this.collection = collection;
-        this.rowKeys = rowKeys;
-        this.row = row;
+        this.rows = rows;
         this.utils = new MongoUtils<>();
         this.isPartialKey = isPartialKey;
         this.maxResults = maxResults;
@@ -65,14 +62,14 @@ public class MongoFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
 
     @Override
     protected List<T> compute() {
-        return fetch(rowKeys);
+        return fetch(rows);
     }
 
-    private List<T> fetch(List<String> rowKeys) {
-        if (rowKeys.size() < 2) {
+    private List<T> fetch(List<T> rows) {
+        if (rows.size() < 2) {
             List<T> fullResult = new ArrayList<>();
-            for (String rowKey : rowKeys) {
-                fullResult.addAll(fetch(rowKey));
+            for (T row : rows) {
+                fullResult.addAll(fetch(row));
             }
             return fullResult;
         }
@@ -80,8 +77,8 @@ public class MongoFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
         List<T> fullResult = new ArrayList<>();
 
         List<ForkJoinTask<List<T>>> taskList = new ArrayList<>();
-        for (String rowKey : rowKeys) {
-            ForkJoinTask<List<T>> fjTask = new MongoFetchTask<>(collection, Collections.singletonList(rowKey), row, isPartialKey, maxResults).fork();
+        for (T row : rows) {
+            ForkJoinTask<List<T>> fjTask = new MongoFetchTask<T>(collection, Collections.singletonList(row), isPartialKey, maxResults).fork();
             taskList.add(fjTask);
         }
 
@@ -92,16 +89,16 @@ public class MongoFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
         return fullResult;
     }
 
-    private List<T> fetch(String rowKey) {
+    private List<T> fetch(T row) {
         List<T> results = new ArrayList<>();
 
-        if (DyDaBoUtils.isBlankOrNull(rowKey)) {
+        if (DyDaBoUtils.isBlankOrNull(row.getBBRowKey())) {
             return results;
         }
 
         FindIterable<Document> docIter;
 
-        rowKey = (row.getClass().getTypeName()) + ":" + rowKey;
+        String rowKey = (row.getClass().getTypeName()) + ":" + row;
         if (isPartialKey) {
             docIter = collection.find(regex(MongoUtils.PRIMARYKEY, rowKey));
         } else {

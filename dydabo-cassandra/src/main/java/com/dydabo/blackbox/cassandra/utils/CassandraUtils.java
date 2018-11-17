@@ -76,7 +76,8 @@ public class CassandraUtils<T extends BlackBoxable> implements DBUtils<T> {
      */
     public boolean createTable(T row) {
 
-        try (Cluster cluster = CassandraConnectionManager.getCluster()) {
+        final CassandraConnectionManager cassandraConnectionManager = new CassandraConnectionManager();
+        try (Cluster cluster = cassandraConnectionManager.getCluster()) {
             // create table
             TableMetadata table = cluster.getMetadata().getKeyspace(CassandraConstants.KEYSPACE)
                     .getTable(getTableName(row));
@@ -95,7 +96,7 @@ public class CassandraUtils<T extends BlackBoxable> implements DBUtils<T> {
                 }
 
                 query.append(");");
-                try (Session session = CassandraConnectionManager.getSession()) {
+                try (Session session = cassandraConnectionManager.getSession()) {
                     logger.finer("Create Table:" + query);
                     session.execute(query.toString());
                 }
@@ -112,7 +113,8 @@ public class CassandraUtils<T extends BlackBoxable> implements DBUtils<T> {
     public boolean createIndex(String columnName, T row) {
         String columnIndexName = columnName + "idx";
 
-        try (Cluster cluster = CassandraConnectionManager.getCluster()) {
+        final CassandraConnectionManager cassandraConnectionManager = new CassandraConnectionManager();
+        try (Cluster cluster = cassandraConnectionManager.getCluster()) {
             TableMetadata table = cluster.getMetadata().getKeyspace(CassandraConstants.KEYSPACE)
                     .getTable(getTableName(row));
 
@@ -127,7 +129,7 @@ public class CassandraUtils<T extends BlackBoxable> implements DBUtils<T> {
                     "with OPTIONS = {'mode':'CONTAINS'};";
             logger.finer("Query:" + indexQuery);
             // create the index
-            try (Session session = CassandraConnectionManager.getSession()) {
+            try (Session session = cassandraConnectionManager.getSession()) {
                 session.execute(indexQuery);
             }
 

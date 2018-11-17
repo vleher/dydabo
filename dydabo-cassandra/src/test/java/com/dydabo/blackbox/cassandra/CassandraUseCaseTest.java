@@ -39,8 +39,8 @@ public class CassandraUseCaseTest extends MedicalUseCaseTest {
     public CassandraUseCaseTest() throws BlackBoxException, IOException {
         super();
         if (utils.dbToTest.contains(BlackBoxFactory.Databases.CASSANDRA)) {
-            CassandraConnectionManager.setAddress("127.0.0.1");
-            instance = new CassandraBlackBoxImpl();
+            new CassandraConnectionManager().setAddress("127.0.0.1");
+            instance = new CassandraBlackBox();
             // Pre-populate with some dynamic data.
             utils.generatePatients(random.nextInt(98765) % 10, instance);
             utils.generateEncounters(random.nextInt(98765) % 10, instance);

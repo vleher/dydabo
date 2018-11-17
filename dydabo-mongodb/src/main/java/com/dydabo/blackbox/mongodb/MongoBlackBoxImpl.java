@@ -21,11 +21,7 @@ import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.common.AbstractBlackBoxImpl;
 import com.dydabo.blackbox.mongodb.db.MongoDBConnectionManager;
-import com.dydabo.blackbox.mongodb.tasks.MongoDeleteTask;
-import com.dydabo.blackbox.mongodb.tasks.MongoFetchTask;
-import com.dydabo.blackbox.mongodb.tasks.MongoInsertTask;
-import com.dydabo.blackbox.mongodb.tasks.MongoRangeSearchTask;
-import com.dydabo.blackbox.mongodb.tasks.MongoSearchTask;
+import com.dydabo.blackbox.mongodb.tasks.*;
 import com.mongodb.client.MongoCollection;
 import org.bson.Document;
 
@@ -44,14 +40,14 @@ public class MongoBlackBoxImpl<T extends BlackBoxable> extends AbstractBlackBoxI
     }
 
     @Override
-    public List<T> fetch(List<String> rowKeys, T bean) throws BlackBoxException {
-        MongoFetchTask<T> task = new MongoFetchTask<>(getCollection(), rowKeys, bean, false, -1);
+    public List<T> fetch(List<T> rows) throws BlackBoxException {
+        MongoFetchTask<T> task = new MongoFetchTask<>(getCollection(), rows, false, -1);
         return task.invoke();
     }
 
     @Override
-    public List<T> fetchByPartialKey(List<String> rowKeys, T bean, long maxResults) throws BlackBoxException {
-        MongoFetchTask<T> task = new MongoFetchTask<>(getCollection(), rowKeys, bean, true, maxResults);
+    public List<T> fetchByPartialKey(List<T> rows,  long maxResults) throws BlackBoxException {
+        MongoFetchTask<T> task = new MongoFetchTask<>(getCollection(), rows,  true, maxResults);
         return task.invoke();
     }
 

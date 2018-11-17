@@ -38,24 +38,23 @@ public class GenericDBTableRow {
     private static final String DEFAULT_FAMILY = "D";
 
     private String rowKey;
-    private Map<String, ColumnFamily> columnFamilies = null;
+    private Map<String, GenericDBTableRow.ColumnFamily> columnFamilies;
 
     /**
      * @param rowKey
      */
     public GenericDBTableRow(String rowKey) {
         this.rowKey = rowKey;
-        this.columnFamilies = new HashMap<>();
-        createFamily(DEFAULT_FAMILY);
+        columnFamilies = new HashMap<>();
+        createFamily(GenericDBTableRow.DEFAULT_FAMILY);
     }
 
     /**
      * @param familyName
-     *
      * @return
      */
-    public ColumnFamily getColumnFamily(String familyName) {
-        ColumnFamily colFamily = getColumnFamilies().get(familyName);
+    public GenericDBTableRow.ColumnFamily getColumnFamily(String familyName) {
+        GenericDBTableRow.ColumnFamily colFamily = getColumnFamilies().get(familyName);
         if (colFamily == null) {
             colFamily = createFamily(familyName);
         }
@@ -65,17 +64,16 @@ public class GenericDBTableRow {
     /**
      * @return
      */
-    public ColumnFamily getDefaultFamily() {
-        return createFamily(DEFAULT_FAMILY);
+    public GenericDBTableRow.ColumnFamily getDefaultFamily() {
+        return createFamily(GenericDBTableRow.DEFAULT_FAMILY);
     }
 
     /**
      * @param familyName
-     *
      * @return
      */
-    public ColumnFamily createFamily(String familyName) {
-        getColumnFamilies().computeIfAbsent(familyName, ColumnFamily::new);
+    public GenericDBTableRow.ColumnFamily createFamily(String familyName) {
+        getColumnFamilies().computeIfAbsent(familyName, GenericDBTableRow.ColumnFamily::new);
         return getColumnFamilies().get(familyName);
     }
 
@@ -96,7 +94,7 @@ public class GenericDBTableRow {
     /**
      * @return
      */
-    public Map<String, ColumnFamily> getColumnFamilies() {
+    public Map<String, GenericDBTableRow.ColumnFamily> getColumnFamilies() {
         return columnFamilies;
     }
 
@@ -106,8 +104,8 @@ public class GenericDBTableRow {
     public JsonObject toJsonObject() {
         JsonObject jsonObject = getDefaultFamily().toJsonObject();
 
-        for (ColumnFamily columnFamily : getColumnFamilies().values()) {
-            if (!DEFAULT_FAMILY.equals(columnFamily.getFamilyName())) {
+        for (GenericDBTableRow.ColumnFamily columnFamily : getColumnFamilies().values()) {
+            if (!GenericDBTableRow.DEFAULT_FAMILY.equals(columnFamily.getFamilyName())) {
                 jsonObject.add(columnFamily.getFamilyName(), columnFamily.toJsonObject());
             }
         }
@@ -132,15 +130,15 @@ public class GenericDBTableRow {
      */
     public class ColumnFamily {
 
-        private String familyName = null;
-        private Map<String, Column> columns = null;
+        private String familyName;
+        private Map<String, GenericDBTableRow.Column> columns;
 
         /**
          * @param familyName
          */
         public ColumnFamily(String familyName) {
             this.familyName = familyName;
-            this.columns = new HashMap<>();
+            columns = new HashMap<>();
         }
 
         /**
@@ -148,15 +146,14 @@ public class GenericDBTableRow {
          * @param columnValue
          */
         public void addColumn(String columnName, Object columnValue) {
-            getColumns().put(columnName, new Column(columnName, columnValue));
+            getColumns().put(columnName, new GenericDBTableRow.Column(columnName, columnValue));
         }
 
         /**
          * @param colName
-         *
          * @return
          */
-        public Column getColumn(String colName) {
+        public GenericDBTableRow.Column getColumn(String colName) {
             return getColumns().get(colName);
         }
 
@@ -177,7 +174,7 @@ public class GenericDBTableRow {
         /**
          * @return
          */
-        public Map<String, Column> getColumns() {
+        public Map<String, GenericDBTableRow.Column> getColumns() {
             return columns;
         }
 
@@ -187,7 +184,7 @@ public class GenericDBTableRow {
          */
         public JsonObject toJsonObject() {
             JsonObject jsonObject = new JsonObject();
-            for (Column coln : getColumns().values()) {
+            for (GenericDBTableRow.Column coln : getColumns().values()) {
                 String keyName = coln.getColumnName();
                 String value = coln.getColumnValueAsString();
                 if (!DyDaBoUtils.isBlankOrNull(value)) {
@@ -214,8 +211,8 @@ public class GenericDBTableRow {
      */
     public class Column {
 
-        private String columnName = null;
-        private Object columnValue = null;
+        private String columnName;
+        private Object columnValue;
 
         /**
          * @param columnName

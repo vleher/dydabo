@@ -35,6 +35,13 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class DyDaBoUtilsTest {
 
+    static Stream<Arguments> stringAndNullProvider() {
+        return Stream.of(Arguments.of(true, new String[]{"foo", "", "test"}),
+                Arguments.of(true, new String[]{null, "bar", "23"}),
+                Arguments.of(false, new String[]{"qqqq", "bar", "23"})
+        );
+    }
+
     /**
      *
      */
@@ -66,13 +73,6 @@ public class DyDaBoUtilsTest {
     @MethodSource("stringAndNullProvider")
     public void testIsNotBlankOrNull(boolean expResult, String... str) {
         assertEquals(DyDaBoUtils.isNotBlankOrNull(str), !expResult);
-    }
-
-    static Stream<Arguments> stringAndNullProvider() {
-        return Stream.of(Arguments.of(true, new String[]{"foo", "", "test"}),
-                Arguments.of(true, new String[]{null, "bar", "23"}),
-                Arguments.of(false, new String[]{"qqqq", "bar", "23"})
-        );
     }
 
     /**

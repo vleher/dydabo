@@ -57,7 +57,7 @@ public class RedisSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
 
     private List<T> search(List<T> rows) {
         if (rows.size() < 2) {
-            final ArrayList<T> fullResult = new ArrayList<>();
+            final List<T> fullResult = new ArrayList<>();
             for (T r : rows) {
                 List<T> res = search(r);
                 fullResult.addAll(res);

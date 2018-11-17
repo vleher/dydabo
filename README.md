@@ -58,6 +58,7 @@ Support for the following databases:
 * Apache HBase/Hadoop
 * Apache Cassandra
 * MongoDB
+* Redis
 
 
 ### Status of the Project

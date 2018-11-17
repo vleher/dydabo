@@ -38,6 +38,10 @@ public class Customer extends User implements BlackBoxable {
         super(userId, userName);
     }
 
+    public Customer(String userName) {
+        super(userName);
+    }
+
     /**
      *
      */

@@ -18,20 +18,12 @@ package com.dydabo.blackbox.usecase.medical;
 
 import com.dydabo.blackbox.BlackBox;
 import com.dydabo.blackbox.BlackBoxException;
-import com.dydabo.blackbox.usecase.medical.db.Claim;
-import com.dydabo.blackbox.usecase.medical.db.ClaimCharges;
-import com.dydabo.blackbox.usecase.medical.db.Encounter;
-import com.dydabo.blackbox.usecase.medical.db.Medication;
-import com.dydabo.blackbox.usecase.medical.db.Patient;
+import com.dydabo.blackbox.usecase.medical.db.*;
 import com.dydabo.blackbox.utils.DyDaBoTestUtils;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -80,10 +72,9 @@ public abstract class MedicalUseCaseTest {
      */
     @Test
     public void testPatientWithId() throws BlackBoxException {
-        Patient p = new Patient();
         // All Patients with patient id (row key search)
         String pIDKey = "123456P:.*";
-        List<Patient> pList2 = instance.fetchByPartialKey(pIDKey, p);
+        List<Patient> pList2 = instance.fetchByPartialKey(new Patient(pIDKey, ".*", ".*"));
         for (Patient pat : pList2) {
             assertEquals(pat.getpId(), "123456P");
         }
@@ -121,17 +112,17 @@ public abstract class MedicalUseCaseTest {
         String lastName = allPEs.get(rId).getpLN();
 
         long startTime = System.nanoTime();
-        List<Patient> p4 = instance.fetchByPartialKey(".*:" + firstName + ":" + lastName, new Patient());
+        List<Patient> p4 = instance.fetchByPartialKey(new Patient(".*", firstName, lastName));
         long endTime = System.nanoTime();
         logger.info("1 :" + p4.size() + ":" + (endTime - startTime));
 
         startTime = System.nanoTime();
-        List<Patient> p5 = instance.fetchByPartialKey(".*:" + ".*:" + lastName, new Patient());
+        List<Patient> p5 = instance.fetchByPartialKey(new Patient(".*", ".*", lastName));
         endTime = System.nanoTime();
         logger.info("2 :" + p5.size() + ":" + (endTime - startTime));
 
         startTime = System.nanoTime();
-        List<Patient> p6 = instance.fetchByPartialKey(".*:" + firstName + ":.*", new Patient());
+        List<Patient> p6 = instance.fetchByPartialKey(new Patient(".*", firstName,".*"));
         endTime = System.nanoTime();
         logger.info("3 :" + p6.size() + ":" + (endTime - startTime));
     }
@@ -148,7 +139,7 @@ public abstract class MedicalUseCaseTest {
 
         // All Patients with specific first name (row key search)
         String fNameKey = ".*:Cyndi:.*";
-        List<Patient> pList4 = instance.fetchByPartialKey(Collections.singletonList(fNameKey), p);
+        List<Patient> pList4 = instance.fetchByPartialKey(Collections.singletonList(fNameKey));
         for (Patient pat : pList4) {
             assertEquals(pat.getfN(), "Cyndi");
         }
@@ -156,10 +147,9 @@ public abstract class MedicalUseCaseTest {
 
     @Test
     public void testPatientEncountersById() throws BlackBoxException {
-        Encounter pe = new Encounter();
         // All encounters by patient Id (row key)
         List<String> query = Collections.singletonList(knownPatientId + "P:.*");
-        List<Encounter> peL2 = instance.fetchByPartialKey(query, pe);
+        List<Encounter> peL2 = instance.fetchByPartialKey(query);
         for (Encounter penc : peL2) {
             assertEquals(penc.getpId(), knownPatientId + "P");
         }
@@ -238,11 +228,11 @@ public abstract class MedicalUseCaseTest {
 
         Encounter pe1 = new Encounter();
         // All encounters for patient names
-        List<Patient> p2 = instance.fetchByPartialKey(".*:" + firstName + ":" + lastName, new Patient());
+        List<Patient> p2 = instance.fetchByPartialKey(new Patient(".*", firstName,lastName));
         assertTrue(p2.size() > 0, "Size :" + p2.size());
         List<Encounter> peL3 = new ArrayList<>();
         for (Patient patient : p2) {
-            List<Encounter> temp = instance.fetchByPartialKey(".*" + patient.getpId() + ":.*", pe1);
+            List<Encounter> temp = instance.fetchByPartialKey(new Encounter(".*", patient.getpId()));
             peL3.addAll(temp);
         }
 
@@ -296,7 +286,7 @@ public abstract class MedicalUseCaseTest {
         Patient p = new Patient();
         // All Patients with first name
         List<String> queryKeys = Arrays.asList(".*:" + firstName + ":.*", ".*:.*:" + lastName);
-        List<Patient> pList5 = instance.fetchByPartialKey(queryKeys, p);
+        List<Patient> pList5 = instance.fetchByPartialKey(queryKeys);
         for (Patient pat : pList5) {
             boolean result = firstName.equals(pat.getfN()) || lastName.equals(pat.getlN());
             assertTrue(result);
@@ -304,7 +294,7 @@ public abstract class MedicalUseCaseTest {
 
         if (pList5.size() > 0) {
             int maxCount = pList5.size() / 3 + 1;
-            List<Patient> pList6 = instance.fetchByPartialKey(queryKeys, p, maxCount);
+            List<Patient> pList6 = instance.fetchByPartialKey(queryKeys, maxCount);
             logger.info("" + pList5.size() + ":" + pList6.size() + ":" + maxCount);
             assertTrue(pList6.size() <= maxCount * 2, pList5.size() + ":" + pList6.size() + ":" + maxCount);
         }
@@ -373,7 +363,7 @@ public abstract class MedicalUseCaseTest {
         String encId = peL1.get(randId).geteId();
 
         long startTime = System.nanoTime();
-        List<Encounter> resultOne = instance.fetchByPartialKey(patientId, new Encounter());
+        List<Encounter> resultOne = instance.fetchByPartialKey(new Encounter("", patientId));
         long endTime = System.nanoTime();
         long execTime = endTime - startTime;
         logger.info("1 :" + resultOne.size() + ":" + execTime);
@@ -382,7 +372,7 @@ public abstract class MedicalUseCaseTest {
         }
 
         startTime = System.nanoTime();
-        List<Encounter> resultTwo = instance.fetch(patientId + ":" + encId, new Encounter());
+        List<Encounter> resultTwo = instance.fetch(new Encounter(encId, patientId));
         endTime = System.nanoTime();
         execTime = endTime - startTime;
         logger.info("2 :" + resultTwo.size() + ":" + execTime);
@@ -391,7 +381,8 @@ public abstract class MedicalUseCaseTest {
         }
 
         startTime = System.nanoTime();
-        List<Encounter> resultThree = instance.fetchByPartialKey(".*" + patientId + ":" + encId, new Encounter());
+        final Encounter s = new Encounter(encId, ".*" + patientId );
+        List<Encounter> resultThree = instance.fetchByPartialKey(s);
         endTime = System.nanoTime();
         execTime = endTime - startTime;
         logger.info("3 :" + resultThree.size() + ":" + execTime);
@@ -400,7 +391,7 @@ public abstract class MedicalUseCaseTest {
         }
 
         startTime = System.nanoTime();
-        List<Encounter> resultFour = instance.fetchByPartialKey(".*" + patientId + ":.*", new Encounter());
+        List<Encounter> resultFour = instance.fetchByPartialKey(new Encounter(".*", ".*" + patientId));
         endTime = System.nanoTime();
         execTime = endTime - startTime;
         logger.info("4 :" + resultFour.size() + ":" + execTime);
@@ -409,7 +400,7 @@ public abstract class MedicalUseCaseTest {
         }
 
         startTime = System.nanoTime();
-        List<Encounter> resultFive = instance.fetchByPartialKey(patientId + ":.*", new Encounter());
+        List<Encounter> resultFive = instance.fetchByPartialKey(new Encounter(".*", patientId));
         endTime = System.nanoTime();
         execTime = endTime - startTime;
         logger.info("5 :" + resultFive.size() + ":" + execTime);
