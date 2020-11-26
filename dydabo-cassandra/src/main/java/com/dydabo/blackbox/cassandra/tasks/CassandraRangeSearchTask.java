@@ -19,11 +19,11 @@ package com.dydabo.blackbox.cassandra.tasks;
 import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.Clause;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.cassandra.db.CassandraConnectionManager;
 import com.dydabo.blackbox.cassandra.utils.CassandraConstants;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
 import com.dydabo.blackbox.common.utils.DyDaBoUtils;
@@ -44,23 +44,23 @@ public class CassandraRangeSearchTask<T extends BlackBoxable> extends RecursiveT
 
     private static final Logger logger = Logger.getLogger(CassandraRangeSearchTask.class.getName());
     private final long maxResults;
-    private final Session session;
+    private final CassandraConnectionManager connectionManager;
     private final T endRow;
     private final T startRow;
     private final CassandraUtils<BlackBoxable> utils;
 
     /**
-     * @param session
+     * @param connectionManager
      * @param startRow
      * @param endRow
      * @param maxResults
      */
-    public CassandraRangeSearchTask(Session session, T startRow, T endRow, long maxResults) {
-        this.session = session;
+    public CassandraRangeSearchTask(CassandraConnectionManager connectionManager, T startRow, T endRow, long maxResults) {
+        this.connectionManager = connectionManager;
         this.startRow = startRow;
         this.endRow = endRow;
         this.maxResults = maxResults;
-        this.utils = new CassandraUtils<>();
+        this.utils = new CassandraUtils<>(connectionManager);
     }
 
     @Override
@@ -82,7 +82,7 @@ public class CassandraRangeSearchTask<T extends BlackBoxable> extends RecursiveT
             queryStmt.where().and(whereClause);
         }
         logger.finer("Range Search :" + queryStmt);
-        ResultSet resultSet = getSession().execute(queryStmt);
+        ResultSet resultSet = getConnectionManager().getSession().execute(queryStmt);
         for (Row result : resultSet) {
             GenericDBTableRow ctr = new GenericDBTableRow(result.getString(CassandraConstants.DEFAULT_ROWKEY));
             for (ColumnDefinitions.Definition def : result.getColumnDefinitions().asList()) {
@@ -107,8 +107,8 @@ public class CassandraRangeSearchTask<T extends BlackBoxable> extends RecursiveT
     /**
      * @return
      */
-    private Session getSession() {
-        return session;
+    private CassandraConnectionManager getConnectionManager() {
+        return connectionManager;
     }
 
     private void parseClausesEnd(GenericDBTableRow endTableRow, List<Clause> whereClauses) {

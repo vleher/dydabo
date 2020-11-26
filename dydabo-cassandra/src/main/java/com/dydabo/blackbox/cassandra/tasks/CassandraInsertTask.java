@@ -16,11 +16,11 @@
  */
 package com.dydabo.blackbox.cassandra.tasks;
 
-import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.cassandra.db.CassandraConnectionManager;
 import com.dydabo.blackbox.cassandra.utils.CassandraConstants;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
 import com.dydabo.blackbox.common.utils.DyDaBoUtils;
@@ -43,29 +43,29 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
     private static final Logger logger = Logger.getLogger(CassandraInsertTask.class.getName());
 
     private final boolean checkExisting;
-    private final Session session;
+    private final CassandraConnectionManager connectionManager;
     private final List<T> rows;
     private final CassandraUtils<T> utils;
 
     /**
-     * @param session
+     * @param connectionManager
      * @param row
      * @param checkExisting
      */
-    private CassandraInsertTask(Session session, T row, boolean checkExisting) {
-        this(session, Collections.singletonList(row), checkExisting);
+    private CassandraInsertTask(CassandraConnectionManager connectionManager, T row, boolean checkExisting) {
+        this(connectionManager, Collections.singletonList(row), checkExisting);
     }
 
     /**
-     * @param session
+     * @param connectionManager
      * @param rows
      * @param checkExisting
      */
-    public CassandraInsertTask(Session session, List<T> rows, boolean checkExisting) {
-        this.session = session;
+    public CassandraInsertTask(CassandraConnectionManager connectionManager, List<T> rows, boolean checkExisting) {
+        this.connectionManager = connectionManager;
         this.rows = rows;
         this.checkExisting = checkExisting;
-        this.utils = new CassandraUtils<>();
+        this.utils = new CassandraUtils<>(connectionManager);
     }
 
     @Override
@@ -81,8 +81,8 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
     /**
      * @return
      */
-    private Session getSession() {
-        return session;
+    private CassandraConnectionManager getConnectionManager() {
+        return connectionManager;
     }
 
     /**
@@ -104,7 +104,7 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
         // create a task for each element or row in the list
         List<ForkJoinTask<Boolean>> taskList = new ArrayList<>();
         for (T row : rows) {
-            ForkJoinTask<Boolean> fjTask = new CassandraInsertTask<>(getSession(), Collections.singletonList(row), checkExisting).fork();
+            ForkJoinTask<Boolean> fjTask = new CassandraInsertTask<>(getConnectionManager(), Collections.singletonList(row), checkExisting).fork();
             taskList.add(fjTask);
         }
         // wait for all to join
@@ -144,10 +144,10 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
             }
         });
 
-        //try (Session session = CassandraConnectionManager.getSession()) {
+        //try (Session connectionManager = CassandraConnectionManager.getConnectionManager()) {
         logger.info("Executing " + insStmt.toString());
         // execute query, might throw exception
-        session.execute(insStmt);
+        getConnectionManager().getSession().execute(insStmt);
         //}
 
         return successFlag;

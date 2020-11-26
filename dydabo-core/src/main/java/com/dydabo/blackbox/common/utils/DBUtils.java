@@ -36,7 +36,7 @@ public interface DBUtils<T extends BlackBoxable> {
      */
     default GenericDBTableRow convertRowToTableRow(T row) {
         GenericDBTableRow cTable = new GenericDBTableRow(row.getBBRowKey());
-        Map<String, Field> fields = com.dydabo.blackbox.common.utils.DyDaBoUtils.getFieldFromType(row.getClass());
+        Map<String, Field> fields = DyDaBoUtils.getFieldFromType(row.getClass());
 
         fields.forEach((key, field) -> {
             try {

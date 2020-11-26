@@ -19,12 +19,12 @@ package com.dydabo.blackbox.cassandra.tasks;
 import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.Clause;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.cassandra.db.CassandraConnectionManager;
 import com.dydabo.blackbox.cassandra.utils.CassandraConstants;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
 import com.dydabo.blackbox.common.utils.DyDaBoUtils;
@@ -48,37 +48,37 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
 
     private static final Logger logger = Logger.getLogger(CassandraSearchTask.class.getName());
 
-    private final Session session;
+    private final CassandraConnectionManager connectionManager;
     private final long maxResults;
     private final List<T> rows;
     private final CassandraUtils<T> utils;
 
     /**
-     * @param session
+     * @param connectionManager
      * @param row
      * @param maxResults
      */
-    public CassandraSearchTask(Session session, T row, long maxResults) {
-        this(session, Collections.singletonList(row), maxResults);
+    public CassandraSearchTask(CassandraConnectionManager connectionManager, T row, long maxResults) {
+        this(connectionManager, Collections.singletonList(row), maxResults);
     }
 
     /**
-     * @param session
+     * @param connectionManager
      * @param rows
      * @param maxResults
      */
-    public CassandraSearchTask(Session session, List<T> rows, long maxResults) {
-        this.session = session;
+    public CassandraSearchTask(CassandraConnectionManager connectionManager, List<T> rows, long maxResults) {
+        this.connectionManager = connectionManager;
         this.rows = rows;
-        this.utils = new CassandraUtils<>();
+        this.utils = new CassandraUtils<>(connectionManager);
         this.maxResults = maxResults;
     }
 
     /**
      * @return
      */
-    private Session getSession() {
-        return session;
+    private CassandraConnectionManager getConnectionManager() {
+        return connectionManager;
     }
 
     /**
@@ -99,7 +99,8 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
             // create a task for each element or row in the list
             List<ForkJoinTask<List<T>>> taskList = new ArrayList<>();
             for (T row : rows) {
-                ForkJoinTask<List<T>> fjTask = new CassandraSearchTask<>(getSession(), Collections.singletonList(row), maxResults).fork();
+                ForkJoinTask<List<T>> fjTask = new CassandraSearchTask<>(getConnectionManager(),
+                        Collections.singletonList(row), maxResults).fork();
                 taskList.add(fjTask);
             }
             // wait for all to join
@@ -156,7 +157,7 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
             selectStmt.limit((int) maxResults);
         }
         logger.finer("Search: " + selectStmt);
-        ResultSet resultSet = getSession().execute(selectStmt);
+        ResultSet resultSet = getConnectionManager().getSession().execute(selectStmt);
         for (Row result : resultSet) {
             GenericDBTableRow ctr = new GenericDBTableRow(result.getString(CassandraConstants.DEFAULT_ROWKEY));
 

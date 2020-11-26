@@ -32,7 +32,7 @@ import java.util.*;
  */
 public class DyDaBoTestUtils {
 
-    public final List<BlackBoxFactory.Databases> dbToTest = Arrays.asList();
+    public final List<BlackBoxFactory.Databases> dbToTest = Arrays.asList(BlackBoxFactory.Databases.REDIS);
 
     /**
      * Random first names

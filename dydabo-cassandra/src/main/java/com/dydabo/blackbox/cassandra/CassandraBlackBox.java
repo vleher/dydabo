@@ -16,7 +16,6 @@
  */
 package com.dydabo.blackbox.cassandra;
 
-import com.datastax.driver.core.Session;
 import com.dydabo.blackbox.BlackBox;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
@@ -34,39 +33,43 @@ import java.util.List;
  */
 public class CassandraBlackBox<T extends BlackBoxable> extends AbstractBlackBoxImpl<T> implements BlackBox<T> {
 
-    CassandraUtils<T> utils = new CassandraUtils<>();
+    private CassandraConnectionManager connectionManager;
+
+    public CassandraBlackBox(CassandraConnectionManager connectionManager) {
+        this.connectionManager = connectionManager;
+    }
 
     @Override
     public boolean delete(List<T> rows) throws BlackBoxException {
         createTable(rows);
-        CassandraDeleteTask<T> deleteJob = new CassandraDeleteTask<>(getSession(), rows);
+        CassandraDeleteTask<T> deleteJob = new CassandraDeleteTask<>(getConnectionManager(), rows);
         return getForkJoinPool().invoke(deleteJob);
     }
 
     @Override
     public List<T> fetch(List<T> rows) throws BlackBoxException {
-        CassandraFetchTask<T> fetchTask = new CassandraFetchTask<T>(getSession(), rows, false, -1);
+        CassandraFetchTask<T> fetchTask = new CassandraFetchTask<T>(getConnectionManager(), rows, false, -1);
         return getForkJoinPool().invoke(fetchTask);
     }
 
     @Override
     public List<T> fetchByPartialKey(List<T> rows, long maxResults) throws BlackBoxException {
         // TODO: really inefficient full table scan
-        CassandraFetchTask<T> fetchTask = new CassandraFetchTask<T>(getSession(), rows, true, maxResults);
+        CassandraFetchTask<T> fetchTask = new CassandraFetchTask<T>(getConnectionManager(), rows, true, maxResults);
         return getForkJoinPool().invoke(fetchTask);
     }
 
     @Override
     public boolean insert(List<T> rows) throws BlackBoxException {
         createTable(rows);
-        CassandraInsertTask<T> insertJob = new CassandraInsertTask<>(getSession(), rows, true);
+        CassandraInsertTask<T> insertJob = new CassandraInsertTask<>(getConnectionManager(), rows, true);
         return getForkJoinPool().invoke(insertJob);
     }
 
     @Override
     public List<T> search(List<T> rows, long maxResults) throws BlackBoxException {
         createTable(rows);
-        CassandraSearchTask<T> searchTask = new CassandraSearchTask<>(getSession(), rows, maxResults);
+        CassandraSearchTask<T> searchTask = new CassandraSearchTask<>(getConnectionManager(), rows, maxResults);
         return getForkJoinPool().invoke(searchTask);
     }
 
@@ -74,7 +77,7 @@ public class CassandraBlackBox<T extends BlackBoxable> extends AbstractBlackBoxI
     public List<T> search(T startRow, T endRow, long maxResults) throws BlackBoxException {
         createTable(Collections.singletonList(startRow));
         if (startRow.getClass().equals(endRow.getClass())) {
-            CassandraRangeSearchTask<T> searchTask = new CassandraRangeSearchTask<>(getSession(), startRow, endRow, maxResults);
+            CassandraRangeSearchTask<T> searchTask = new CassandraRangeSearchTask<>(getConnectionManager(), startRow, endRow, maxResults);
             return getForkJoinPool().invoke(searchTask);
         }
         return Collections.emptyList();
@@ -83,7 +86,7 @@ public class CassandraBlackBox<T extends BlackBoxable> extends AbstractBlackBoxI
     @Override
     public boolean update(List<T> rows) throws BlackBoxException {
         createTable(rows);
-        CassandraInsertTask<T> insertJob = new CassandraInsertTask<>(getSession(), rows, false);
+        CassandraInsertTask<T> insertJob = new CassandraInsertTask<>(getConnectionManager(), rows, false);
         return getForkJoinPool().invoke(insertJob);
     }
 
@@ -93,14 +96,14 @@ public class CassandraBlackBox<T extends BlackBoxable> extends AbstractBlackBoxI
      */
     private void createTable(List<T> rows) {
         for (T row : rows) {
-            new CassandraUtils<T>().createTable(row);
+            new CassandraUtils<T>(connectionManager).createTable(row);
         }
     }
 
     /**
      * @return
      */
-    private Session getSession() {
-        return new CassandraConnectionManager().getSession();
+    private CassandraConnectionManager getConnectionManager() {
+        return connectionManager;
     }
 }

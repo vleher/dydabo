@@ -16,11 +16,10 @@
  */
 package com.dydabo.blackbox.cassandra.tasks;
 
-import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.Delete;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.cassandra.db.CassandraConnectionManager;
 import com.dydabo.blackbox.cassandra.utils.CassandraConstants;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
 
@@ -29,7 +28,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -42,30 +40,25 @@ public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<B
 
     private static final Logger logger = Logger.getLogger(CassandraDeleteTask.class.getName());
 
-    private final Session session;
+    private final CassandraConnectionManager connectionManager;
     private final List<T> rows;
     private final CassandraUtils<T> utils;
 
     /**
      * Constructor
      *
-     * @param session a session instance for db connection
-     * @param rows    list of rows to be deleted
+     * @param connectionManager a connectionManager instance for db connection
+     * @param rows              list of rows to be deleted
      */
-    public CassandraDeleteTask(Session session, List<T> rows) {
-        this.session = session;
+    public CassandraDeleteTask(CassandraConnectionManager connectionManager, List<T> rows) {
+        this.connectionManager = connectionManager;
         this.rows = rows;
-        this.utils = new CassandraUtils<>();
+        this.utils = new CassandraUtils<>(connectionManager);
     }
 
     @Override
     protected Boolean compute() {
-        try {
-            return delete(rows);
-        } catch (BlackBoxException ex) {
-            logger.log(Level.SEVERE, null, ex);
-        }
-        return false;
+        return delete(rows);
     }
 
     /**
@@ -73,12 +66,11 @@ public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<B
      *
      * @param rows rows to be deleted
      * @return true if all operations were successful
-     * @throws BlackBoxException
      */
-    private Boolean delete(List<T> rows) throws BlackBoxException {
+    private Boolean delete(List<T> rows) {
         // one row is the recursion base line
         if (rows.size() < 2) {
-            Boolean successFlag = true;
+            boolean successFlag = true;
             for (T t : rows) {
                 successFlag = successFlag && delete(t);
             }
@@ -89,7 +81,7 @@ public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<B
         // create a task for each element or row in the list
         List<ForkJoinTask<Boolean>> taskList = new ArrayList<>();
         for (T row : rows) {
-            ForkJoinTask<Boolean> fjTask = new CassandraDeleteTask<>(getSession(), Collections.singletonList(row)).fork();
+            ForkJoinTask<Boolean> fjTask = new CassandraDeleteTask<>(getConnectionManager(), Collections.singletonList(row)).fork();
             taskList.add(fjTask);
         }
         // wait for all to join
@@ -105,22 +97,22 @@ public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<B
      *
      * @param row the row to be deleted
      * @return true if the delete was successful
-     * @throws BlackBoxException
      */
     private Boolean delete(T row) {
+        logger.info("deleting " + row);
         // Create a delete statement with the row key
         Delete delStmt = QueryBuilder.delete().from(CassandraConstants.KEYSPACE, utils.getTableName(row));
         delStmt.where(QueryBuilder.eq(CassandraConstants.DEFAULT_ROWKEY, row.getBBRowKey()));
 
-        getSession().execute(delStmt);
+        getConnectionManager().getSession().execute(delStmt);
 
         return true;
     }
 
     /**
-     * @return
+     * @return connection manager
      */
-    private Session getSession() {
-        return session;
+    private CassandraConnectionManager getConnectionManager() {
+        return connectionManager;
     }
 }

@@ -19,11 +19,11 @@ package com.dydabo.blackbox.cassandra.tasks;
 import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
-import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.cassandra.db.CassandraConnectionManager;
 import com.dydabo.blackbox.cassandra.utils.CassandraConstants;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
@@ -50,29 +50,29 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
     private final boolean isPartialKeys;
     private final long maxResults;
     private final List<T> rowKeys;
-    private final Session session;
+    private final CassandraConnectionManager connectionManager;
     private final CassandraUtils<T> utils;
 
 
     /**
-     * @param session
+     * @param connectionManager
      * @param rows
      * @param isPartialKeys
      */
-    private CassandraFetchTask(Session session, List<T> rows, boolean isPartialKeys) {
-        this(session, rows, isPartialKeys, -1);
+    private CassandraFetchTask(CassandraConnectionManager connectionManager, List<T> rows, boolean isPartialKeys) {
+        this(connectionManager, rows, isPartialKeys, -1);
     }
 
     /**
-     * @param session
+     * @param connectionManager
      * @param rows
      * @param isPartialKeys
      * @param maxResults
      */
-    public CassandraFetchTask(Session session, List<T> rows, boolean isPartialKeys, long maxResults) {
-        this.session = session;
+    public CassandraFetchTask(CassandraConnectionManager connectionManager, List<T> rows, boolean isPartialKeys, long maxResults) {
+        this.connectionManager = connectionManager;
         this.rowKeys = rows;
-        this.utils = new CassandraUtils<>();
+        this.utils = new CassandraUtils<>(connectionManager);
         this.isPartialKeys = isPartialKeys;
         this.maxResults = maxResults;
     }
@@ -96,7 +96,7 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
         // create a task for each element or row in the list
         List<ForkJoinTask<List<T>>> taskList = new ArrayList<>();
         for (T row : rows) {
-            ForkJoinTask<List<T>> fjTask = new CassandraFetchTask<T>(getSession(), Collections.singletonList(row), isPartialKeys,
+            ForkJoinTask<List<T>> fjTask = new CassandraFetchTask<T>(getConnectionManager(), Collections.singletonList(row), isPartialKeys,
                     maxResults).fork();
             taskList.add(fjTask);
         }
@@ -121,7 +121,7 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
             queryStmt.where(QueryBuilder.eq(CassandraConstants.DEFAULT_ROWKEY, row));
         }
 
-        ResultSet resultSet = getSession().execute(queryStmt);
+        ResultSet resultSet = getConnectionManager().getSession().execute(queryStmt);
         List<T> results = new ArrayList<>();
         for (Row result : resultSet) {
             final String currRowKey = result.getString(CassandraConstants.DEFAULT_ROWKEY);
@@ -163,8 +163,8 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
     /**
      * @return
      */
-    private Session getSession() {
-        return session;
+    private CassandraConnectionManager getConnectionManager() {
+        return connectionManager;
     }
 
 }

@@ -40,6 +40,11 @@ import java.util.logging.Logger;
 public class CassandraUtils<T extends BlackBoxable> implements DBUtils<T> {
 
     private final Logger logger = Logger.getLogger(CassandraUtils.class.getName());
+    private CassandraConnectionManager connectionManager;
+
+    public CassandraUtils(CassandraConnectionManager connectionManager) {
+        this.connectionManager = connectionManager;
+    }
 
     private String getDatabaseType(Type type) {
         String dbType = "text";
@@ -67,7 +72,7 @@ public class CassandraUtils<T extends BlackBoxable> implements DBUtils<T> {
      * @return
      */
     public String getTableName(T row) {
-        return row.getClass().toString().substring(6).replaceAll("\\.", "");
+        return row.getClass().getSimpleName();
     }
 
     /**
@@ -75,9 +80,7 @@ public class CassandraUtils<T extends BlackBoxable> implements DBUtils<T> {
      * @return
      */
     public boolean createTable(T row) {
-
-        final CassandraConnectionManager cassandraConnectionManager = new CassandraConnectionManager();
-        try (Cluster cluster = cassandraConnectionManager.getCluster()) {
+        try (Cluster cluster = connectionManager.getCluster()) {
             // create table
             TableMetadata table = cluster.getMetadata().getKeyspace(CassandraConstants.KEYSPACE)
                     .getTable(getTableName(row));
@@ -96,7 +99,7 @@ public class CassandraUtils<T extends BlackBoxable> implements DBUtils<T> {
                 }
 
                 query.append(");");
-                try (Session session = cassandraConnectionManager.getSession()) {
+                try (Session session = connectionManager.getSession()) {
                     logger.finer("Create Table:" + query);
                     session.execute(query.toString());
                 }
@@ -112,9 +115,7 @@ public class CassandraUtils<T extends BlackBoxable> implements DBUtils<T> {
      */
     public boolean createIndex(String columnName, T row) {
         String columnIndexName = columnName + "idx";
-
-        final CassandraConnectionManager cassandraConnectionManager = new CassandraConnectionManager();
-        try (Cluster cluster = cassandraConnectionManager.getCluster()) {
+        try (Cluster cluster = connectionManager.getCluster()) {
             TableMetadata table = cluster.getMetadata().getKeyspace(CassandraConstants.KEYSPACE)
                     .getTable(getTableName(row));
 
@@ -129,7 +130,7 @@ public class CassandraUtils<T extends BlackBoxable> implements DBUtils<T> {
                     "with OPTIONS = {'mode':'CONTAINS'};";
             logger.finer("Query:" + indexQuery);
             // create the index
-            try (Session session = cassandraConnectionManager.getSession()) {
+            try (Session session = connectionManager.getSession()) {
                 session.execute(indexQuery);
             }
 
