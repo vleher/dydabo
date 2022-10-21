@@ -18,10 +18,22 @@
 package com.dydabo.blackbox.redis.utils;
 
 import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.common.utils.DBUtils;
+import com.dydabo.blackbox.common.utils.DyDaBoDBUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * @author viswadas leher
  */
-public class RedisUtils<T extends BlackBoxable> implements DBUtils<T> {
+public class RedisUtils<T extends BlackBoxable> implements DyDaBoDBUtils<T> {
+    private final Logger logger = LogManager.getLogger();
+
+    public String getRowKey(T row) {
+        String key = row.getClass().getSimpleName() + ":" + row.getBBRowKey();
+        return key.replaceAll("\\.\\*", "*");
+    }
+
+    public String getRowKey(T row, String rowKey) {
+        return row.getClass().getSimpleName() + ":" + rowKey;
+    }
 }

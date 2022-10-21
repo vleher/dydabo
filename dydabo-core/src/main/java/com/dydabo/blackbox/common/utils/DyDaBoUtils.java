@@ -19,11 +19,12 @@ package com.dydabo.blackbox.common.utils;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 
 /**
  * Library specific utility methods
@@ -32,149 +33,151 @@ import java.util.logging.Logger;
  */
 public class DyDaBoUtils {
 
-    /**
-     * Empty array string representation
-     */
-    public static final String EMPTY_ARRAY = "[]";
+  /** Empty array string representation */
+  public static final String EMPTY_ARRAY = "[]";
 
-    /**
-     * Empty Map string representation
-     */
-    public static final String EMPTY_MAP = "{}";
-    private static final Logger logger = Logger.getLogger(DyDaBoUtils.class.getName());
+  /** Empty Map string representation */
+  public static final String EMPTY_MAP = "{}";
 
-    /**
-     * The prefix to a regular expression.
-     *
-     * @param rowKey the row key that may or may not be a regex
-     * @return the prefix to string
-     */
-    public static String getStringPrefix(String rowKey) {
-        String prefix = "";
-        char[] charArray = rowKey.toCharArray();
-        // TODO : account for '^'
-        for (char c : charArray) {
-            if (Character.isAlphabetic(c) || Character.isDigit(c)) {
-                prefix += c;
-            } else {
-                break;
-            }
-        }
-        return prefix;
+  private final Logger logger = LogManager.getLogger();
+
+  /**
+   * The prefix to a regular expression.
+   *
+   * @param rowKey the row key that may or may not be a regex
+   * @return the prefix to string
+   */
+  public static String getStringPrefix(String rowKey) {
+    String prefix = "";
+    char[] charArray = rowKey.toCharArray();
+    // TODO : account for '^'
+    for (char c : charArray) {
+      if (Character.isAlphabetic(c) || Character.isDigit(c)) {
+        prefix += c;
+      } else {
+        break;
+      }
+    }
+    return prefix;
+  }
+
+  /**
+   * Standard method for checking for null or empty string.
+   *
+   * @param str
+   * @return
+   */
+  public static boolean isBlankOrNull(String... str) {
+    if (str == null) {
+      return true;
     }
 
-    /**
-     * Standard method for checking for null or empty string.
-     *
-     * @param str
-     * @return
-     */
-    public static boolean isBlankOrNull(String... str) {
-        if (str == null) {
-            return true;
-        }
+    for (String s : str) {
+      if (s == null || s.trim().isEmpty()) {
+        return true;
+      }
+    }
+    return false;
+  }
 
-        for (String s : str) {
-            if (s == null || s.trim().isEmpty()) {
-                return true;
-            }
-        }
-        return false;
+  public static boolean isNotBlankOrNull(String... s) {
+    return !isBlankOrNull(s);
+  }
+
+  /**
+   * Customized check for regex.
+   *
+   * @param regexValue
+   * @return
+   */
+  public static boolean isValidRegex(String regexValue) {
+
+    if (isBlankOrNull(regexValue)) {
+      return false;
     }
 
-    public static boolean isNotBlankOrNull(String... s) {
-        return !isBlankOrNull(s);
+    return !EMPTY_ARRAY.equals(regexValue) && !EMPTY_MAP.equals(regexValue);
+  }
+
+  public static boolean isARegex(String str) {
+    if (isBlankOrNull(str)) {
+      return false;
     }
 
-    /**
-     * Customized check for regex.
-     *
-     * @param regexValue
-     * @return
-     */
-    public static boolean isValidRegex(String regexValue) {
+    return str.contains(".") || str.contains("^");
+  }
 
-        if (isBlankOrNull(regexValue)) {
-            return false;
-        }
-
-        return !EMPTY_ARRAY.equals(regexValue) && !EMPTY_MAP.equals(regexValue);
+  /**
+   * @param jsonString
+   * @return
+   */
+  public static JsonElement parseJsonString(String jsonString) {
+    try {
+      return JsonParser.parseString(jsonString);
+    } catch (JsonSyntaxException | NullPointerException ex) {
+      // ignore for now
     }
 
-    public static boolean isARegex(String str) {
-        if (isBlankOrNull(str)) {
-            return false;
-        }
+    return null;
+  }
 
-        if (str.contains(".") || str.contains("^")) {
-            return true;
-        }
-
-        return false;
+  /**
+   * @param obj
+   * @return the boolean
+   */
+  public static boolean isPrimitiveOrPrimitiveWrapperOrString(Object obj) {
+    if (obj == null) {
+      return false;
     }
+    Class<?> type = obj.getClass();
+    return (type.isPrimitive() && type != void.class)
+        || type == Double.class
+        || type == Float.class
+        || type == Long.class
+        || type == Integer.class
+        || type == Short.class
+        || type == Character.class
+        || type == Byte.class
+        || type == Boolean.class
+        || type == String.class;
+  }
 
-    /**
-     * @param jsonString
-     * @return
-     */
-    public static JsonElement parseJsonString(String jsonString) {
-        try {
-            return new JsonParser().parse(jsonString);
-        } catch (JsonSyntaxException | NullPointerException ex) {
-            // ignore for now
-        }
-
-        return null;
+  /**
+   * @param obj
+   * @return
+   */
+  public static boolean isNumber(Object obj) {
+    if (obj == null) {
+      return false;
     }
+    Class<?> type = obj.getClass();
+    return type == Double.class
+        || type == Float.class
+        || type == Long.class
+        || type == Integer.class
+        || type == Short.class;
+  }
 
-    /**
-     * @param obj
-     * @return the boolean
-     */
-    public static boolean isPrimitiveOrPrimitiveWrapperOrString(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        Class<?> type = obj.getClass();
-        return (type.isPrimitive() && type != void.class) || type == Double.class || type == Float.class ||
-                type == Long.class || type == Integer.class || type == Short.class || type == Character.class ||
-                type == Byte.class || type == Boolean.class || type == String.class;
+  /**
+   * @param type
+   * @return
+   */
+  public static Map<String, Field> getFieldFromType(Class<?> type) {
+    Map<String, Field> fields = new HashMap<>();
+    for (Class<?> c = type; c != Object.class; c = c.getSuperclass()) {
+      for (Field declaredField : c.getDeclaredFields()) {
+        fields.put(declaredField.getName(), declaredField);
+      }
     }
+    return fields;
+  }
 
-    /**
-     * @param obj
-     * @return
-     */
-    public static boolean isNumber(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        Class<?> type = obj.getClass();
-        return type == Double.class || type == Float.class || type == Long.class || type == Integer.class || type == Short.class;
-    }
-
-    /**
-     * @param type
-     * @return
-     */
-    public static Map<String, Field> getFieldFromType(Class<?> type) {
-        Map<String, Field> fields = new HashMap<>();
-        for (Class<?> c = type; c != Object.class; c = c.getSuperclass()) {
-            for (Field declaredField : c.getDeclaredFields()) {
-                fields.put(declaredField.getName(), declaredField);
-            }
-        }
-
-        return fields;
-    }
-
-    /**
-     * @param type
-     * @param fieldName
-     * @return
-     */
-    public static Field getFieldFromType(Class<?> type, String fieldName) {
-        return getFieldFromType(type).get(fieldName);
-    }
-
+  /**
+   * @param type
+   * @param fieldName
+   * @return
+   */
+  public static Field getFieldFromType(Class<?> type, String fieldName) {
+    return getFieldFromType(type).get(fieldName);
+  }
 }

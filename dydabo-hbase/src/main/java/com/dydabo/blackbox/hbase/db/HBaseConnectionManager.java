@@ -16,75 +16,56 @@
  */
 package com.dydabo.blackbox.hbase.db;
 
+import java.io.IOException;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
-
-import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * @author viswadas leher
  */
 public class HBaseConnectionManager {
 
-    private static final Object lockObject = new Object();
+	private static final int MIN_NUM_CONNECTION = 15;
+	private static final Queue<Connection> connectionPool = new ConcurrentLinkedQueue<>();
+	private final Logger logger = LogManager.getLogger();
+	private final Configuration configuration;
 
-    private static final Configuration defaultConfig = HBaseConfiguration.create();
-    private static final Map<Integer, Connection> connectionPool = new ConcurrentHashMap<>();
-    private static final Logger logger = Logger.getLogger(HBaseConnectionManager.class.getName());
+	public HBaseConnectionManager(final Configuration configuration) {
+		this.configuration = configuration;
+	}
 
-    public HBaseConnectionManager() {
-    }
+	private void populatePool() {
+		final AtomicInteger tries = new AtomicInteger(0);
+		while ((connectionPool.size() < (2 * MIN_NUM_CONNECTION))
+				&& (tries.getAndIncrement() < (2 * MIN_NUM_CONNECTION))) {
+			try {
+				connectionPool.add(ConnectionFactory.createConnection(configuration));
+			} catch (final Exception e) {
+				logger.catching(e);
+			}
+		}
+		logger.debug("Connection pool populated: {}", connectionPool.size());
+	}
 
-    /**
-     * @return
-     * @throws IOException
-     */
-    public Connection getConnection() throws IOException {
-        return getConnection(defaultConfig);
-    }
+	public Connection getConnection() throws IOException {
+		Connection connection = connectionPool.poll();
+		while ((connection != null) && connection.isClosed()) {
+			connection = connectionPool.poll();
+		}
+		if (connectionPool.size() < MIN_NUM_CONNECTION) {
+			new Thread(this::populatePool).start();
+		}
+		if ((connection != null) && !connection.isClosed()) {
+			return connection;
+		}
 
-    /**
-     * @param config
-     * @return
-     * @throws IOException
-     */
-    public Connection getConnection(Configuration config) throws IOException {
-        Connection thisConnection = connectionPool.get(config.hashCode());
-        if (thisConnection == null || thisConnection.isAborted() || thisConnection.isClosed()) {
-            synchronized (lockObject) {
-                thisConnection = getConnectionFromHbase(config);
-            }
-        }
-        if (thisConnection != null) {
-            connectionPool.put(config.hashCode(), thisConnection);
-        }
-        return thisConnection;
-    }
-
-    private static Connection getConnectionFromHbase(Configuration config) throws IOException {
-        return ConnectionFactory.createConnection(config);
-    }
-
-    /**
-     * Close all open connections. This can be called by the client to do a graceful shutdown.
-     */
-    public synchronized void closeAllConnections() {
-
-        connectionPool.forEach((integer, connection) -> {
-            if (connection != null) {
-                try {
-                    connection.close();
-                } catch (IOException e) {
-                    logger.log(Level.SEVERE, e.getMessage(), e);
-                }
-            }
-        });
-
-    }
+		return ConnectionFactory.createConnection(configuration);
+	}
 }

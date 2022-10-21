@@ -18,60 +18,66 @@
 package com.dydabo.blackbox.redis.tasks;
 
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.common.MaxResultList;
 import com.dydabo.blackbox.common.utils.DyDaBoUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.dydabo.blackbox.redis.db.RedisConnectionManager;
 import com.dydabo.blackbox.redis.utils.RedisUtils;
 import com.google.gson.Gson;
-import redis.clients.jedis.Jedis;
+import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.api.sync.RedisCommands;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
-import java.util.*;
-import java.util.concurrent.RecursiveTask;
-import java.util.logging.Logger;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author viswadas leher
  */
-public class RedisRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
+public class RedisRangeSearchTask<T extends BlackBoxable> extends RedisBaseTask<List<T>, T> {
 
+    private final Logger logger = LogManager.getLogger();
     private final T startRow;
     private final T endRow;
-    private final long maxResults;
-    private final RedisUtils utils;
-    private transient Logger logger = Logger.getLogger(RedisRangeSearchTask.class.getName());
+    private final int maxResults;
+    private final RedisUtils<T> utils;
+    private final boolean isFirst;
 
-    public RedisRangeSearchTask(T startRow, T endRow, long maxResults) {
+    public RedisRangeSearchTask(RedisConnectionManager connectionManager, T startRow, T endRow, int maxResults, boolean isFirst) {
+        setConnectionManager(connectionManager);
         this.startRow = startRow;
         this.endRow = endRow;
         this.maxResults = maxResults;
+        this.isFirst = isFirst;
         this.utils = new RedisUtils<>();
     }
 
     @Override
     protected List<T> compute() {
-        return search(startRow, endRow, maxResults);
+        return search(startRow, endRow, maxResults, isFirst);
     }
 
-    private List<T> search(T startRow, T endRow, long maxResults) {
-        List<T> results = new ArrayList<>();
+    private List<T> search(T startRow, T endRow, int maxResults, boolean isFirst) {
+        List<T> results = new MaxResultList<>(maxResults);
         GenericDBTableRow startTableRow = utils.convertRowToTableRow(startRow);
         GenericDBTableRow endTableRow = utils.convertRowToTableRow(endRow);
 
-        final String type = startRow.getClass().getTypeName() + ":";
-
         // An inefficient search that scans all rows
-        try (Jedis connection = RedisConnectionManager.getConnection("localhost")) {
-            Set<String> allKeys = connection.keys(type + "*");
+        try (StatefulRedisConnection<String, String> connection = getConnectionManager().getConnection()) {
+            RedisCommands<String, String> redisCommands = connection.sync();
+            List<String> allKeys = redisCommands.keys(getRedisUtils().getRowKey(startRow, "*"));
 
             for (String key : allKeys) {
-                String currentRow = connection.get(key);
+                String currentRow = redisCommands.get(key);
                 T rowObject = new Gson().fromJson(currentRow, (Type) startRow.getClass());
 
                 if (filter(rowObject, startTableRow, endTableRow)) {
                     results.add(rowObject);
-                    if (maxResults > 0 && results.size() >= maxResults) {
+                    if (isFirst && maxResults > 0 && results.size() >= maxResults) {
                         break;
                     }
                 }
@@ -90,13 +96,13 @@ public class RedisRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
                 String columnName = columnEntry.getKey();
                 GenericDBTableRow.Column columnValue = columnEntry.getValue();
 
-                GenericDBTableRow.Column startColValue = startTableRow.getColumnFamily(colFamily.getFamilyName()).getColumn(columnName);
+                GenericDBTableRow.Column startColValue =
+                        startTableRow.getColumnFamily(colFamily.getFamilyName()).getColumn(columnName);
                 GenericDBTableRow.Column endColValue = endTableRow.getColumnFamily(colFamily.getFamilyName()).getColumn(columnName);
 
                 if (!compareInRange(startColValue, columnValue, endColValue)) {
                     return false;
                 }
-
             }
         }
 
@@ -104,7 +110,8 @@ public class RedisRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
     }
 
     // TODO : refactor this
-    private boolean compareInRange(GenericDBTableRow.Column startColValue, GenericDBTableRow.Column columnValue, GenericDBTableRow.Column endColValue) {
+    private boolean compareInRange(GenericDBTableRow.Column startColValue, GenericDBTableRow.Column columnValue,
+                                   GenericDBTableRow.Column endColValue) {
         Object s1 = null;
         Object s2 = null;
         Object s3 = null;
@@ -120,23 +127,23 @@ public class RedisRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
         if (endColValue != null && DyDaBoUtils.isNotBlankOrNull(endColValue.getColumnValueAsString())) {
             s3 = endColValue.getColumnValue();
         }
-        //logger.info("Comparing :" + s1 + " : " + s2 + " : " + s3);
         boolean flag = false;
 
         if (s1 == null && s3 == null) {
             return true;
         }
 
-        if (Objects.equals(DyDaBoUtils.EMPTY_ARRAY, startColValue.getColumnValueAsString()) && Objects.equals(DyDaBoUtils.EMPTY_ARRAY, endColValue.getColumnValueAsString())) {
+        if (Objects.equals(DyDaBoUtils.EMPTY_ARRAY, Objects.requireNonNull(startColValue).getColumnValueAsString()) && Objects.equals(DyDaBoUtils.EMPTY_ARRAY, Objects.requireNonNull(endColValue).getColumnValueAsString())) {
             flag = true;
         }
 
-        if (Objects.equals(DyDaBoUtils.EMPTY_MAP, startColValue.getColumnValueAsString()) && Objects.equals(DyDaBoUtils.EMPTY_MAP, endColValue.getColumnValueAsString())) {
+        if (Objects.equals(DyDaBoUtils.EMPTY_MAP, startColValue.getColumnValueAsString()) && Objects.equals(DyDaBoUtils.EMPTY_MAP
+                , Objects.requireNonNull(endColValue).getColumnValueAsString())) {
             flag = true;
         }
 
         if (flag) {
-            return flag;
+            return true;
         }
 
         flag = compareNumbersAndStrings(s1, s2) && compareNumbersAndStrings(s2, s3);
@@ -159,7 +166,6 @@ public class RedisRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
                 }
             }
         }
-        //logger.info("comparing "+first+" : "+second+" :"+flag);
         return flag;
     }
 

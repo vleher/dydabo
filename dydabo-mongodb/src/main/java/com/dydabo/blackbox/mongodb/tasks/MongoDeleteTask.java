@@ -17,45 +17,41 @@
 package com.dydabo.blackbox.mongodb.tasks;
 
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.common.utils.DyDaBoDBUtils;
 import com.dydabo.blackbox.mongodb.utils.MongoUtils;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.result.DeleteResult;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bson.Document;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.RecursiveTask;
-import java.util.logging.Logger;
 
 /**
  * @param <T>
  * @author viswadas leher
  */
-public class MongoDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boolean> {
-
-    private static final Logger logger = Logger.getLogger(MongoDeleteTask.class.getName());
-
-    private final MongoCollection<Document> collection;
+public class MongoDeleteTask<T extends BlackBoxable> extends MongoBaseTask<T, Boolean> {
+    private final Logger logger = LogManager.getLogger();
     private final List<T> rows;
-    private final MongoUtils<T> utils;
 
     /**
      * @param collection
      * @param rows
      */
     public MongoDeleteTask(MongoCollection<Document> collection, List<T> rows) {
-        this.collection = collection;
+        super(collection);
         this.rows = rows;
-        this.utils = new MongoUtils<>();
     }
 
     @Override
     protected Boolean compute() {
         // Stop case
-        if (rows.size() < 2) {
+        if (rows.size() < DyDaBoDBUtils.MIN_PARALLEL_THRESHOLD) {
             boolean successFlag = Boolean.TRUE;
             for (T row : rows) {
                 successFlag = successFlag && delete(row);
@@ -65,15 +61,11 @@ public class MongoDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
 
         List<ForkJoinTask<Boolean>> taskList = new ArrayList<>();
         for (T row : rows) {
-            ForkJoinTask<Boolean> subTask = new MongoDeleteTask<>(collection, Collections.singletonList(row)).fork();
+            ForkJoinTask<Boolean> subTask = new MongoDeleteTask<>(getCollection(), Collections.singletonList(row));
             taskList.add(subTask);
         }
 
-        boolean successFlag = Boolean.TRUE;
-        for (ForkJoinTask<Boolean> fjTask : taskList) {
-            successFlag = fjTask.join() && successFlag;
-        }
-        return successFlag;
+        return ForkJoinTask.invokeAll(taskList).stream().map(ForkJoinTask::join).reduce(Boolean::logicalAnd).orElse(false);
     }
 
     /**
@@ -82,10 +74,9 @@ public class MongoDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
      */
     private Boolean delete(T row) {
 
-        Document doc = utils.parseRowToDocument(row);
-        DeleteResult delResult = collection.deleteOne(Filters.eq(MongoUtils.PRIMARYKEY, doc.get(MongoUtils.PRIMARYKEY)));
+        Document doc = getUtils().parseRowToDocument(row);
+        DeleteResult delResult = getCollection().deleteOne(Filters.eq(MongoUtils.PRIMARYKEY, doc.get(MongoUtils.PRIMARYKEY)));
 
         return delResult.wasAcknowledged();
     }
-
 }

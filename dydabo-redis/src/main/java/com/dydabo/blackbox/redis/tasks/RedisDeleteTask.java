@@ -18,26 +18,28 @@
 package com.dydabo.blackbox.redis.tasks;
 
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.common.utils.DyDaBoDBUtils;
 import com.dydabo.blackbox.redis.db.RedisConnectionManager;
-import redis.clients.jedis.Jedis;
+import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.api.sync.RedisCommands;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.RecursiveTask;
-import java.util.logging.Logger;
 
 /**
  * @author viswadas leher
  */
-public class RedisDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boolean> {
+public class RedisDeleteTask<T extends BlackBoxable> extends RedisBaseTask<Boolean, T> {
 
-    private static final Logger logger = Logger.getLogger(RedisDeleteTask.class.getName());
+    private final Logger logger = LogManager.getLogger();
+
     private final List<T> rowsToDelete;
 
-
-    public RedisDeleteTask(List<T> rowsToDelete) {
+    public RedisDeleteTask(RedisConnectionManager connectionManager, List<T> rowsToDelete) {
+        setConnectionManager(connectionManager);
         this.rowsToDelete = rowsToDelete;
     }
 
@@ -48,32 +50,29 @@ public class RedisDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boole
 
     private Boolean delete(List<T> rows) {
         Boolean successFlag = Boolean.TRUE;
-        if (rows.size() < 2) {
-            for (T t : rows) {
-                successFlag = successFlag && delete(t);
+        if (rows.size() < DyDaBoDBUtils.MIN_PARALLEL_THRESHOLD) {
+            try (StatefulRedisConnection<String, String> connection = getConnectionManager().getConnection()) {
+                RedisCommands<String, String> redisCommands = connection.sync();
+                for (T t : rows) {
+                    String rowKey = getRedisUtils().getRowKey(t);
+                    if (rowKey.contains("*")) {
+                        List<String> keyList = redisCommands.keys(rowKey);
+                        keyList.forEach(redisCommands::del);
+                    } else {
+                        Long r = redisCommands.del(rowKey);
+                        logger.debug("Deleting {} : {}", t.getBBRowKey(), r);
+                    }
+                }
             }
             return successFlag;
         }
 
-        // create a task for each element or row in the list
         List<ForkJoinTask<Boolean>> taskList = new ArrayList<>();
-        for (T row : rows) {
-            ForkJoinTask<Boolean> fjTask = new RedisDeleteTask<>(Collections.singletonList(row)).fork();
-            taskList.add(fjTask);
-        }
-        // wait for all to join
-        for (ForkJoinTask<Boolean> forkJoinTask : taskList) {
-            successFlag = successFlag && forkJoinTask.join();
-        }
+        ForkJoinTask<Boolean> fjTaskOne = new RedisDeleteTask<>(getConnectionManager(), rows.subList(0, rows.size() / 2));
+        taskList.add(fjTaskOne);
+        ForkJoinTask<Boolean> fjTaskTwo = new RedisDeleteTask<>(getConnectionManager(), rows.subList(rows.size() / 2, rows.size()));
+        taskList.add(fjTaskTwo);
 
-        return successFlag;
-    }
-
-    private Boolean delete(T row) {
-        // TODO : handle return value
-        try (Jedis connection = RedisConnectionManager.getConnection("localhost")) {
-            Long result = connection.del(row.getBBRowKey());
-        }
-        return true;
+        return invokeAll(taskList).stream().map(ForkJoinTask::join).reduce(Boolean::logicalAnd).orElse(false);
     }
 }

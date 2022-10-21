@@ -1,5 +1,6 @@
 /*
- * Copyright 2017 viswadas leher <vleher@gmail.com>.
+
+* Copyright 2017 viswadas leher <vleher@gmail.com>.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,105 +18,106 @@
 
 package com.dydabo.blackbox.cassandra;
 
-import com.dydabo.blackbox.BlackBox;
-import com.dydabo.blackbox.BlackBoxFactory;
-import com.dydabo.blackbox.cassandra.db.CassandraConnectionManager;
-import com.dydabo.blackbox.usecase.company.SimpleUseCase;
+import java.io.IOException;
+
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
+import com.dydabo.blackbox.cassandra.db.CassandraConnectionManager;
+import com.dydabo.test.blackbox.BlackBoxFactory;
+import com.dydabo.test.blackbox.usecase.company.SimpleUseCase;
 
 /**
  * @author viswadas leher
  */
 public class CassandraTest extends SimpleUseCase {
 
-    protected BlackBox instance;
+	private CassandraConnectionManager cassandraConnectionManager;
 
-    /**
-     * @throws IOException
-     */
-    public CassandraTest() throws IOException {
-        super();
-        if (utils.dbToTest.contains(BlackBoxFactory.Databases.CASSANDRA)) {
-            final CassandraConnectionManager cassandraConnectionManager = new CassandraConnectionManager();
-            cassandraConnectionManager.setAddress("127.0.0.1");
-            instance = new CassandraBlackBox(cassandraConnectionManager);
-        }
-    }
+	/**
+	 * @throws IOException
+	 */
+	public CassandraTest() throws IOException {
+		if (utils.dbToTest.contains(BlackBoxFactory.Databases.CASSANDRA)) {
+			cassandraConnectionManager = new CassandraConnectionManager("localhost", 9042);
 
-    @Test
-    public void testInsert() {
-        int testSize = 10;
+		}
+	}
 
-        if (instance != null) {
-            insertionTest(testSize, instance);
-        }
-    }
+	@Test
+	public void testInsert() {
+		final int testSize = 10;
 
-    @Test
-    public void testUpdate() {
-        int testSize = 10;
+		if (cassandraConnectionManager != null) {
+			insertionTest(testSize, new CassandraBlackBox<>(cassandraConnectionManager));
+		}
+	}
 
-        if (instance != null) {
-            updateTest(testSize, instance);
-        }
-    }
+	@Test
+	public void testUpdate() {
+		final int testSize = 10;
 
-    @Test
-    public void testDelete() {
-        int testSize = 10;
-        if (instance != null) {
-            deleteTest(testSize, instance);
-        }
-    }
+		if (cassandraConnectionManager != null) {
+			updateTest(testSize, new CassandraBlackBox<>(cassandraConnectionManager));
+		}
+	}
 
-    @Test
-    public void testFetchByPartialKey() {
-        int testSize = 2;
-        if (instance != null) {
-            fetchPartialKey(testSize, instance);
-        }
-    }
+	@Test
+	public void testDelete() {
+		final int testSize = 10;
+		if (cassandraConnectionManager != null) {
+			deleteTest(testSize, new CassandraBlackBox<>(cassandraConnectionManager));
+		}
+	}
 
-    @Test
-    public void testSearchByName() {
-        int testSize = 5;
-        if (instance != null) {
-            searchTestByName(testSize, instance);
-        }
-    }
+	@Test
+	public void testFetchByPartialKey() {
+		final int testSize = 2;
+		if (cassandraConnectionManager != null) {
+			fetchPartialKey(testSize, new CassandraBlackBox<>(cassandraConnectionManager));
+		}
+	}
 
-    @Test
-    public void testSearchMultipleTypes() {
-        int testSize = 2;
-        if (instance != null) {
-            searchMultipleTypes(testSize, instance);
-        }
-    }
+	@Test
+	public void testSearchByName() {
+		final int testSize = 5;
+		if (cassandraConnectionManager != null) {
+			searchTestByName(testSize, new CassandraBlackBox<>(cassandraConnectionManager));
+		}
+	}
 
-    @Test
-    public void testSearchWithWildCards() {
-        int testSize = 2;
-        if (instance != null) {
-            searchWithWildCards(testSize, instance);
-        }
-    }
+	@Test
+	public void testSearchMultipleTypes() {
+		final int testSize = 2;
+		if (cassandraConnectionManager != null) {
+			searchMultipleTypes(testSize, new CassandraBlackBox<>(cassandraConnectionManager),
+					new CassandraBlackBox<>(cassandraConnectionManager),
+					new CassandraBlackBox<>(cassandraConnectionManager));
+		}
+	}
 
-    @Test
-    public void testSearchWithDouble() {
-        int testSize = 2;
-        if (instance != null) {
-            searchWithDouble(testSize, instance);
-        }
-    }
+	@Test
+	public void testSearchWithWildCards() {
+		final int testSize = 2;
+		if (cassandraConnectionManager != null) {
+			searchWithWildCards(testSize, new CassandraBlackBox<>(cassandraConnectionManager),
+					new CassandraBlackBox<>(cassandraConnectionManager));
+		}
+	}
 
-    @Test
-    public void testRangeSearchDouble() {
-        int testSize = 2;
-        if (instance != null) {
-            rangeSearchDouble(testSize, instance);
-        }
-    }
+	@Test
+	public void testSearchWithDouble() {
+		final int testSize = 2;
+		if (cassandraConnectionManager != null) {
+			searchWithDouble(testSize, new CassandraBlackBox<>(cassandraConnectionManager));
+		}
+	}
+
+	@Test
+	public void testRangeSearchDouble() {
+		final int testSize = 2;
+		if (cassandraConnectionManager != null) {
+			rangeSearchDouble(testSize, new CassandraBlackBox<>(cassandraConnectionManager));
+		}
+	}
 
 }

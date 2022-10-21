@@ -16,29 +16,35 @@
  */
 package com.dydabo.blackbox.cassandra.tasks;
 
-import com.datastax.driver.core.ColumnDefinitions;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.querybuilder.Clause;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.datastax.driver.core.querybuilder.Select;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.querybuilder.select.Select;
+import com.datastax.oss.driver.api.querybuilder.term.Term;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.cassandra.db.CassandraConnectionManager;
 import com.dydabo.blackbox.cassandra.utils.CassandraConstants;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
+import com.dydabo.blackbox.common.MaxResultList;
+import com.dydabo.blackbox.common.utils.DyDaBoDBUtils;
 import com.dydabo.blackbox.common.utils.DyDaBoUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.google.gson.Gson;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.literal;
 
 /**
  * @param <T>
@@ -46,20 +52,21 @@ import java.util.logging.Logger;
  */
 public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
 
-    private static final Logger logger = Logger.getLogger(CassandraSearchTask.class.getName());
+    private final Logger logger = LogManager.getLogger();
 
     private final CassandraConnectionManager connectionManager;
-    private final long maxResults;
+    private final int maxResults;
     private final List<T> rows;
     private final CassandraUtils<T> utils;
+    private final boolean isFirst;
 
     /**
      * @param connectionManager
      * @param row
      * @param maxResults
      */
-    public CassandraSearchTask(CassandraConnectionManager connectionManager, T row, long maxResults) {
-        this(connectionManager, Collections.singletonList(row), maxResults);
+    public CassandraSearchTask(CassandraConnectionManager connectionManager, T row, int maxResults, boolean isFirst) {
+        this(connectionManager, Collections.singletonList(row), maxResults, isFirst);
     }
 
     /**
@@ -67,11 +74,12 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
      * @param rows
      * @param maxResults
      */
-    public CassandraSearchTask(CassandraConnectionManager connectionManager, List<T> rows, long maxResults) {
+    public CassandraSearchTask(CassandraConnectionManager connectionManager, List<T> rows, int maxResults, boolean isFirst) {
         this.connectionManager = connectionManager;
         this.rows = rows;
         this.utils = new CassandraUtils<>(connectionManager);
         this.maxResults = maxResults;
+        this.isFirst = isFirst;
     }
 
     /**
@@ -87,29 +95,25 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
      * @throws BlackBoxException
      */
     private List<T> search(List<T> rows) throws BlackBoxException {
-        if (rows.size() < 2) {
-            List<T> fullResult = new ArrayList<>();
+        List<T> fullResult = new ArrayList<>();
+        if (rows.size() < DyDaBoDBUtils.MIN_PARALLEL_THRESHOLD) {
             for (T row : rows) {
                 fullResult.addAll(search(row));
             }
-            return fullResult;
         } else {
-            List<T> fullResult = new ArrayList<>();
 
             // create a task for each element or row in the list
             List<ForkJoinTask<List<T>>> taskList = new ArrayList<>();
             for (T row : rows) {
-                ForkJoinTask<List<T>> fjTask = new CassandraSearchTask<>(getConnectionManager(),
-                        Collections.singletonList(row), maxResults).fork();
+                ForkJoinTask<List<T>> fjTask = new CassandraSearchTask<>(getConnectionManager(), Collections.singletonList(row),
+                        maxResults, isFirst);
                 taskList.add(fjTask);
             }
-            // wait for all to join
-            for (ForkJoinTask<List<T>> forkJoinTask : taskList) {
-                fullResult.addAll(forkJoinTask.join());
-            }
 
-            return fullResult;
+            fullResult =
+                    ForkJoinTask.invokeAll(taskList).stream().map(ForkJoinTask::join).flatMap(ts -> ts.stream()).collect(Collectors.toList());
         }
+        return fullResult;
     }
 
     /**
@@ -118,14 +122,12 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
      * @throws BlackBoxException
      */
     private List<T> search(T row) {
-        List<T> results = new ArrayList<>();
-
+        List<T> results = new MaxResultList<>(maxResults);
         GenericDBTableRow cTable = utils.convertRowToTableRow(row);
-        Select selectStmt = QueryBuilder.select().from(utils.getTableName(row));
-        selectStmt.enableTracing();
-        selectStmt.allowFiltering();
+        Select selectStmt = QueryBuilder.selectFrom(utils.getTableName(row)).all().allowFiltering();
 
-        List<Clause> whereClauses = new ArrayList<>();
+        Map<String, Term> whereAndClauses = new HashMap<>();
+        Map<String, Term> whereRegexClauses = new HashMap<>();
 
         cTable.getColumnFamilies().forEach((familyName, columnFamily) -> columnFamily.getColumns().forEach((columnName, column) -> {
             Object columnValue = column.getColumnValue();
@@ -133,50 +135,48 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
                 String columnValueString = column.getColumnValueAsString();
                 if (DyDaBoUtils.isValidRegex(columnValueString)) {
                     if (DyDaBoUtils.isNumber(columnValue)) {
-                        whereClauses.add(QueryBuilder.eq("\"" + columnName + "\"", columnValue));
+                        whereAndClauses.put(columnName, literal(columnValue));
                     } else {
                         if (DyDaBoUtils.isARegex(columnValueString)) {
                             utils.createIndex(columnName, row);
                             columnValueString = cleanup(columnValueString);
-                            whereClauses.add(QueryBuilder.like("\"" + columnName + "\"", columnValueString));
+                            whereRegexClauses.put(columnName, literal(columnValueString));
                         } else if (columnValueString.startsWith("[") || columnValueString.startsWith("{")) {
                             // TODO : search inside maps and arrays
                         } else {
-                            whereClauses.add(QueryBuilder.eq("\"" + columnName + "\"", columnValueString));
+                            whereAndClauses.put(columnName, literal(columnValue));
                         }
                     }
                 }
             }
         }));
 
-        for (Clause whereClause : whereClauses) {
-            selectStmt.where().and(whereClause);
-        }
+        whereAndClauses.forEach((s, o) -> selectStmt.whereColumn(s).isEqualTo(o));
+        whereRegexClauses.forEach((s, o) -> selectStmt.whereColumn(s).like(o));
 
         if (maxResults > 0) {
-            selectStmt.limit((int) maxResults);
+            selectStmt.limit(maxResults);
         }
-        logger.finer("Search: " + selectStmt);
-        ResultSet resultSet = getConnectionManager().getSession().execute(selectStmt);
+        logger.debug("Search Query:{}", selectStmt);
+        ResultSet resultSet = getConnectionManager().getSession().execute(selectStmt.build());
         for (Row result : resultSet) {
             GenericDBTableRow ctr = new GenericDBTableRow(result.getString(CassandraConstants.DEFAULT_ROWKEY));
 
-            for (ColumnDefinitions.Definition def : result.getColumnDefinitions().asList()) {
-                final Object object = result.getObject(def.getName());
+            result.getColumnDefinitions().forEach(columnDefinition -> {
+                final Object object = result.getObject(columnDefinition.getName());
                 if (object != null) {
-                    ctr.getDefaultFamily().addColumn(def.getName(), object);
+                    ctr.getDefaultFamily().addColumn(columnDefinition.getName().toString(), object);
                 }
-            }
+            });
 
             T resultObject = new Gson().fromJson(ctr.toJsonObject(), (Type) row.getClass());
             if (resultObject != null) {
                 results.add(resultObject);
             }
 
-            if (maxResults > 0 && results.size() >= maxResults) {
+            if (isFirst && maxResults > 0 && results.size() >= maxResults) {
                 break;
             }
-
         }
         return results;
     }
@@ -197,9 +197,8 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
         try {
             return search(rows);
         } catch (BlackBoxException ex) {
-            logger.log(Level.SEVERE, null, ex);
+            logger.error(ex);
         }
         return Collections.emptyList();
     }
-
 }

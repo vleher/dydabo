@@ -17,26 +17,38 @@
 
 package com.dydabo.blackbox.redis.db;
 
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.api.StatefulRedisConnection;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author viswadas leher
  */
 public class RedisConnectionManager {
+    public static final int MAX_TOTAL = 100;
+    private static final Logger logger = LogManager.getLogger();
+    private static Map<String, RedisClient> redisClientPool = new ConcurrentHashMap<>();
+    private final String hostName;
+    private final Integer port;
+    private final Integer database;
 
-    private static final Map<String, JedisPool> pools = new HashMap<>();
-
-    private RedisConnectionManager() {
-        //
+    public RedisConnectionManager(String hostName, Integer port, Integer database) {
+        this.hostName = hostName;
+        this.port = port;
+        this.database = database;
     }
 
-    public static Jedis getConnection(String hostName) {
-        JedisPool jedisPool = pools.computeIfAbsent(hostName, n -> new JedisPool(new JedisPoolConfig(), n));
-        return jedisPool.getResource();
+    private static StatefulRedisConnection<String, String> getConnection(String hostName, Integer port, Integer database) {
+        RedisClient redisClient = redisClientPool.computeIfAbsent(hostName, name -> RedisClient.create("redis://" + hostName +
+                ":" + port + "/" + database));
+        return redisClient.connect();
+    }
+
+    public synchronized StatefulRedisConnection<String, String> getConnection() {
+        return RedisConnectionManager.getConnection(hostName, port, database);
     }
 }

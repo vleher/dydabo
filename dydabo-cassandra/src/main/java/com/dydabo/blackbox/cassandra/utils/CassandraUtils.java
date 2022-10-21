@@ -16,31 +16,32 @@
  */
 package com.dydabo.blackbox.cassandra.utils;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.IndexMetadata;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.TableMetadata;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.SimpleStatement;
+import com.datastax.oss.driver.api.core.metadata.schema.KeyspaceMetadata;
+import com.datastax.oss.driver.api.core.metadata.schema.TableMetadata;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.cassandra.db.CassandraConnectionManager;
-import com.dydabo.blackbox.common.utils.DBUtils;
+import com.dydabo.blackbox.common.utils.DyDaBoDBUtils;
 import com.dydabo.blackbox.common.utils.DyDaBoUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @param <T>
  * @author viswadas leher
  */
-public class CassandraUtils<T extends BlackBoxable> implements DBUtils<T> {
+public class CassandraUtils<T extends BlackBoxable> implements DyDaBoDBUtils<T> {
 
-    private final Logger logger = Logger.getLogger(CassandraUtils.class.getName());
-    private CassandraConnectionManager connectionManager;
+    private final Logger logger = LogManager.getLogger();
+    private final CassandraConnectionManager connectionManager;
 
     public CassandraUtils(CassandraConnectionManager connectionManager) {
         this.connectionManager = connectionManager;
@@ -80,12 +81,18 @@ public class CassandraUtils<T extends BlackBoxable> implements DBUtils<T> {
      * @return
      */
     public boolean createTable(T row) {
-        try (Cluster cluster = connectionManager.getCluster()) {
-            // create table
-            TableMetadata table = cluster.getMetadata().getKeyspace(CassandraConstants.KEYSPACE)
-                    .getTable(getTableName(row));
-            if (table == null) {
-                StringBuilder query = new StringBuilder("create table " + getTableName(row) + "(" + CassandraConstants.DEFAULT_ROWKEY + " text primary key");
+        // create table
+        Optional<KeyspaceMetadata> keyspaceMetadata =
+                connectionManager.getSession().getMetadata().getKeyspace(CassandraConstants.KEYSPACE);
+
+        if (keyspaceMetadata.isPresent()) {
+            Optional<TableMetadata> table = keyspaceMetadata.get().getTable(getTableName(row));
+            if (table.isPresent()) {
+                return true;
+            } else {
+                StringBuilder query =
+                        new StringBuilder("create table " + getTableName(row) + "(" + CassandraConstants.DEFAULT_ROWKEY + " text "
+                                + "primary key");
 
                 Map<String, Field> fields = DyDaBoUtils.getFieldFromType(row.getClass());
 
@@ -94,18 +101,18 @@ public class CassandraUtils<T extends BlackBoxable> implements DBUtils<T> {
                     Field field = entry.getValue();
                     if (!field.isSynthetic()) {
                         String dbType = getDatabaseType(field.getType());
-                        query.append(", \"").append(fName).append("\" ").append(dbType);
+                        query.append(",").append(fName).append(" ").append(dbType);
                     }
                 }
 
                 query.append(");");
-                try (Session session = connectionManager.getSession()) {
-                    logger.finer("Create Table:" + query);
-                    session.execute(query.toString());
-                }
+                logger.info("Create Table: {}", query);
+                ResultSet resultSet = connectionManager.getSession().execute(SimpleStatement.builder(query.toString()).build());
+                return true;
             }
         }
-        return true;
+
+        return false;
     }
 
     /**
@@ -115,37 +122,19 @@ public class CassandraUtils<T extends BlackBoxable> implements DBUtils<T> {
      */
     public boolean createIndex(String columnName, T row) {
         String columnIndexName = columnName + "idx";
-        try (Cluster cluster = connectionManager.getCluster()) {
-            TableMetadata table = cluster.getMetadata().getKeyspace(CassandraConstants.KEYSPACE)
-                    .getTable(getTableName(row));
+        Optional<KeyspaceMetadata> keyspace = connectionManager.getSession().getMetadata().getKeyspace(CassandraConstants.KEYSPACE);
 
-            for (IndexMetadata indexMetadata : table.getIndexes()) {
-                if (columnIndexName.equalsIgnoreCase(indexMetadata.getName())) {
-                    return true;
-                }
-            }
+        Optional<TableMetadata> table = keyspace.flatMap(keyspaceMetadata -> keyspaceMetadata.getTable(getTableName(row)));
 
-            String indexQuery = "create custom index if not exists \"" + columnIndexName + "\" " +
-                    "on " + CassandraConstants.KEYSPACE + "." + getTableName(row) + "(\"" + columnName + "\") USING 'org.apache.cassandra.index.sasi.SASIIndex' " +
-                    "with OPTIONS = {'mode':'CONTAINS'};";
-            logger.finer("Query:" + indexQuery);
-            // create the index
-            try (Session session = connectionManager.getSession()) {
-                session.execute(indexQuery);
-            }
-
-            int count = 0;
-            // TODO: clean this up
-            while (table.getIndex(columnIndexName) == null && count < 2) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException ex) {
-                    logger.log(Level.SEVERE, null, ex);
-                }
-                count++;
-            }
+        if (table.isPresent() && (table.get().getIndex(columnIndexName).isPresent())) {
+            return true;
         }
+
+        String indexQuery =
+                "create custom index if not exists \"" + columnIndexName + "\" " + "on " + CassandraConstants.KEYSPACE + "." + getTableName(row) + "(\"" + columnName + "\") USING 'org.apache.cassandra.index.sasi.SASIIndex' " + "with OPTIONS = {'mode':'CONTAINS'};";
+        logger.debug("Index Query: {}", indexQuery);
+        // create the index
+        connectionManager.getSession().execute(indexQuery);
         return true;
     }
-
 }

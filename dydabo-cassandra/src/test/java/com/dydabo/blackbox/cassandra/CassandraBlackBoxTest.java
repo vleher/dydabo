@@ -1,7 +1,12 @@
 package com.dydabo.blackbox.cassandra;
 
-import com.datastax.driver.core.*;
-import com.datastax.driver.core.querybuilder.Select;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.cql.Statement;
+import com.datastax.oss.driver.api.core.metadata.Metadata;
+import com.datastax.oss.driver.api.core.metadata.schema.KeyspaceMetadata;
+import com.datastax.oss.driver.api.core.metadata.schema.TableMetadata;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.cassandra.db.CassandraConnectionManager;
@@ -14,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -26,7 +32,7 @@ class CassandraBlackBoxTest {
     private CassandraBlackBox<BlackBoxable> bb;
     private BlackBoxable row;
     @Mock
-    private Session session;
+    private CqlSession session;
     @Mock
     private CassandraConnectionManager connectionManager;
 
@@ -39,15 +45,20 @@ class CassandraBlackBoxTest {
 
     private void setupSession() {
         Metadata metadata = mock(Metadata.class);
-        Cluster cluster = mock(Cluster.class);
         KeyspaceMetadata keyspaceMetadata = mock(KeyspaceMetadata.class);
         TableMetadata tableMetadata = mock(TableMetadata.class);
 
-        doReturn(cluster).when(connectionManager).getCluster();
-        doReturn(metadata).when(cluster).getMetadata();
-        doReturn(keyspaceMetadata).when(metadata).getKeyspace(anyString());
-        doReturn(tableMetadata).when(keyspaceMetadata).getTable(anyString());
+        doReturn(Optional.of(keyspaceMetadata)).when(metadata).getKeyspace(anyString());
+        doReturn(Optional.of(tableMetadata)).when(keyspaceMetadata).getTable(anyString());
         doReturn(session).when(connectionManager).getSession();
+        doReturn(metadata).when(session).getMetadata();
+    }
+
+    private void setupResultSet() {
+        ResultSet resultSet = mock(ResultSet.class);
+        doReturn(resultSet).when(session).execute(any(Statement.class));
+        List<Row> rowList = Collections.emptyList();
+        doReturn(rowList.iterator()).when(resultSet).iterator();
     }
 
     @Test
@@ -58,7 +69,7 @@ class CassandraBlackBoxTest {
 
     @Test
     void fetch() throws BlackBoxException {
-        doReturn(session).when(connectionManager).getSession();
+        setupSession();
         setupResultSet();
         bb.fetch(row);
     }
@@ -74,6 +85,8 @@ class CassandraBlackBoxTest {
     @Test
     void insert() throws BlackBoxException {
         setupSession();
+        ResultSet resultSet = mock(ResultSet.class);
+        doReturn(resultSet).when(session).execute(any(Statement.class));
         bb.insert(row);
     }
 
@@ -83,13 +96,6 @@ class CassandraBlackBoxTest {
         setupResultSet();
 
         bb.search(row);
-    }
-
-    private void setupResultSet() {
-        ResultSet resultSet = mock(ResultSet.class);
-        doReturn(resultSet).when(session).execute(any(Select.class));
-        List<Row> rowList = Collections.emptyList();
-        doReturn(rowList.iterator()).when(resultSet).iterator();
     }
 
     @Test
@@ -102,18 +108,15 @@ class CassandraBlackBoxTest {
     @Test
     void update() throws BlackBoxException {
         setupSession();
+        ResultSet resultSet = mock(ResultSet.class);
+        doReturn(resultSet).when(session).execute(any(Statement.class));
         bb.update(row);
     }
 
     private class Dummy implements BlackBoxable {
         @Override
-        public String getBBJson() {
-            return null;
-        }
-
-        @Override
-        public String getBBRowKey() {
-            return null;
+        public List<Optional<Object>> getBBRowKeys() {
+            return Collections.emptyList();
         }
     }
 }

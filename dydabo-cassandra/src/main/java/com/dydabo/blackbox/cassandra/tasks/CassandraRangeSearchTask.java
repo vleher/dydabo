@@ -16,25 +16,29 @@
  */
 package com.dydabo.blackbox.cassandra.tasks;
 
-import com.datastax.driver.core.ColumnDefinitions;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.querybuilder.Clause;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.datastax.driver.core.querybuilder.Select;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.querybuilder.select.Select;
+import com.datastax.oss.driver.api.querybuilder.term.Term;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.cassandra.db.CassandraConnectionManager;
 import com.dydabo.blackbox.cassandra.utils.CassandraConstants;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
+import com.dydabo.blackbox.common.MaxResultList;
 import com.dydabo.blackbox.common.utils.DyDaBoUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.google.gson.Gson;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.RecursiveTask;
-import java.util.logging.Logger;
+
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.literal;
 
 /**
  * @param <T>
@@ -42,12 +46,13 @@ import java.util.logging.Logger;
  */
 public class CassandraRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
 
-    private static final Logger logger = Logger.getLogger(CassandraRangeSearchTask.class.getName());
-    private final long maxResults;
+    private final Logger logger = LogManager.getLogger();
+    private final int maxResults;
     private final CassandraConnectionManager connectionManager;
     private final T endRow;
     private final T startRow;
     private final CassandraUtils<BlackBoxable> utils;
+    private final boolean isFirst;
 
     /**
      * @param connectionManager
@@ -55,51 +60,44 @@ public class CassandraRangeSearchTask<T extends BlackBoxable> extends RecursiveT
      * @param endRow
      * @param maxResults
      */
-    public CassandraRangeSearchTask(CassandraConnectionManager connectionManager, T startRow, T endRow, long maxResults) {
+    public CassandraRangeSearchTask(CassandraConnectionManager connectionManager, T startRow, T endRow, int maxResults,
+                                    boolean isFirst) {
         this.connectionManager = connectionManager;
         this.startRow = startRow;
         this.endRow = endRow;
         this.maxResults = maxResults;
+        this.isFirst = isFirst;
         this.utils = new CassandraUtils<>(connectionManager);
     }
 
     @Override
     protected List<T> compute() {
-        List<T> results = new ArrayList<>();
-        Select queryStmt = QueryBuilder.select().from(CassandraConstants.KEYSPACE, utils.getTableName(startRow));
-        queryStmt.allowFiltering();
+        List<T> results = new MaxResultList<>(maxResults);
+        Select queryStmt =
+                QueryBuilder.selectFrom(CassandraConstants.KEYSPACE, utils.getTableName(startRow)).all().allowFiltering();
 
         GenericDBTableRow startTableRow = utils.convertRowToTableRow(startRow);
         GenericDBTableRow endTableRow = utils.convertRowToTableRow(endRow);
 
-        List<Clause> whereClauses = new ArrayList<>();
+        Map<String, Term> whereClauses = new HashMap<>();
         // parse the start row for where clauses
-        parseClausesStart(startTableRow, whereClauses);
+        parseClausesStart(startTableRow, queryStmt);
         // parse the end row for where clauses
-        parseClausesEnd(endTableRow, whereClauses);
+        parseClausesEnd(endTableRow, queryStmt);
 
-        for (Clause whereClause : whereClauses) {
-            queryStmt.where().and(whereClause);
-        }
-        logger.finer("Range Search :" + queryStmt);
-        ResultSet resultSet = getConnectionManager().getSession().execute(queryStmt);
+        logger.debug("Range Search :{}", queryStmt);
+        ResultSet resultSet = getConnectionManager().getSession().execute(queryStmt.build());
         for (Row result : resultSet) {
             GenericDBTableRow ctr = new GenericDBTableRow(result.getString(CassandraConstants.DEFAULT_ROWKEY));
-            for (ColumnDefinitions.Definition def : result.getColumnDefinitions().asList()) {
-                ctr.getDefaultFamily().addColumn(def.getName(), result.getObject(def.getName()));
-            }
+            result.getColumnDefinitions().forEach(columnDefinition -> ctr.getDefaultFamily().addColumn(columnDefinition.getName().toString(), result.getObject(columnDefinition.getName())));
 
             T resultObject = new Gson().fromJson(ctr.toJsonObject(), (Type) startRow.getClass());
             if (resultObject != null) {
-                if (maxResults < 0) {
-                    results.add(resultObject);
-                } else if (maxResults > 0 && results.size() < maxResults) {
-                    results.add(resultObject);
-                } else {
+                results.add(resultObject);
+                if (isFirst && maxResults > 0 && results.size() < maxResults) {
                     break;
                 }
             }
-
         }
         return results;
     }
@@ -111,18 +109,18 @@ public class CassandraRangeSearchTask<T extends BlackBoxable> extends RecursiveT
         return connectionManager;
     }
 
-    private void parseClausesEnd(GenericDBTableRow endTableRow, List<Clause> whereClauses) {
+    private void parseClausesEnd(GenericDBTableRow endTableRow, Select select) {
 
         endTableRow.forEach((familyName, columnName, columnValue, columnValueAsString) -> {
             if (DyDaBoUtils.isValidRegex(columnValueAsString)) {
                 if (DyDaBoUtils.isNumber(columnValue)) {
-                    whereClauses.add(QueryBuilder.lt("\"" + columnName + "\"", columnValue));
+                    select.whereColumn(columnName).isLessThan(literal(columnValue));
                 } else {
                     if (DyDaBoUtils.isARegex(columnValueAsString)) {
                         utils.createIndex(columnName, startRow);
-                        whereClauses.add(QueryBuilder.like("\"" + columnName + "\"", cleanup(columnValueAsString)));
+                        select.whereColumn(columnName).like(literal(cleanup(columnValueAsString)));
                     } else {
-                        whereClauses.add(QueryBuilder.lt("\"" + columnName + "\"", columnValueAsString));
+                        select.whereColumn(columnName).isLessThan(literal(columnValue));
                     }
                 }
             }
@@ -130,18 +128,18 @@ public class CassandraRangeSearchTask<T extends BlackBoxable> extends RecursiveT
 
     }
 
-    private void parseClausesStart(GenericDBTableRow startTableRow, List<Clause> whereClauses) {
+    private void parseClausesStart(GenericDBTableRow startTableRow, Select select) {
 
         startTableRow.forEach((familyName, columnName, columnValue, columnValueAsString) -> {
             if (DyDaBoUtils.isValidRegex(columnValueAsString)) {
                 if (DyDaBoUtils.isNumber(columnValue)) {
-                    whereClauses.add(QueryBuilder.gte("\"" + columnName + "\"", columnValue));
+                    select.whereColumn(columnName).isGreaterThan(literal(columnValue));
                 } else {
                     if (DyDaBoUtils.isARegex(columnValueAsString)) {
                         utils.createIndex(columnName, startRow);
-                        whereClauses.add(QueryBuilder.like("\"" + columnName + "\"", cleanup(columnValueAsString)));
+                        select.whereColumn(columnName).like(literal(cleanup(columnValueAsString)));
                     } else {
-                        whereClauses.add(QueryBuilder.gte("\"" + columnName + "\"", columnValueAsString));
+                        select.whereColumn(columnName).isGreaterThan(literal(columnValue));
                     }
                 }
             }

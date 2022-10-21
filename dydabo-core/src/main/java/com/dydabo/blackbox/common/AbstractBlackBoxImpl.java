@@ -19,11 +19,12 @@ package com.dydabo.blackbox.common;
 import com.dydabo.blackbox.BlackBox;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
-import java.util.logging.Logger;
 
 /**
  * Abstract Implementation of BlackBox
@@ -31,7 +32,7 @@ import java.util.logging.Logger;
  * @author viswadas leher
  */
 public abstract class AbstractBlackBoxImpl<T extends BlackBoxable> implements BlackBox<T> {
-    private final Logger logger = Logger.getLogger(getClass().getName());
+    private final Logger logger = LogManager.getLogger();
 
     private final ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();
 
@@ -41,67 +42,67 @@ public abstract class AbstractBlackBoxImpl<T extends BlackBoxable> implements Bl
 
     @Override
     public boolean delete(T row) throws BlackBoxException {
-        logger.entering(getClass().getName(), "delete", row.toString());
+        logger.trace(getClass().getName(), "delete", row.toString());
         return delete(Collections.singletonList(row));
     }
 
     @Override
     public List<T> fetch(T row) throws BlackBoxException {
-        logger.entering(getClass().getName(), "fetch", row.toString());
+        logger.trace(getClass().getName(), "fetch", row.toString());
         return fetch(Collections.singletonList(row));
     }
 
     @Override
     public List<T> fetchByPartialKey(List<T> rows) throws BlackBoxException {
-        logger.entering(getClass().getName(), "fetchByPartialKey", rows);
-        return fetchByPartialKey(rows, -1);
+        logger.trace(getClass().getName(), "fetchByPartialKey", rows);
+        return fetchByPartialKey(rows, Integer.MAX_VALUE, false);
     }
 
     @Override
     public List<T> fetchByPartialKey(T row) throws BlackBoxException {
-        logger.entering(getClass().getName(), "fetchByPartialKey", row);
-        return fetchByPartialKey(row, -1);
+        logger.trace(getClass().getName(), "fetchByPartialKey", row);
+        return fetchByPartialKey(row, Integer.MAX_VALUE, false);
     }
 
     @Override
-    public List<T> fetchByPartialKey(T row, long maxResults) throws BlackBoxException {
-        logger.entering(getClass().getName(), "fetchByPartialKey", row + " :" + maxResults);
-        return fetchByPartialKey(Collections.singletonList(row), -1);
+    public List<T> fetchByPartialKey(T row, int maxResults, boolean isFirst) throws BlackBoxException {
+        logger.trace(getClass().getName(), "fetchByPartialKey", row + " :" + maxResults);
+        return fetchByPartialKey(Collections.singletonList(row), maxResults, isFirst);
     }
 
     @Override
     public boolean insert(T row) throws BlackBoxException {
-        logger.entering(getClass().getName(), "insert", row);
+        logger.trace(getClass().getName(), "insert", row);
         return insert(Collections.singletonList(row));
     }
 
     @Override
     public List<T> search(List<T> rows) throws BlackBoxException {
-        logger.entering(getClass().getName(), "search", rows);
-        return search(rows, -1);
+        logger.trace(getClass().getName(), "search", rows);
+        return search(rows, Integer.MAX_VALUE, false);
     }
 
     @Override
     public List<T> search(T row) throws BlackBoxException {
-        logger.entering(getClass().getName(), "search", row);
-        return search(row, -1);
+        logger.trace(getClass().getName(), "search", row);
+        return search(row, Integer.MAX_VALUE, false);
     }
 
     @Override
-    public List<T> search(T row, long maxResults) throws BlackBoxException {
-        logger.entering(getClass().getName(), "search", row + " :" + maxResults);
-        return search(Collections.singletonList(row), maxResults);
+    public List<T> search(T row, int maxResults, boolean isFirst) throws BlackBoxException {
+        logger.trace(getClass().getName(), "search", row + " :" + maxResults);
+        return search(Collections.singletonList(row), maxResults, isFirst);
     }
 
     @Override
     public List<T> search(T startRow, T endRow) throws BlackBoxException {
-        logger.entering(getClass().getName(), "search", startRow + " :" + endRow);
-        return search(startRow, endRow, -1);
+        logger.trace(getClass().getName(), "search", startRow + " :" + endRow);
+        return search(startRow, endRow, Integer.MAX_VALUE, false);
     }
 
     @Override
     public boolean update(T newRow) throws BlackBoxException {
-        logger.entering(getClass().getName(), "update", newRow);
+        logger.trace(getClass().getName(), "update", newRow);
         return update(Collections.singletonList(newRow));
     }
 }

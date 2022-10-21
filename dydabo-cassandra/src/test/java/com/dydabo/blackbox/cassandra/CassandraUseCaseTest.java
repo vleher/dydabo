@@ -16,141 +16,170 @@
  */
 package com.dydabo.blackbox.cassandra;
 
-import com.dydabo.blackbox.BlackBoxException;
-import com.dydabo.blackbox.BlackBoxFactory;
-import com.dydabo.blackbox.cassandra.db.CassandraConnectionManager;
-import com.dydabo.blackbox.usecase.medical.MedicalUseCaseTest;
+import java.io.IOException;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.util.logging.Logger;
+import com.dydabo.blackbox.BlackBoxException;
+import com.dydabo.blackbox.cassandra.db.CassandraConnectionManager;
+import com.dydabo.test.blackbox.BlackBoxFactory;
+import com.dydabo.test.blackbox.usecase.medical.MedicalUseCaseTest;
 
 /**
  * @author viswadas leher
  */
 public class CassandraUseCaseTest extends MedicalUseCaseTest {
 
-    protected Logger logger = Logger.getLogger(CassandraUseCaseTest.class.getName());
+	private final Logger logger = LogManager.getLogger();
 
-    /**
-     * @throws BlackBoxException
-     * @throws IOException
-     */
-    public CassandraUseCaseTest() throws BlackBoxException, IOException {
-        super();
-        if (utils.dbToTest.contains(BlackBoxFactory.Databases.CASSANDRA)) {
-            CassandraConnectionManager cm = new CassandraConnectionManager();
-            cm.setAddress("127.0.0.1");
-            instance = new CassandraBlackBox(cm);
-            // Pre-populate with some dynamic data.
-            utils.generatePatients(random.nextInt(98765) % 10, instance);
-            utils.generateEncounters(random.nextInt(98765) % 10, instance);
-        }
-    }
+	/**
+	 * @throws BlackBoxException
+	 * @throws IOException
+	 */
+	public CassandraUseCaseTest() throws BlackBoxException, IOException {
+		if (utils.dbToTest.contains(BlackBoxFactory.Databases.CASSANDRA)) {
+			final CassandraConnectionManager cm = new CassandraConnectionManager("localhost", 9042);
+			patientBlackBox = new CassandraBlackBox<>(cm);
+			encounterBlackBox = new CassandraBlackBox<>(cm);
+			medicationBlackBox = new CassandraBlackBox<>(cm);
+			claimBlackBox = new CassandraBlackBox<>(cm);
+			claimChargesBlackBox = new CassandraBlackBox<>(cm);
+			// Pre-populate with some dynamic data.
+			utils.generatePatients(random.nextInt(98765) % 10, patientBlackBox);
+			utils.generateEncounters(random.nextInt(98765) % 10, patientBlackBox, new CassandraBlackBox<>(cm),
+					medicationBlackBox, claimBlackBox, claimChargesBlackBox, new CassandraBlackBox<>(cm),
+					encounterBlackBox);
+		}
+	}
 
-    @Test
-    public void testAllClaimChargesForPatient() throws BlackBoxException {
-        if (instance != null) {
-            super.testAllClaimChargesForPatient();
-        }
-    }
+	@Override
+	@Test
+	public void testAllClaimChargesForPatient() throws BlackBoxException {
+		if (patientBlackBox != null) {
+			super.testAllClaimChargesForPatient();
+		}
+	}
 
-    @Test
-    public void testAllClaimsForPatient() throws BlackBoxException {
-        if (instance != null) {
-            super.testAllClaimsForPatient();
-        }
-    }
+	@Override
+	@Test
+	public void testAllClaimsForPatient() throws BlackBoxException {
+		if (patientBlackBox != null) {
+			super.testAllClaimsForPatient();
+		}
+	}
 
-    @Test
-    public void testAllPatientEncounters() throws BlackBoxException {
-        if (instance != null) {
-            super.testAllPatientEncounters();
-        }
-    }
+	@Override
+	@Test
+	public void testAllPatientEncounters() throws BlackBoxException {
+		if (patientBlackBox != null) {
+			super.testAllPatientEncounters();
+		}
+	}
 
-    @Test
-    public void testAllPatients() throws BlackBoxException {
-        if (instance != null) {
-            super.testAllPatients();
-        }
-    }
+	@Override
+	@Test
+	public void testAllPatients() throws BlackBoxException {
+		if (patientBlackBox != null) {
+			super.testAllPatients();
+		}
+	}
 
-    @Test
-    public void testAllPatientsWithDiagnosis() throws BlackBoxException {
-        if (instance != null) {
-            super.testAllPatientsWithDiagnosis();
-        }
-    }
+	@Override
+	@Test
+	public void testAllPatientsWithDiagnosis() throws BlackBoxException {
+		if (patientBlackBox != null) {
+			super.testAllPatientsWithDiagnosis();
+		}
+	}
 
-    @Test
-    public void testFetchQueryPerformance() throws BlackBoxException {
-        if (instance != null) {
-            super.testFetchQueryPerformance();
-        }
-    }
+	@Override
+	@Test
+	public void testFetchQueryPerformance() throws BlackBoxException {
+		if (patientBlackBox != null) {
+			super.testFetchQueryPerformance();
+		}
+	}
 
-    @Test
-    public void testGetEncounterByPatient() throws BlackBoxException {
-        if (instance != null) {
-            super.testGetEncounterByPatient();
-        }
-    }
+	@Override
+	@Test
+	public void testGetEncounterByPatient() throws BlackBoxException {
+		if (patientBlackBox != null) {
+			super.testGetEncounterByPatient();
+		}
+	}
 
-    @Test
-    public void testPatientByName() throws BlackBoxException {
-        if (instance != null) {
-            super.testPatientByName();
-        }
-    }
+	@Override
+	@Test
+	public void testPatientByName() throws BlackBoxException {
+		if (patientBlackBox != null) {
+			super.testPatientByName();
+		}
+	}
 
-    @Test
-    public void testPatientEncountersById() throws BlackBoxException {
-        if (instance != null) {
-            super.testPatientEncountersById();
-        }
-    }
+	@Override
+	@Test
+	public void testPatientEncountersById() throws BlackBoxException {
+		if (patientBlackBox != null) {
+			super.testPatientEncountersById();
+		}
+	}
 
-    @Test
-    public void testPatientEncountersByMedId() throws BlackBoxException {
-        if (instance != null) {
-            super.testPatientEncountersByMedId();
-        }
-    }
+	@Override
+	@Test
+	public void testPatientEncountersByMedId() throws BlackBoxException {
+		if (patientBlackBox != null) {
+			super.testPatientEncountersByMedId();
+		}
+	}
 
-    @Test
-    public void testPatientEncountersByMedIdAndPFName() throws BlackBoxException {
-        if (instance != null) {
-            super.testPatientEncountersByMedIdAndPFName();
-        }
-    }
+	@Override
+	@Test
+	public void testPatientEncountersByMedIdAndPFName() throws BlackBoxException {
+		if (patientBlackBox != null) {
+			super.testPatientEncountersByMedIdAndPFName();
+		}
+	}
 
-    @Test
-    public void testPatientEncountersByName() throws BlackBoxException {
-        if (instance != null) {
-            super.testPatientEncountersByName();
-        }
-    }
+	@Override
+	@Test
+	public void testPatientEncountersByName() throws BlackBoxException {
+		if (patientBlackBox != null) {
+			super.testPatientEncountersByName();
+		}
+	}
 
-    @Test
-    public void testPatientWithId() throws BlackBoxException {
-        if (instance != null) {
-            super.testPatientWithId();
-        }
-    }
+	@Override
+	@Test
+	public void testPatientWithId() throws BlackBoxException {
+		if (patientBlackBox != null) {
+			super.testPatientWithId();
+		}
+	}
 
-    @Test
-    public void testPatientsWithFirstAndLastName() throws BlackBoxException {
-        if (instance != null) {
-            super.testPatientsWithFirstAndLastName();
-        }
-    }
+	@Override
+	@Test
+	public void testPatientsWithFirstAndLastName() throws BlackBoxException {
+		if (patientBlackBox != null) {
+			super.testPatientsWithFirstAndLastName();
+		}
+	}
 
-    @Test
-    public void testRangeSearch() throws BlackBoxException {
-        if (instance != null) {
-            super.testRangeSearch();
-        }
-    }
+	@Override
+	@Test
+	public void testRangeSearch() throws BlackBoxException {
+		if (patientBlackBox != null) {
+			super.testRangeSearch();
+		}
+	}
+
+	@Override
+	@Test
+	public void testMaxResultsSearch() throws BlackBoxException {
+		if (patientBlackBox != null) {
+			super.testMaxResultsSearch();
+		}
+	}
 
 }

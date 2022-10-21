@@ -21,13 +21,12 @@ import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.hbase.utils.HBaseUtils;
 import org.apache.hadoop.hbase.client.Connection;
 
-import java.util.List;
 import java.util.concurrent.RecursiveTask;
 
 /**
  * @author viswadas leher
  */
-public abstract class HBaseTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
+public abstract class HBaseTask<T extends BlackBoxable, R> extends RecursiveTask<R> {
     protected final Connection connection;
     protected HBaseUtils<T> utils;
 

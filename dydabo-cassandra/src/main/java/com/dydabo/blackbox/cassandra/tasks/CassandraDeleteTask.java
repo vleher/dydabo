@@ -16,19 +16,24 @@
  */
 package com.dydabo.blackbox.cassandra.tasks;
 
-import com.datastax.driver.core.querybuilder.Delete;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.cql.SimpleStatement;
+import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.cassandra.db.CassandraConnectionManager;
 import com.dydabo.blackbox.cassandra.utils.CassandraConstants;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
+import com.dydabo.blackbox.common.utils.DyDaBoDBUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
-import java.util.logging.Logger;
+
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.literal;
 
 /**
  * Delete rows from Cassandra
@@ -38,7 +43,7 @@ import java.util.logging.Logger;
  */
 public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<Boolean> {
 
-    private static final Logger logger = Logger.getLogger(CassandraDeleteTask.class.getName());
+    private final Logger logger = LogManager.getLogger();
 
     private final CassandraConnectionManager connectionManager;
     private final List<T> rows;
@@ -69,7 +74,7 @@ public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<B
      */
     private Boolean delete(List<T> rows) {
         // one row is the recursion base line
-        if (rows.size() < 2) {
+        if (rows.size() < DyDaBoDBUtils.MIN_PARALLEL_THRESHOLD) {
             boolean successFlag = true;
             for (T t : rows) {
                 successFlag = successFlag && delete(t);
@@ -81,15 +86,11 @@ public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<B
         // create a task for each element or row in the list
         List<ForkJoinTask<Boolean>> taskList = new ArrayList<>();
         for (T row : rows) {
-            ForkJoinTask<Boolean> fjTask = new CassandraDeleteTask<>(getConnectionManager(), Collections.singletonList(row)).fork();
+            ForkJoinTask<Boolean> fjTask = new CassandraDeleteTask<>(getConnectionManager(), Collections.singletonList(row));
             taskList.add(fjTask);
         }
-        // wait for all to join
-        for (ForkJoinTask<Boolean> forkJoinTask : taskList) {
-            successFlag = successFlag && forkJoinTask.join();
-        }
-        // return the overall status
-        return successFlag;
+
+        return ForkJoinTask.invokeAll(taskList).stream().map(ForkJoinTask::join).reduce(Boolean::logicalAnd).orElse(false);
     }
 
     /**
@@ -99,10 +100,9 @@ public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<B
      * @return true if the delete was successful
      */
     private Boolean delete(T row) {
-        logger.info("deleting " + row);
         // Create a delete statement with the row key
-        Delete delStmt = QueryBuilder.delete().from(CassandraConstants.KEYSPACE, utils.getTableName(row));
-        delStmt.where(QueryBuilder.eq(CassandraConstants.DEFAULT_ROWKEY, row.getBBRowKey()));
+        SimpleStatement delStmt =
+                QueryBuilder.deleteFrom(CassandraConstants.KEYSPACE, utils.getTableName(row)).whereColumn(CassandraConstants.DEFAULT_ROWKEY).isEqualTo(bindMarker()).ifColumn(CassandraConstants.DEFAULT_ROWKEY).isEqualTo(literal(row.getBBRowKey())).build();
 
         getConnectionManager().getSession().execute(delStmt);
 

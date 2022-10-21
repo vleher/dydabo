@@ -37,4 +37,7 @@ public class BlackBoxException extends Exception {
         super(message);
     }
 
+    public BlackBoxException(String message, Throwable throwable) {
+        super(message, throwable);
+    }
 }

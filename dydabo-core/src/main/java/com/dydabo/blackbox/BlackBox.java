@@ -27,8 +27,7 @@ import java.util.List;
 public interface BlackBox<T extends BlackBoxable> {
 
     /**
-     * Delete a list of POJO beans that are
-     * rows in the table. Each of these objects should have a valid row key.
+     * Delete a list of POJO beans that are rows in the table. Each of these objects should have a valid row key.
      *
      * @param rows a list of POJO
      * @return true if all deletes have been successful, false otherwise
@@ -46,7 +45,7 @@ public interface BlackBox<T extends BlackBoxable> {
     /**
      * Get all matching rows given a list of row keys.
      *
-     * @param  rows list of rows
+     * @param rows list of rows
      * @return a list of POJO that match the keys
      * @throws BlackBoxException blackbox exception
      */
@@ -71,12 +70,12 @@ public interface BlackBox<T extends BlackBoxable> {
     /**
      * Get matching rows upto maxResults given a list of partial keys. This uses the fuzzy filter to search through keys
      *
-     * @param rows    list of partial keys in regex format
+     * @param rows       list of partial keys in regex format
      * @param maxResults maximum number of results returned
      * @return a list of POJO that match the keys
      * @throws BlackBoxException blackbox exception
      */
-    List<T> fetchByPartialKey(List<T> rows, long maxResults) throws BlackBoxException;
+    List<T> fetchByPartialKey(List<T> rows, int maxResults, boolean isFirst) throws BlackBoxException;
 
     /**
      * Get all matching rows given a partial key.
@@ -90,12 +89,13 @@ public interface BlackBox<T extends BlackBoxable> {
     /**
      * Get matching rows upto maxResults given a list of partial keys. This uses the fuzzy filter to search through keys
      *
-     * @param row     a key in regex format
+     * @param row        a key in regex format
      * @param maxResults maximum number of results returned
+     * @param isFirst    if true, return the first maxResults else return the last
      * @return a list of POJO that match the keys
      * @throws BlackBoxException blackbox exception
      */
-    List<T> fetchByPartialKey(T row, long maxResults) throws BlackBoxException;
+    List<T> fetchByPartialKey(T row, int maxResults, boolean isFirst) throws BlackBoxException;
 
     /**
      * Inserts a list of rows into the table. The rows should not exist in the table.
@@ -119,8 +119,8 @@ public interface BlackBox<T extends BlackBoxable> {
      * Search for all matching rows in the table, given a list of POJO. You can add known values to the POJO fields or regular
      * expressions in the field.
      * <p>
-     * Example: to search for all names starting with David, you can do obj.setName("David.*") and pass in the obj to the
-     * search method.
+     * Example: to search for all names starting with David, you can do obj.setName("David.*") and pass in the obj to the search
+     * method.
      *
      * @param rows a list of POJO
      * @return list of POJO that match the criteria
@@ -132,22 +132,23 @@ public interface BlackBox<T extends BlackBoxable> {
      * Search for all matching rows in the table, given a list of POJO. You can add known values to the POJO fields or regular
      * expressions in the field.
      * <p>
-     * Example: to search for all names starting with David, you can do obj.setName("David.*") and pass in the obj to the
-     * search method.
+     * Example: to search for all names starting with David, you can do obj.setName("David.*") and pass in the obj to the search
+     * method.
      *
      * @param rows       a list of POJO
      * @param maxResults the maximum number of results to return
+     * @param isFirst    if true, then first maxResults are returned, else the last.
      * @return list of POJO that match the criteria
      * @throws BlackBoxException blackbox exception
      */
-    List<T> search(List<T> rows, long maxResults) throws BlackBoxException;
+    List<T> search(List<T> rows, int maxResults, boolean isFirst) throws BlackBoxException;
 
     /**
-     * Search for all matching rows in the table, given a POJO. You can add known values to the POJO fields or regular
-     * expressions in the field.
+     * Search for all matching rows in the table, given a POJO. You can add known values to the POJO fields or regular expressions
+     * in the field.
      * <p>
-     * Example: to search for all names starting with David, you can do obj.setName("David.*") and pass in the obj to the
-     * search method.
+     * Example: to search for all names starting with David, you can do obj.setName("David.*") and pass in the obj to the search
+     * method.
      *
      * @param row a POJO
      * @return list of POJO that match the criteria
@@ -156,18 +157,19 @@ public interface BlackBox<T extends BlackBoxable> {
     List<T> search(T row) throws BlackBoxException;
 
     /**
-     * Search for all matching rows in the table, given a POJO. You can add known values to the POJO fields or regular
-     * expressions in the field.
+     * Search for all matching rows in the table, given a POJO. You can add known values to the POJO fields or regular expressions
+     * in the field.
      * <p>
-     * Example: to search for all names starting with David, you can do obj.setName("David.*") and pass in the obj to the
-     * search method.
+     * Example: to search for all names starting with David, you can do obj.setName("David.*") and pass in the obj to the search
+     * method.
      *
      * @param row        a POJO
      * @param maxResults the maximum number of results to return
+     * @param isFirst    if true, the first maxResults are returned
      * @return list of POJO that match the criteria
      * @throws BlackBoxException blackbox exception
      */
-    List<T> search(T row, long maxResults) throws BlackBoxException;
+    List<T> search(T row, int maxResults, boolean isFirst) throws BlackBoxException;
 
     /**
      * Search for all matching rows in the table, given a two POJOs. You can add known values to the POJO fields or regular
@@ -187,14 +189,15 @@ public interface BlackBox<T extends BlackBoxable> {
      * @param startRow   the start filter POJO
      * @param endRow     the end filter POJO
      * @param maxResults the maximum number of results
+     * @param isFirst    if true, the first maxResults are returned, else the last
      * @return a list of POJO matching the criteria
      * @throws BlackBoxException blackbox exception
      */
-    List<T> search(T startRow, T endRow, long maxResults) throws BlackBoxException;
+    List<T> search(T startRow, T endRow, int maxResults, boolean isFirst) throws BlackBoxException;
 
     /**
-     * Update or insert the rows that match the POJO. If a row does not exist, then it will added otherwise the existing row
-     * is updated with the new values.
+     * Update or insert the rows that match the POJO. If a row does not exist, then it will added otherwise the existing row is
+     * updated with the new values.
      *
      * @param newRows a list of POJO
      * @return true if update is successful, false otherwise
@@ -203,13 +206,12 @@ public interface BlackBox<T extends BlackBoxable> {
     boolean update(List<T> newRows) throws BlackBoxException;
 
     /**
-     * Update or insert the row that match the POJO. If a row does not exist, then it will added otherwise the existing row
-     * is updated with the new values.
+     * Update or insert the row that match the POJO. If a row does not exist, then it will added otherwise the existing row is
+     * updated with the new values.
      *
      * @param newRow a POJO
      * @return true if update is successful, false otherwise
      * @throws BlackBoxException blackbox exception
      */
     boolean update(T newRow) throws BlackBoxException;
-
 }

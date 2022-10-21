@@ -16,87 +16,31 @@
  */
 package com.dydabo.blackbox.cassandra.db;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.Session;
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.dydabo.blackbox.cassandra.utils.CassandraConstants;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Logger;
+import java.net.InetSocketAddress;
 
 /**
  * @author viswadas leher
  */
 public class CassandraConnectionManager {
 
-    private static final Logger logger = Logger.getLogger(CassandraConnectionManager.class.getName());
-    private static final Map<String, Session> sessionPool = new ConcurrentHashMap<>();
-    private static final Map<String, Cluster> clusterPool = new ConcurrentHashMap<>();
+    private final Logger logger = LogManager.getLogger();
+    private final String address;
+    private final int port;
 
-    private static String address;
-
-    public CassandraConnectionManager() {
+    public CassandraConnectionManager(String address, int port) {
+        this.address = address;
+        this.port = port;
+        String ksQuery = "create keyspace if not exists " + CassandraConstants.KEYSPACE + " with replication = " + "{'class" +
+                "':'SimpleStrategy', 'replication_factor':1};";
+        getSession().execute(ksQuery);
     }
 
-    // TODO: clean this up
-
-    /**
-     * @param address
-     * @return
-     */
-    private synchronized Session getSession(String address) {
-
-        if (sessionPool.get(CassandraConstants.KEYSPACE) == null) {
-            if (clusterPool.get(CassandraConstants.CLUSTER_NAME) == null) {
-                Cluster cluster = Cluster.builder()
-                        .withClusterName(CassandraConstants.CLUSTER_NAME)
-                        .addContactPoint(address)
-                        .build();
-                clusterPool.put(CassandraConstants.CLUSTER_NAME, cluster);
-            }
-
-            Cluster cluster = clusterPool.get(CassandraConstants.CLUSTER_NAME);
-            Session session = cluster.connect();
-
-            // keysapce query TODO: create a CassandraConstants.KEYSPACE name, make it all configurable
-            String ksQuery = "create keyspace if not exists " + CassandraConstants.KEYSPACE + " with replication = {'class':'SimpleStrategy', 'replication_factor':1};";
-            session.execute(ksQuery);
-            session = cluster.connect(CassandraConstants.KEYSPACE);
-            sessionPool.put(CassandraConstants.KEYSPACE, session);
-        }
-
-        return sessionPool.get(CassandraConstants.KEYSPACE);
+    public CqlSession getSession() {
+        return CqlSession.builder().addContactPoint(new InetSocketAddress(address, port)).withKeyspace(CassandraConstants.KEYSPACE).build();
     }
-
-    public Session getSession() {
-        return getSession(address);
-    }
-
-    /**
-     * @return
-     */
-    public synchronized Cluster getCluster() {
-        if (clusterPool.get(CassandraConstants.CLUSTER_NAME) == null) {
-            Cluster cluster = Cluster.builder()
-                    .withClusterName(CassandraConstants.CLUSTER_NAME)
-                    .addContactPoint(address)
-                    .build();
-            clusterPool.put(CassandraConstants.CLUSTER_NAME, cluster);
-        }
-        Session session = clusterPool.get(CassandraConstants.CLUSTER_NAME).connect();
-
-        // keysapce query TODO: create a CassandraConstants.KEYSPACE name
-        String ksQuery = "create keyspace if not exists " + CassandraConstants.KEYSPACE + " with replication = {'class':'SimpleStrategy', 'replication_factor':1};";
-        session.execute(ksQuery);
-        return clusterPool.get(CassandraConstants.CLUSTER_NAME);
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        CassandraConnectionManager.address = address;
-    }
-
 }

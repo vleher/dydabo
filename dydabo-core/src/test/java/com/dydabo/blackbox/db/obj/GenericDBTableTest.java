@@ -22,7 +22,9 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author viswadas leher
@@ -31,7 +33,6 @@ public class GenericDBTableTest {
 
     private static final String KEY = "key";
     private static GenericDBTableRow instance;
-
 
     /**
      * @throws Exception
@@ -43,7 +44,6 @@ public class GenericDBTableTest {
         GenericDBTableRow.ColumnFamily fam = instance.getColumnFamilies().get("default");
         fam.addColumn("col1", "colVal1");
     }
-
 
     /**
      * Test of getDefaultFamily method, of class GenericDBTableRow.

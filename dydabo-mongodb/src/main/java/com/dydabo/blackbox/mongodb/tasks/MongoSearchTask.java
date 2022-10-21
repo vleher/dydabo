@@ -17,13 +17,16 @@
 package com.dydabo.blackbox.mongodb.tasks;
 
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.common.MaxResultList;
+import com.dydabo.blackbox.common.utils.DyDaBoDBUtils;
 import com.dydabo.blackbox.common.utils.DyDaBoUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.dydabo.blackbox.mongodb.utils.MongoUtils;
 import com.google.gson.Gson;
-import com.mongodb.Block;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
@@ -32,31 +35,31 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.RecursiveTask;
-import java.util.logging.Logger;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * @param <T>
  * @author viswadas leher
  */
-public class MongoSearchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
+public class MongoSearchTask<T extends BlackBoxable> extends MongoBaseTask<T, List<T>> {
 
-    private static final Logger logger = Logger.getLogger(MongoSearchTask.class.getName());
-    private final MongoCollection<Document> collection;
-    private final long maxResult;
+    private final Logger logger = LogManager.getLogger();
+    private final int maxResult;
     private final List<T> rows;
-    private final MongoUtils<T> utils;
+    private final boolean isFirst;
 
     /**
      * @param collection
      * @param rows
      * @param maxResult
+     * @param isFirst
      */
-    public MongoSearchTask(MongoCollection<Document> collection, List<T> rows, long maxResult) {
-        this.collection = collection;
+    public MongoSearchTask(MongoCollection<Document> collection, List<T> rows, int maxResult, boolean isFirst) {
+        super(collection);
         this.rows = rows;
         this.maxResult = maxResult;
-        this.utils = new MongoUtils<>();
+        this.isFirst = isFirst;
     }
 
     @Override
@@ -89,7 +92,7 @@ public class MongoSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
     }
 
     private List<T> search(List<T> rows) {
-        if (rows.size() < 2) {
+        if (rows.size() < DyDaBoDBUtils.MIN_PARALLEL_THRESHOLD) {
             List<T> fullResult = new ArrayList<>();
             for (T row : rows) {
                 fullResult.addAll(search(row));
@@ -102,43 +105,37 @@ public class MongoSearchTask<T extends BlackBoxable> extends RecursiveTask<List<
         // create a task for each row
         List<ForkJoinTask<List<T>>> taskList = new ArrayList<>();
         for (T row : rows) {
-            ForkJoinTask<List<T>> fjTask = new MongoSearchTask<>(collection, Collections.singletonList(row), maxResult).fork();
+            ForkJoinTask<List<T>> fjTask = new MongoSearchTask<>(getCollection(), Collections.singletonList(row), maxResult,
+                    isFirst);
             taskList.add(fjTask);
         }
-
-        // wait for all threads to finish
-        for (ForkJoinTask<List<T>> fjTask : taskList) {
-            fullResult.addAll(fjTask.join());
-        }
-
-        return fullResult;
+        return invokeAll(taskList).stream().map(ForkJoinTask::join).flatMap(ts -> ts.stream()).collect(Collectors.toList());
     }
 
     private List<T> search(T row) {
-        List<T> results = new ArrayList<>();
+        List<T> results = new MaxResultList<>(maxResult);
         String type = row.getClass().getTypeName();
-        Block<Document> addToResultBlock = (Document doc) -> {
+        Consumer<Document> addToResultBlock = (Document doc) -> {
             T resultObject = new Gson().fromJson(doc.toJson(), (Type) row.getClass());
             if (resultObject != null) {
-                if (maxResult <= 0) {
-                    results.add(resultObject);
-                } else if (results.size() < maxResult) {
+                if (isFirst && maxResult > 0 && results.size() >= maxResult) {
+                    logger.debug("Skipping result object.");
+                } else {
                     results.add(resultObject);
                 }
             }
         };
 
-        GenericDBTableRow tableRow = utils.convertRowToTableRow(row);
+        GenericDBTableRow tableRow = getUtils().convertRowToTableRow(row);
 
         List<Bson> filterList = parseFilters(tableRow);
         filterList.add(Filters.regex(MongoUtils.PRIMARYKEY, type + ":.*"));
 
-        logger.finest("Mongo Filter:" + filterList);
+        logger.debug("Filter: {}", filterList);
         if (filterList.size() > 0) {
-            collection.find(Filters.and(filterList)).forEach(addToResultBlock);
+            getCollection().find(Filters.and(filterList)).forEach(addToResultBlock);
         }
 
         return results;
     }
-
 }

@@ -17,33 +17,31 @@
 package com.dydabo.blackbox.mongodb.tasks;
 
 import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.mongodb.utils.MongoUtils;
+import com.dydabo.blackbox.common.utils.DyDaBoDBUtils;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.ReplaceOptions;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bson.Document;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.RecursiveTask;
-import java.util.logging.Logger;
 
 /**
  * @param <T>
  * @author viswadas leher
  */
-public class MongoInsertTask<T extends BlackBoxable> extends RecursiveTask<Boolean> {
+public class MongoInsertTask<T extends BlackBoxable> extends MongoBaseTask<T, Boolean> {
 
-    private static final Logger logger = Logger.getLogger(MongoInsertTask.class.getName());
+    private final Logger logger = LogManager.getLogger();
 
     private final boolean checkExisting;
-    private final MongoCollection collection;
     private final List<T> rows;
-    private final MongoUtils<T> utils;
 
-    public MongoInsertTask(MongoCollection collection, T row, boolean checkExisting) {
+    public MongoInsertTask(MongoCollection<Document> collection, T row, boolean checkExisting) {
         this(collection, Collections.singletonList(row), checkExisting);
     }
 
@@ -52,11 +50,10 @@ public class MongoInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
      * @param rows
      * @param checkExisting
      */
-    public MongoInsertTask(MongoCollection collection, List<T> rows, boolean checkExisting) {
-        this.collection = collection;
+    public MongoInsertTask(MongoCollection<Document> collection, List<T> rows, boolean checkExisting) {
+        super(collection);
         this.rows = rows;
         this.checkExisting = checkExisting;
-        this.utils = new MongoUtils<>();
     }
 
     @Override
@@ -64,43 +61,34 @@ public class MongoInsertTask<T extends BlackBoxable> extends RecursiveTask<Boole
         if (checkExisting) {
             List<Document> documents = new ArrayList<>();
             for (T row : rows) {
-                Document doc = utils.parseRowToDocument(row);
+                Document doc = getUtils().parseRowToDocument(row);
                 documents.add(doc);
             }
             // this inserts the document if there are none with a matching id
-            collection.insertMany(documents);
+            getCollection().insertMany(documents);
         } else {
-            if (rows.size() < 2) {
-                Boolean successFlag = true;
+            if (rows.size() < DyDaBoDBUtils.MIN_PARALLEL_THRESHOLD) {
+                boolean successFlag = true;
                 for (T row : rows) {
-                    successFlag = successFlag && upsertDocument(utils.parseRowToDocument(row));
+                    successFlag = successFlag && upsertDocument(getUtils().parseRowToDocument(row));
                 }
                 return successFlag;
             }
             // replace the existing document with this one, or insert a new one
             List<ForkJoinTask<Boolean>> taskList = new ArrayList<>();
             for (T row : rows) {
-                ForkJoinTask<Boolean> fjTask = new MongoInsertTask<>(getCollection(), row, checkExisting).fork();
+                ForkJoinTask<Boolean> fjTask = new MongoInsertTask<>(getCollection(), row, checkExisting);
                 taskList.add(fjTask);
             }
-            boolean successFlag = Boolean.TRUE;
-            for (ForkJoinTask<Boolean> fjTask : taskList) {
-                successFlag = fjTask.join() && successFlag;
-            }
-            return successFlag;
+            return ForkJoinTask.invokeAll(taskList).stream().map(ForkJoinTask::join).reduce(Boolean::logicalAnd).orElse(false);
         }
 
         return true;
     }
 
-    private MongoCollection getCollection() {
-        return collection;
-    }
-
     private Boolean upsertDocument(Document doc) {
-        UpdateOptions uo = new UpdateOptions().upsert(true);
-        getCollection().replaceOne(Filters.eq("_id", doc.get("_id")), doc, uo);
+        ReplaceOptions ro = new ReplaceOptions().upsert(true);
+        getCollection().replaceOne(Filters.eq("_id", doc.get("_id")), doc, ro);
         return true;
     }
-
 }

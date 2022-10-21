@@ -18,28 +18,28 @@ package com.dydabo.blackbox.hbase.tasks.impl;
 
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.common.utils.DyDaBoDBUtils;
 import com.dydabo.blackbox.hbase.tasks.HBaseTask;
-import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ForkJoinTask;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @param <T>
  * @author viswadas leher
  */
-public class HBaseDeleteTask<T extends BlackBoxable> extends HBaseTask<T> {
+public class HBaseDeleteTask<T extends BlackBoxable> extends HBaseTask<T, Boolean> {
 
-    private final Logger logger = Logger.getLogger(HBaseDeleteTask.class.getName());
+    private final Logger logger = LogManager.getLogger();
     private final List<T> rows;
 
     /**
@@ -60,13 +60,13 @@ public class HBaseDeleteTask<T extends BlackBoxable> extends HBaseTask<T> {
     }
 
     @Override
-    protected List<T> compute() {
+    protected Boolean compute() {
         try {
             return delete(rows);
         } catch (BlackBoxException ex) {
-            logger.log(Level.SEVERE, null, ex);
+            logger.error(ex);
         }
-        return Collections.EMPTY_LIST;
+        return false;
     }
 
     /**
@@ -74,35 +74,23 @@ public class HBaseDeleteTask<T extends BlackBoxable> extends HBaseTask<T> {
      * @return
      * @throws BlackBoxException
      */
-    private List<T> delete(List<T> rows) throws BlackBoxException {
-        if (rows.size() < 2) {
-            Boolean successFlag = true;
+    private Boolean delete(List<T> rows) throws BlackBoxException {
+        if (rows.size() < DyDaBoDBUtils.MIN_PARALLEL_THRESHOLD) {
+            boolean successFlag = true;
             for (T t : rows) {
                 successFlag = successFlag && delete(t);
             }
-            if (successFlag) {
-                return rows;
-            }
+            return successFlag;
         }
 
-        Boolean successFlag = Boolean.TRUE;
+        boolean successFlag = Boolean.TRUE;
         // create a task for each element or row in the list
-        List<ForkJoinTask<List<T>>> taskList = new ArrayList<>();
+        List<ForkJoinTask<Boolean>> taskList = new ArrayList<>();
         for (T row : rows) {
-            ForkJoinTask<List<T>> fjTask = new HBaseDeleteTask<>(getConnection(), Collections.singletonList(row)).fork();
+            ForkJoinTask<Boolean> fjTask = new HBaseDeleteTask<>(getConnection(), Collections.singletonList(row));
             taskList.add(fjTask);
         }
-        // wait for all to join
-        for (ForkJoinTask<List<T>> forkJoinTask : taskList) {
-            successFlag = successFlag && !forkJoinTask.join().isEmpty();
-        }
-
-        if (successFlag) {
-            return rows;
-        }
-
-        return Collections.EMPTY_LIST;
-
+        return ForkJoinTask.invokeAll(taskList).stream().map(ForkJoinTask::join).reduce(Boolean::logicalAnd).orElse(false);
     }
 
     /**
@@ -111,22 +99,18 @@ public class HBaseDeleteTask<T extends BlackBoxable> extends HBaseTask<T> {
      * @throws BlackBoxException
      */
     private boolean delete(T row) {
-        try (Admin admin = getConnection().getAdmin()) {
-            // consider create to be is nothing but alter...so
-            try (Table hTable = admin.getConnection().getTable(getUtils().getTableName(row))) {
-                if (getUtils().isValidRowKey(row)) {
-                    Delete delete = new Delete(Bytes.toBytes(row.getBBRowKey()));
-                    // delete.addFamily(Bytes.toBytes(HBaseTable.DEFAULT_FAMILY));
-                    hTable.delete(delete);
-                } else {
-                    return false;
-                }
+        try (Table hTable = getConnection().getTable(getUtils().getTableName(row))) {
+            if (getUtils().isValidRowKey(row)) {
+                Delete delete = new Delete(Bytes.toBytes(row.getBBRowKey()));
+                // delete.addFamily(Bytes.toBytes(HBaseTable.DEFAULT_FAMILY));
+                hTable.delete(delete);
+            } else {
+                return false;
             }
-            return true;
-        } catch (IOException ex) {
-            logger.log(Level.SEVERE, null, ex);
+        } catch (IOException e) {
+            logger.error(e);
+            return false;
         }
-        return false;
+        return true;
     }
-
 }

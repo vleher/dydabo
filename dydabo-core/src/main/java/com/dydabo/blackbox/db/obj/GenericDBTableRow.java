@@ -21,10 +21,13 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author viswadas leher
@@ -36,9 +39,8 @@ public class GenericDBTableRow {
      *
      */
     private static final String DEFAULT_FAMILY = "D";
-
+    private final Map<String, GenericDBTableRow.ColumnFamily> columnFamilies;
     private String rowKey;
-    private Map<String, GenericDBTableRow.ColumnFamily> columnFamilies;
 
     /**
      * @param rowKey
@@ -114,9 +116,7 @@ public class GenericDBTableRow {
     }
 
     public void forEach(DBTableIterator dbTableIterator) {
-        getColumnFamilies().forEach((familyName, columnFamily) -> columnFamily.getColumns().forEach((columnName, column) -> {
-            dbTableIterator.accept(familyName, columnName, column.getColumnValue(), column.getColumnValueAsString());
-        }));
+        getColumnFamilies().forEach((familyName, columnFamily) -> columnFamily.getColumns().forEach((columnName, column) -> dbTableIterator.accept(familyName, columnName, column.getColumnValue(), column.getColumnValueAsString())));
 
     }
 
@@ -130,8 +130,8 @@ public class GenericDBTableRow {
      */
     public class ColumnFamily {
 
+        private final Map<String, GenericDBTableRow.Column> columns;
         private String familyName;
-        private Map<String, GenericDBTableRow.Column> columns;
 
         /**
          * @param familyName
@@ -178,7 +178,6 @@ public class GenericDBTableRow {
             return columns;
         }
 
-
         /**
          * @return
          */
@@ -189,11 +188,7 @@ public class GenericDBTableRow {
                 String value = coln.getColumnValueAsString();
                 if (!DyDaBoUtils.isBlankOrNull(value)) {
                     JsonElement elem = DyDaBoUtils.parseJsonString(value);
-                    if (elem != null) {
-                        jsonObject.add(keyName, elem);
-                    } else {
-                        jsonObject.add(keyName, new JsonPrimitive(value));
-                    }
+                    jsonObject.add(keyName, Objects.requireNonNullElseGet(elem, () -> new JsonPrimitive(value)));
                 }
             }
             return jsonObject;
@@ -210,6 +205,7 @@ public class GenericDBTableRow {
      * Columns inside a column family
      */
     public class Column {
+        private final Logger logger = LogManager.getLogger();
 
         private String columnName;
         private Object columnValue;
@@ -259,7 +255,7 @@ public class GenericDBTableRow {
                 return null;
             }
 
-            String colStringValue = "";
+            String colStringValue;
 
             if (DyDaBoUtils.isPrimitiveOrPrimitiveWrapperOrString(columnValue)) {
                 if (columnValue instanceof Number) {

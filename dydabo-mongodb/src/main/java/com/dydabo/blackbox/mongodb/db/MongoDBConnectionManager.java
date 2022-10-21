@@ -30,16 +30,30 @@ public class MongoDBConnectionManager {
     private static final Object lockObj = new Object();
     private static MongoClient mongoClient = null;
 
+    private final String connectionString;
+    private final String database;
+    private final String collection;
+
+    public MongoDBConnectionManager(String connectionString, String database, String collection) {
+        this.connectionString = connectionString;
+        this.database = database;
+        this.collection = collection;
+    }
+
+    public MongoCollection<Document> getMongoDBCollection() {
+        return getMongoDBCollection(connectionString, database, collection);
+    }
+
     /**
      * @param connString
      * @param database
      * @param collection
      * @return
      */
-    public static MongoCollection<Document> getMongoDBCollection(String connString, String database, String collection) {
+    private MongoCollection<Document> getMongoDBCollection(String connString, String database, String collection) {
         if (mongoClient == null) {
             if (DyDaBoUtils.isBlankOrNull(connString)) {
-                connString = "com.dydabo.com.dydabo.blackbox.blackbox.mongodb.mongodb://localhost:27017";
+                connString = "mongodb://localhost:27017";
             }
             synchronized (lockObj) {
                 mongoClient = new MongoClient(new MongoClientURI(connString));

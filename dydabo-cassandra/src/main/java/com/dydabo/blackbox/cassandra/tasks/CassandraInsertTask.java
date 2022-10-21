@@ -16,23 +16,32 @@
  */
 package com.dydabo.blackbox.cassandra.tasks;
 
-import com.datastax.driver.core.querybuilder.Insert;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.SimpleStatement;
+import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.querybuilder.insert.InsertInto;
+import com.datastax.oss.driver.api.querybuilder.term.Term;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.cassandra.db.CassandraConnectionManager;
 import com.dydabo.blackbox.cassandra.utils.CassandraConstants;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
+import com.dydabo.blackbox.common.utils.DyDaBoDBUtils;
 import com.dydabo.blackbox.common.utils.DyDaBoUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.literal;
 
 /**
  * @param <T>
@@ -40,7 +49,7 @@ import java.util.logging.Logger;
  */
 public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<Boolean> {
 
-    private static final Logger logger = Logger.getLogger(CassandraInsertTask.class.getName());
+    private final Logger logger = LogManager.getLogger();
 
     private final boolean checkExisting;
     private final CassandraConnectionManager connectionManager;
@@ -73,7 +82,7 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
         try {
             return insert(rows, checkExisting);
         } catch (BlackBoxException ex) {
-            logger.log(Level.SEVERE, null, ex);
+            logger.error(ex);
         }
         return false;
     }
@@ -92,7 +101,7 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
      * @throws BlackBoxException
      */
     private Boolean insert(List<T> rows, boolean checkExisting) throws BlackBoxException {
-        if (rows.size() < 2) {
+        if (rows.size() < DyDaBoDBUtils.MIN_PARALLEL_THRESHOLD) {
             Boolean successFlag = Boolean.TRUE;
             for (T t : rows) {
                 successFlag = successFlag && insert(t, checkExisting);
@@ -104,16 +113,11 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
         // create a task for each element or row in the list
         List<ForkJoinTask<Boolean>> taskList = new ArrayList<>();
         for (T row : rows) {
-            ForkJoinTask<Boolean> fjTask = new CassandraInsertTask<>(getConnectionManager(), Collections.singletonList(row), checkExisting).fork();
+            ForkJoinTask<Boolean> fjTask = new CassandraInsertTask<>(getConnectionManager(), Collections.singletonList(row),
+                    checkExisting);
             taskList.add(fjTask);
         }
-        // wait for all to join
-        for (ForkJoinTask<Boolean> forkJoinTask : taskList) {
-            successFlag = successFlag && forkJoinTask.join();
-        }
-
-        return successFlag;
-
+        return ForkJoinTask.invokeAll(taskList).stream().map(ForkJoinTask::join).reduce(Boolean::logicalAnd).orElse(false);
     }
 
     /**
@@ -125,32 +129,36 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
     private Boolean insert(T row, boolean checkExisting) {
         boolean successFlag = true;
 
-        final Insert insStmt = QueryBuilder.insertInto(CassandraConstants.KEYSPACE, utils.getTableName(row));
-
-        if (checkExisting) {
-            insStmt.ifNotExists();
-        }
+        InsertInto insStmt = QueryBuilder.insertInto(CassandraConstants.KEYSPACE, utils.getTableName(row));
 
         GenericDBTableRow cTable = utils.convertRowToTableRow(row);
-        insStmt.value("\"" + CassandraConstants.DEFAULT_ROWKEY + "\"", row.getBBRowKey());
+
+        Map<String, Term> fields = new HashMap<>();
+        fields.put(CassandraConstants.DEFAULT_ROWKEY, literal(row.getBBRowKey()));
 
         cTable.forEach((familyName, columnName, columnValue, columnValueAsString) -> {
             if (columnValue != null) {
                 if (DyDaBoUtils.isNumber(columnValue)) {
-                    insStmt.value("\"" + columnName + "\"", columnValue);
+                    fields.put(columnName, literal(columnValue));
                 } else {
-                    insStmt.value("\"" + columnName + "\"", columnValueAsString);
+                    fields.put(columnName, literal(columnValueAsString));
                 }
             }
         });
 
-        //try (Session connectionManager = CassandraConnectionManager.getConnectionManager()) {
-        logger.info("Executing " + insStmt.toString());
+        SimpleStatement statement;
+        if (checkExisting) {
+            statement = insStmt.values(fields).ifNotExists().build();
+        } else {
+            statement = insStmt.values(fields).build();
+        }
+
+        logger.debug("Executing query: {}", statement.getQuery());
         // execute query, might throw exception
-        getConnectionManager().getSession().execute(insStmt);
-        //}
+        ResultSet result = getConnectionManager().getSession().execute(statement);
 
-        return successFlag;
+        result.forEach(r -> logger.debug(r.toString()));
+
+        return Objects.nonNull(result);
     }
-
 }

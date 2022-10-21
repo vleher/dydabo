@@ -16,18 +16,21 @@
  */
 package com.dydabo.blackbox.cassandra.tasks;
 
-import com.datastax.driver.core.ColumnDefinitions;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Row;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.datastax.driver.core.querybuilder.Select;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.querybuilder.select.Select;
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.cassandra.db.CassandraConnectionManager;
 import com.dydabo.blackbox.cassandra.utils.CassandraConstants;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
+import com.dydabo.blackbox.common.MaxResultList;
+import com.dydabo.blackbox.common.utils.DyDaBoDBUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.google.gson.Gson;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -35,9 +38,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.literal;
 
 /**
  * @param <T>
@@ -45,45 +49,47 @@ import java.util.regex.Pattern;
  */
 public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
 
-    private static final Logger logger = Logger.getLogger(CassandraFetchTask.class.getName());
+    private final Logger logger = LogManager.getLogger();
 
     private final boolean isPartialKeys;
-    private final long maxResults;
+    private final int maxResults;
     private final List<T> rowKeys;
     private final CassandraConnectionManager connectionManager;
     private final CassandraUtils<T> utils;
-
+    private final boolean isFirst;
 
     /**
-     * @param connectionManager
-     * @param rows
-     * @param isPartialKeys
+     * @param connectionManager connection manager
+     * @param rows              list of objects to be fetched
+     * @param isPartialKeys     if the fetch is using partial keys
      */
     private CassandraFetchTask(CassandraConnectionManager connectionManager, List<T> rows, boolean isPartialKeys) {
-        this(connectionManager, rows, isPartialKeys, -1);
+        this(connectionManager, rows, isPartialKeys, Integer.MAX_VALUE, false);
     }
 
     /**
-     * @param connectionManager
-     * @param rows
-     * @param isPartialKeys
-     * @param maxResults
+     * @param connectionManager connection manager
+     * @param rows              list of objects to be fetched
+     * @param isPartialKeys     if the fetch is using partial keys
+     * @param maxResults        maximum number of results to return
      */
-    public CassandraFetchTask(CassandraConnectionManager connectionManager, List<T> rows, boolean isPartialKeys, long maxResults) {
+    public CassandraFetchTask(CassandraConnectionManager connectionManager, List<T> rows, boolean isPartialKeys, int maxResults,
+                              boolean isFirst) {
         this.connectionManager = connectionManager;
         this.rowKeys = rows;
         this.utils = new CassandraUtils<>(connectionManager);
         this.isPartialKeys = isPartialKeys;
         this.maxResults = maxResults;
+        this.isFirst = isFirst;
     }
 
     /**
-     * @param rows
-     * @return
-     * @throws BlackBoxException
+     * @param rows list of objects to fetch
+     * @return list of objects
+     * @throws BlackBoxException if results cannot be fetched
      */
     private List<T> fetch(List<T> rows) throws BlackBoxException {
-        if (rows.size() < 2) {
+        if (rows.size() < DyDaBoDBUtils.MIN_PARALLEL_THRESHOLD) {
             List<T> fullResult = new ArrayList<>();
             for (T row : rows) {
                 fullResult.addAll(fetch(row));
@@ -96,17 +102,11 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
         // create a task for each element or row in the list
         List<ForkJoinTask<List<T>>> taskList = new ArrayList<>();
         for (T row : rows) {
-            ForkJoinTask<List<T>> fjTask = new CassandraFetchTask<T>(getConnectionManager(), Collections.singletonList(row), isPartialKeys,
-                    maxResults).fork();
+            ForkJoinTask<List<T>> fjTask = new CassandraFetchTask<>(getConnectionManager(), Collections.singletonList(row),
+                    isPartialKeys, maxResults, isFirst);
             taskList.add(fjTask);
         }
-        // wait for all to join
-        for (ForkJoinTask<List<T>> forkJoinTask : taskList) {
-            fullResult.addAll(forkJoinTask.join());
-        }
-
-        return fullResult;
-
+        return invokeAll(taskList).stream().map(ForkJoinTask::join).flatMap(ts -> ts.stream()).collect(Collectors.toList());
     }
 
     /**
@@ -116,13 +116,13 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
      */
     private List<T> fetch(T row) {
 
-        Select queryStmt = QueryBuilder.select().from(utils.getTableName(row)).allowFiltering();
+        Select queryStmt = QueryBuilder.selectFrom(utils.getTableName(row)).all();
         if (!isPartialKeys) {
-            queryStmt.where(QueryBuilder.eq(CassandraConstants.DEFAULT_ROWKEY, row));
+            queryStmt = queryStmt.whereColumn(CassandraConstants.DEFAULT_ROWKEY).isEqualTo(literal(row.getBBRowKey()));
         }
 
-        ResultSet resultSet = getConnectionManager().getSession().execute(queryStmt);
-        List<T> results = new ArrayList<>();
+        ResultSet resultSet = getConnectionManager().getSession().execute(queryStmt.build());
+        List<T> results = new MaxResultList<>(maxResults);
         for (Row result : resultSet) {
             final String currRowKey = result.getString(CassandraConstants.DEFAULT_ROWKEY);
             boolean isResult = true;
@@ -131,21 +131,17 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
             }
             if (isResult) {
                 GenericDBTableRow ctr = new GenericDBTableRow(currRowKey);
-                for (ColumnDefinitions.Definition def : result.getColumnDefinitions().asList()) {
-                    ctr.getDefaultFamily().addColumn(def.getName(), result.getObject(def.getName()));
-                }
+                result.getColumnDefinitions().forEach(columnDefinition -> ctr.getDefaultFamily().addColumn(columnDefinition.getName().toString(), result.getObject(columnDefinition.getName())));
 
                 T resultObject = new Gson().fromJson(ctr.toJsonObject(), (Type) row.getClass());
-
                 if (resultObject != null) {
                     results.add(resultObject);
                 }
             }
 
-            if (maxResults > 0 && results.size() >= maxResults) {
+            if (isFirst && maxResults > 0 && results.size() >= maxResults) {
                 break;
             }
-
         }
         return results;
     }
@@ -155,7 +151,7 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
         try {
             return fetch(rowKeys);
         } catch (BlackBoxException ex) {
-            logger.log(Level.SEVERE, null, ex);
+            logger.error(ex);
         }
         return Collections.emptyList();
     }
@@ -166,5 +162,4 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
     private CassandraConnectionManager getConnectionManager() {
         return connectionManager;
     }
-
 }

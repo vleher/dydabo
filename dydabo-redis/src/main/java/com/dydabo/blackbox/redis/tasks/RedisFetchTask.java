@@ -18,99 +18,118 @@
 package com.dydabo.blackbox.redis.tasks;
 
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.common.MaxResultList;
+import com.dydabo.blackbox.common.utils.DyDaBoDBUtils;
 import com.dydabo.blackbox.common.utils.DyDaBoUtils;
 import com.dydabo.blackbox.redis.db.RedisConnectionManager;
 import com.google.gson.Gson;
-import redis.clients.jedis.Jedis;
+import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.api.sync.RedisCommands;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.RecursiveTask;
-import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
-/**
- * @author viswadas leher
- */
-public class RedisFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
+/** @author viswadas leher */
+public class RedisFetchTask<T extends BlackBoxable> extends RedisBaseTask<List<T>, T> {
+  private final Logger logger = LogManager.getLogger();
+  private final List<T> rows;
+  private final boolean isPartialKey;
+  private final int maxResults;
+  private final boolean isFirst;
 
-    private final List<T> rows;
-    private final boolean isPartialKey;
-    private final long maxResults;
-    private Logger logger = Logger.getLogger(RedisFetchTask.class.getName());
+  public RedisFetchTask(
+      RedisConnectionManager connectionManager,
+      List<T> rows,
+      boolean isPartialKey,
+      int maxResults,
+      boolean isFirst) {
+    setConnectionManager(connectionManager);
+    this.rows = rows;
+    this.isPartialKey = isPartialKey;
+    this.maxResults = maxResults;
+    this.isFirst = isFirst;
+  }
 
+  @Override
+  protected List<T> compute() {
+    return fetch(rows);
+  }
 
-    public RedisFetchTask(List<T> rows, boolean isPartialKey, long maxResults) {
-        this.rows = rows;
-        this.isPartialKey = isPartialKey;
-        this.maxResults = maxResults;
-    }
-
-    @Override
-    protected List<T> compute() {
-        return fetch(rows);
-    }
-
-    private List<T> fetch(List<T> rows) {
-        if (rows.size() < 2) {
-            List<T> fullResult = new ArrayList<>();
-            for (T row : rows) {
-                fullResult.addAll(fetch(row));
-            }
-            return fullResult;
-        }
-
-        List<T> fullResult = new ArrayList<>();
-
-        List<ForkJoinTask<List<T>>> taskList = new ArrayList<>();
+  private List<T> fetch(List<T> rows) {
+    if (rows.size() < DyDaBoDBUtils.MIN_PARALLEL_THRESHOLD) {
+      List<T> fullResult = new ArrayList<>();
+      try (StatefulRedisConnection<String, String> connection =
+          getConnectionManager().getConnection()) {
         for (T row : rows) {
-            ForkJoinTask<List<T>> fjTask = new RedisFetchTask<>(Collections.singletonList(row), isPartialKey, maxResults).fork();
-            taskList.add(fjTask);
+          fullResult.addAll(fetch(row, connection));
         }
-
-        for (ForkJoinTask<List<T>> forkJoinTask : taskList) {
-            fullResult.addAll(forkJoinTask.join());
-        }
-
-        return fullResult;
+      }
+      return fullResult;
     }
 
-    private List<T> fetch(T row) {
-        List<T> fullResults = Collections.synchronizedList(new ArrayList<>());
+    List<ForkJoinTask<List<T>>> taskList = new ArrayList<>();
+    ForkJoinTask<List<T>> fjTaskOne =
+        new RedisFetchTask<>(
+            getConnectionManager(),
+            rows.subList(0, rows.size() / 2),
+            isPartialKey,
+            maxResults,
+            isFirst);
+    taskList.add(fjTaskOne);
+    ForkJoinTask<List<T>> fjTaskTwo =
+        new RedisFetchTask<>(
+            getConnectionManager(),
+            rows.subList(rows.size() / 2, rows.size()),
+            isPartialKey,
+            maxResults,
+            isFirst);
+    taskList.add(fjTaskTwo);
 
-        if (DyDaBoUtils.isBlankOrNull(row.getBBRowKey())) {
+    return ForkJoinTask.invokeAll(taskList).stream()
+        .map(ForkJoinTask::join)
+        .flatMap(Collection::stream)
+        .collect(Collectors.toList());
+  }
+
+  private List<T> fetch(T row, StatefulRedisConnection<String, String> connection) {
+    List<T> fullResults = Collections.synchronizedList(new MaxResultList<>(maxResults));
+
+    if (DyDaBoUtils.isBlankOrNull(row.getBBRowKey())) {
+      return fullResults;
+    }
+
+    RedisCommands<String, String> redisCommands = connection.sync();
+
+    String rowKey = getRedisUtils().getRowKey(row);
+    if (isPartialKey || rowKey.contains("*")) {
+      List<String> newKeys = redisCommands.keys(rowKey);
+      logger.debug("Fetching keys:{}", newKeys.size());
+      for (String newKey : newKeys) {
+        String result = redisCommands.get(newKey);
+        if (!DyDaBoUtils.isBlankOrNull(result)) {
+          T resultObj = new Gson().fromJson(result, (Type) row.getClass());
+          fullResults.add(resultObj);
+          if (isFirst && maxResults > 0 && fullResults.size() >= maxResults) {
             return fullResults;
+          }
         }
-
-        String type = row.getClass().getTypeName() + ":";
-
-        try (Jedis connection = RedisConnectionManager.getConnection("localhost")) {
-            if (isPartialKey) {
-                String partialKey = row.getBBRowKey().replaceAll("\\.\\*", "*");
-                Set<String> newKeys = connection.keys(type + partialKey);
-
-                for (String newKey : newKeys) {
-                    String result = connection.get(newKey);
-                    if (!DyDaBoUtils.isBlankOrNull(result)) {
-                        T resultObj = new Gson().fromJson(result, (Type) row.getClass());
-                        fullResults.add(resultObj);
-                        if (maxResults > 0 && fullResults.size() >= maxResults) {
-                            return fullResults;
-                        }
-                    }
-                }
-            } else {
-                String result = connection.get(type + row.getBBRowKey());
-                if (!DyDaBoUtils.isBlankOrNull(result)) {
-                    T resultObj = new Gson().fromJson(result, (Type) row.getClass());
-                    fullResults.add(resultObj);
-                }
-            }
-        }
-
-        return fullResults;
+      }
+    } else {
+      logger.debug("Fetching key {}", rowKey);
+      String result = redisCommands.get(rowKey);
+      if (!DyDaBoUtils.isBlankOrNull(result)) {
+        T resultObj = new Gson().fromJson(result, (Type) row.getClass());
+        fullResults.add(resultObj);
+      }
     }
+    logger.debug("Fetched for {} : {}", rowKey, fullResults.size());
+    return fullResults;
+  }
 }

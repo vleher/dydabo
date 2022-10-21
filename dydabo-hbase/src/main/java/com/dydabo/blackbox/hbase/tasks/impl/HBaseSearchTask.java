@@ -18,14 +18,25 @@ package com.dydabo.blackbox.hbase.tasks.impl;
 
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.common.MaxResultList;
+import com.dydabo.blackbox.common.utils.DyDaBoDBUtils;
 import com.dydabo.blackbox.common.utils.DyDaBoUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
-import com.dydabo.blackbox.hbase.HBaseBlackBoxImpl;
 import com.dydabo.blackbox.hbase.tasks.HBaseTask;
 import com.google.gson.Gson;
-import org.apache.hadoop.hbase.client.*;
-import org.apache.hadoop.hbase.filter.*;
+import org.apache.hadoop.hbase.CompareOperator;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.filter.BinaryComparator;
+import org.apache.hadoop.hbase.filter.FilterList;
+import org.apache.hadoop.hbase.filter.RegexStringComparator;
+import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -33,26 +44,27 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ForkJoinTask;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 /**
  * @param <T>
  * @author viswadas leher
  */
-public class HBaseSearchTask<T extends BlackBoxable> extends HBaseTask<T> {
+public class HBaseSearchTask<T extends BlackBoxable> extends HBaseTask<T, List<T>> {
 
-    private final Logger logger = Logger.getLogger(HBaseBlackBoxImpl.class.getName());
+    private final Logger logger = LogManager.getLogger();
     private final List<T> rows;
-    private final long maxResults;
+    private final int maxResults;
+    private final boolean isFirst;
 
     /**
      * @param connection
      * @param row
      * @param maxResults
      */
-    public HBaseSearchTask(Connection connection, T row, long maxResults) {
-        this(connection, Collections.singletonList(row), maxResults);
+    public HBaseSearchTask(Connection connection, T row, int maxResults, boolean isFirst) {
+        this(connection, Collections.singletonList(row), maxResults, isFirst);
     }
 
     /**
@@ -60,10 +72,11 @@ public class HBaseSearchTask<T extends BlackBoxable> extends HBaseTask<T> {
      * @param rows
      * @param maxResults
      */
-    public HBaseSearchTask(Connection connection, List<T> rows, long maxResults) {
+    public HBaseSearchTask(Connection connection, List<T> rows, int maxResults, boolean isFirst) {
         super(connection);
         this.rows = rows;
         this.maxResults = maxResults;
+        this.isFirst = isFirst;
     }
 
     @Override
@@ -71,7 +84,7 @@ public class HBaseSearchTask<T extends BlackBoxable> extends HBaseTask<T> {
         try {
             return search(rows);
         } catch (BlackBoxException ex) {
-            logger.log(Level.SEVERE, null, ex);
+            logger.error(ex);
         }
         return new ArrayList<>();
     }
@@ -82,7 +95,7 @@ public class HBaseSearchTask<T extends BlackBoxable> extends HBaseTask<T> {
      * @return
      */
     private boolean parseForFilters(GenericDBTableRow thisTable, FilterList filterList) {
-        final boolean[] hasFilters = {false};
+        final AtomicBoolean hasFilters = new AtomicBoolean(false);
 
         thisTable.forEach((familyName, columnName, columnValue, columnValueAsString) -> {
             String regexValue = utils.sanitizeRegex(columnValueAsString);
@@ -90,20 +103,21 @@ public class HBaseSearchTask<T extends BlackBoxable> extends HBaseTask<T> {
                 if (DyDaBoUtils.isNumber(columnValue)) {
                     BinaryComparator regexComp = new BinaryComparator(utils.getAsByteArray(columnValue));
                     SingleColumnValueFilter scvf = new SingleColumnValueFilter(Bytes.toBytes(familyName),
-                            Bytes.toBytes(columnName), CompareFilter.CompareOp.EQUAL, regexComp);
+                            Bytes.toBytes(columnName), CompareOperator.EQUAL, regexComp);
+                    scvf.setFilterIfMissing(true);
                     filterList.addFilter(scvf);
-                    hasFilters[0] = true;
                 } else {
                     RegexStringComparator regexComp = new RegexStringComparator(regexValue);
                     SingleColumnValueFilter scvf = new SingleColumnValueFilter(Bytes.toBytes(familyName),
-                            Bytes.toBytes(columnName), CompareFilter.CompareOp.EQUAL, regexComp);
+                            Bytes.toBytes(columnName), CompareOperator.EQUAL, regexComp);
+                    scvf.setFilterIfMissing(true);
                     filterList.addFilter(scvf);
-                    hasFilters[0] = true;
                 }
+                hasFilters.set(true);
             }
         });
 
-        return hasFilters[0];
+        return hasFilters.get();
     }
 
     /**
@@ -112,27 +126,22 @@ public class HBaseSearchTask<T extends BlackBoxable> extends HBaseTask<T> {
      * @throws BlackBoxException
      */
     private List<T> search(List<T> rows) throws BlackBoxException {
-        if (rows.size() < 2) {
+
+        if (rows.size() < DyDaBoDBUtils.MIN_PARALLEL_THRESHOLD) {
             List<T> fullResult = new ArrayList<>();
             for (T row : rows) {
                 fullResult.addAll(search(row));
             }
             return fullResult;
         } else {
-            List<T> fullResult = new ArrayList<>();
-
             // create a task for each element or row in the list
             List<ForkJoinTask<List<T>>> taskList = new ArrayList<>();
             for (T row : rows) {
-                ForkJoinTask<List<T>> fjTask = new HBaseSearchTask<>(getConnection(), Collections.singletonList(row), maxResults).fork();
+                ForkJoinTask<List<T>> fjTask = new HBaseSearchTask<>(getConnection(), Collections.singletonList(row), maxResults,
+                        isFirst);
                 taskList.add(fjTask);
             }
-            // wait for all to join
-            for (ForkJoinTask<List<T>> forkJoinTask : taskList) {
-                fullResult.addAll(forkJoinTask.join());
-            }
-
-            return fullResult;
+            return invokeAll(taskList).stream().map(ForkJoinTask::join).flatMap(ts -> ts.stream()).collect(Collectors.toList());
         }
     }
 
@@ -141,46 +150,36 @@ public class HBaseSearchTask<T extends BlackBoxable> extends HBaseTask<T> {
      * @return
      * @throws BlackBoxException
      */
-    private List<T> search(T row) {
-        List<T> results = new ArrayList<>();
+    private List<T> search(T row) throws BlackBoxException {
+        List<T> results = new MaxResultList<>(maxResults);
 
-        try (Admin admin = getConnection().getAdmin()) {
-            // consider create to be is nothing but alter...so
-            try (Table hTable = admin.getConnection().getTable(utils.getTableName(row))) {
-                Scan scan = new Scan();
-                if (maxResults > 0) {
-                    scan.setMaxResultSize(maxResults);
-                }
-                // Get the filters : just simple regex filters for now
-                GenericDBTableRow thisTable = utils.convertRowToTableRow(row);
-                FilterList filterList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
-                boolean hasFilters = parseForFilters(thisTable, filterList);
-                if (hasFilters) {
-                    logger.finest("Filters:" + filterList);
-                    scan.setFilter(filterList);
-                }
+        try (Table hTable = getConnection().getTable(utils.getTableName(row))) {
+            Scan scan = new Scan();
 
-                try (ResultScanner resultScanner = hTable.getScanner(scan)) {
-                    int count = 0;
-                    for (Result result : resultScanner) {
-                        GenericDBTableRow resultTable = utils.parseResultToHTable(result, row);
+            // Get the filters : just simple regex filters for now
+            GenericDBTableRow thisTable = utils.convertRowToTableRow(row);
+            FilterList filterList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
+            boolean hasFilters = parseForFilters(thisTable, filterList);
+            if (hasFilters) {
+                logger.debug("Filters: {}", filterList);
+                scan.setFilter(filterList);
+            }
 
-                        T resultObject = new Gson().fromJson(resultTable.toJsonObject(), (Type) row.getClass());
-                        if (resultObject != null) {
-                            results.add(resultObject);
-                            count++;
-                        }
+            try (ResultScanner resultScanner = hTable.getScanner(scan)) {
+                int count = 0;
+                for (Result result : resultScanner) {
+                    GenericDBTableRow resultTable = utils.parseResultToHTable(result, row);
 
-                        if (maxResults > 0 && count >= maxResults) {
-                            break;
-                        }
+                    T resultObject = new Gson().fromJson(resultTable.toJsonObject(), (Type) row.getClass());
+                    results.add(resultObject);
+                    if (isFirst && results.size() >= maxResults) {
+                        break;
                     }
                 }
             }
         } catch (IOException ex) {
-            logger.log(Level.SEVERE, null, ex);
+            logger.error(ex);
         }
         return results;
     }
-
 }

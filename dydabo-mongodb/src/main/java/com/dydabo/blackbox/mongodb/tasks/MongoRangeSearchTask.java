@@ -17,52 +17,50 @@
 package com.dydabo.blackbox.mongodb.tasks;
 
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.common.MaxResultList;
 import com.dydabo.blackbox.common.utils.DyDaBoUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.dydabo.blackbox.mongodb.utils.MongoUtils;
 import com.google.gson.Gson;
-import com.mongodb.Block;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.RecursiveTask;
-import java.util.logging.Logger;
+import java.util.function.Consumer;
 
 /**
  * @author viswadas leher
  */
-public class MongoRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
+public class MongoRangeSearchTask<T extends BlackBoxable> extends MongoBaseTask<T, List<T>> {
 
-    private static final Logger logger = Logger.getLogger(MongoRangeSearchTask.class.getName());
+    private final Logger logger = LogManager.getLogger();
 
-    private final MongoCollection<Document> collection;
     private final T endRow;
-    private final long maxResults;
     private final T startRow;
-    private final MongoUtils<BlackBoxable> utils;
+    private final boolean isFirst;
+    private final int maxResults;
 
-    public MongoRangeSearchTask(MongoCollection<Document> collection, T startRow, T endRow, long maxResults) {
-        this.collection = collection;
+    public MongoRangeSearchTask(MongoCollection<Document> collection, T startRow, T endRow, int maxResults, boolean isFirst) {
+        super(collection);
         this.startRow = startRow;
         this.endRow = endRow;
         this.maxResults = maxResults;
-        this.utils = new MongoUtils<>();
+        this.isFirst = isFirst;
     }
 
     @Override
     protected List<T> compute() {
+        List<T> results = new MaxResultList<>(maxResults);
 
-        List<T> results = new ArrayList<>();
-
-        GenericDBTableRow startTableRow = utils.convertRowToTableRow(startRow);
-        GenericDBTableRow endTableRow = utils.convertRowToTableRow(endRow);
+        GenericDBTableRow startTableRow = getUtils().convertRowToTableRow(startRow);
+        GenericDBTableRow endTableRow = getUtils().convertRowToTableRow(endRow);
         List<Bson> filterList = new ArrayList<>();
-
 
         startTableRow.forEach((familyName, columnName, columnValue, columnValueAsString) -> {
             if (DyDaBoUtils.isValidRegex(columnValueAsString)) {
@@ -94,19 +92,23 @@ public class MongoRangeSearchTask<T extends BlackBoxable> extends RecursiveTask<
 
         String type = startRow.getClass().getTypeName();
 
-        Block<Document> addToResultBlock = (Document doc) -> {
+        Consumer<Document> addToResultBlock = (Document doc) -> {
             T resultObject = new Gson().fromJson(doc.toJson(), (Type) startRow.getClass());
             if (resultObject != null) {
-                results.add(resultObject);
+                if (isFirst && maxResults > 0 && results.size() >= maxResults) {
+                    logger.debug("Skipping result");
+                } else {
+                    results.add(resultObject);
+                }
             }
         };
 
-        logger.finest("Filters :" + filterList);
+        logger.debug("Filters :" + filterList);
         filterList.add(Filters.regex(MongoUtils.PRIMARYKEY, type + ":.*"));
         if (filterList.size() > 0) {
-            collection.find(Filters.and(filterList)).forEach(addToResultBlock);
+            getCollection().find(Filters.and(filterList)).forEach(addToResultBlock);
         } else {
-            collection.find().forEach(addToResultBlock);
+            getCollection().find().forEach(addToResultBlock);
         }
 
         return results;

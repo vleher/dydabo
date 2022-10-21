@@ -12,19 +12,19 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- *  
+ *
  */
 package com.dydabo.blackbox.mongodb.utils;
 
 import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.common.utils.DBUtils;
+import com.dydabo.blackbox.common.utils.DyDaBoDBUtils;
 import org.bson.Document;
 
 /**
  * @param <T>
  * @author viswadas leher
  */
-public class MongoUtils<T extends BlackBoxable> implements DBUtils<T> {
+public class MongoUtils<T extends BlackBoxable> implements DyDaBoDBUtils<T> {
 
     /**
      *
@@ -36,10 +36,13 @@ public class MongoUtils<T extends BlackBoxable> implements DBUtils<T> {
      * @return
      */
     public Document parseRowToDocument(T row) {
-        String type = row.getClass().getTypeName();
         Document doc = Document.parse(row.getBBJson());
         // make sure we have an id
-        doc.append(PRIMARYKEY, type + ":" + row.getBBRowKey());
+        doc.append(PRIMARYKEY, getRowKey(row));
         return doc;
+    }
+
+    public String getRowKey(T row) {
+        return (row.getClass().getTypeName()) + ":" + row.getBBRowKey();
     }
 }

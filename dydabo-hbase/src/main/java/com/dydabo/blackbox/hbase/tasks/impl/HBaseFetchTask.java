@@ -18,35 +18,44 @@ package com.dydabo.blackbox.hbase.tasks.impl;
 
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.common.MaxResultList;
 import com.dydabo.blackbox.common.utils.DyDaBoUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.dydabo.blackbox.hbase.tasks.HBaseTask;
 import com.google.gson.Gson;
-import org.apache.hadoop.hbase.client.*;
-import org.apache.hadoop.hbase.filter.CompareFilter;
+import org.apache.hadoop.hbase.CompareOperator;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.RegexStringComparator;
 import org.apache.hadoop.hbase.filter.RowFilter;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @param <T>
  * @author viswadas leher
  */
-public class HBaseFetchTask<T extends BlackBoxable> extends HBaseTask<T> {
+public class HBaseFetchTask<T extends BlackBoxable> extends HBaseTask<T, List<T>> {
 
-    private final Logger logger = Logger.getLogger(HBaseFetchTask.class.getName());
-    private final long maxResults;
+    private final Logger logger = LogManager.getLogger();
+    private final int maxResults;
     private final List<T> rowKeys;
     private final boolean isPartialKeys;
+    private final boolean isFirst;
 
     /**
      * @param connection
@@ -63,7 +72,7 @@ public class HBaseFetchTask<T extends BlackBoxable> extends HBaseTask<T> {
      * @param isPartialKeys
      */
     public HBaseFetchTask(Connection connection, List<T> rowKeys, boolean isPartialKeys) {
-        this(connection, rowKeys, isPartialKeys, -1);
+        this(connection, rowKeys, isPartialKeys, Integer.MAX_VALUE, false);
     }
 
     /**
@@ -72,11 +81,12 @@ public class HBaseFetchTask<T extends BlackBoxable> extends HBaseTask<T> {
      * @param isPartialKeys
      * @param maxResults
      */
-    public HBaseFetchTask(Connection connection, List<T> rowKeys, boolean isPartialKeys, long maxResults) {
+    public HBaseFetchTask(Connection connection, List<T> rowKeys, boolean isPartialKeys, int maxResults, boolean isFirst) {
         super(connection);
         this.rowKeys = rowKeys;
         this.isPartialKeys = isPartialKeys;
         this.maxResults = maxResults;
+        this.isFirst = isFirst;
     }
 
     /**
@@ -84,91 +94,84 @@ public class HBaseFetchTask<T extends BlackBoxable> extends HBaseTask<T> {
      * @return
      * @throws BlackBoxException
      */
-    private List<T> fetch(List<T> rows) {
+    private List<T> fetch(List<T> rows) throws BlackBoxException {
         if (isPartialKeys) {
             return fetchByPartialKeys(rows);
         }
 
         List<T> allResults = new ArrayList<>();
 
-        try (Admin admin = getConnection().getAdmin()) {
-            // consider create to be is nothing but alter...so
-            try (Table hTable = admin.getConnection().getTable(utils.getTableName(rows.get(0)))) {
-                List<Get> getList = new ArrayList<>();
+        try (Table hTable = getConnection().getTable(utils.getTableName(rows.get(0)))) {
+            List<Get> getList = new ArrayList<>();
 
-                for (T row : rows) {
-                    Get g = new Get(Bytes.toBytes(row.getBBRowKey()));
-                    getList.add(g);
-                }
+            for (T row : rows) {
+                Get g = new Get(Bytes.toBytes(row.getBBRowKey()));
+                getList.add(g);
+            }
 
-                Result[] results = hTable.get(getList);
-                for (Result result : results) {
-                    if (result.listCells() != null) {
-                        GenericDBTableRow resultTable = utils.parseResultToHTable(result, rows.get(0));
-
-                        T resultObject = new Gson().fromJson(resultTable.toJsonObject(), (Type) rows.get(0).getClass());
-                        if (resultObject != null) {
-                            allResults.add(resultObject);
-                        }
+            Result[] results = hTable.get(getList);
+            for (Result result : results) {
+                if (result.listCells() != null) {
+                    GenericDBTableRow resultTable = utils.parseResultToHTable(result, rows.get(0));
+                    T resultObject = new Gson().fromJson(resultTable.toJsonObject(), (Type) rows.get(0).getClass());
+                    if (resultObject != null) {
+                        allResults.add(resultObject);
                     }
                 }
             }
-        } catch (IOException ex) {
-            logger.log(Level.SEVERE, null, ex);
+        } catch (IOException e) {
+            logger.error(e);
         }
 
         return allResults;
     }
 
-    private List<T> fetchByPartialKeys(List<T> rows) {
-        List<T> results = new ArrayList<>();
-        try (Admin admin = getConnection().getAdmin()) {
-            try (Table hTable = admin.getConnection().getTable(utils.getTableName(rows.get(0)))) {
-                for (T row : rows) {
-                    Scan scan = new Scan();
+    private List<T> fetchByPartialKeys(List<T> rows) throws BlackBoxException {
+        List<T> results = new MaxResultList<>(maxResults);
+        final TableName tableName = utils.getTableName(rows.get(0));
+        try (Table hTable = getConnection().getTable(tableName)) {
+            for (T row : rows) {
+                Scan scan = new Scan();
 
-                    if (maxResults > 0) {
-                        scan.setMaxResultSize(maxResults);
-                    }
+                String rowPrefix = DyDaBoUtils.getStringPrefix(row.getBBRowKey());
+                Filter rowFilter = new RowFilter(CompareOperator.EQUAL, new RegexStringComparator(row.getBBRowKey()));
+                if (!DyDaBoUtils.isBlankOrNull(rowPrefix)) {
+                    scan.setRowPrefixFilter(Bytes.toBytes(rowPrefix));
+                }
+                logger.debug(rows);
+                logger.debug(rowFilter.toString());
+                scan.setFilter(rowFilter);
 
-                    String rowPrefix = DyDaBoUtils.getStringPrefix(row.getBBRowKey());
+                try (ResultScanner resultScanner = hTable.getScanner(scan)) {
+                    for (Result result : resultScanner) {
+                        GenericDBTableRow resultTable = utils.parseResultToHTable(result, rows.get(0));
 
-                    Filter rowFilter = new RowFilter(CompareFilter.CompareOp.EQUAL, new RegexStringComparator(row.getBBRowKey()));
-                    if (!DyDaBoUtils.isBlankOrNull(rowPrefix)) {
-                        scan.setRowPrefixFilter(Bytes.toBytes(rowPrefix));
-                    }
-                    logger.finest(rowFilter.toString());
-                    scan.setFilter(rowFilter);
+                        T resultObject = new Gson().fromJson(resultTable.toJsonObject(), (Type) rows.get(0).getClass());
+                        if (resultObject != null) {
+                            results.add(resultObject);
+                        }
 
-                    try (ResultScanner resultScanner = hTable.getScanner(scan)) {
-                        int count = 0;
-                        for (Result result : resultScanner) {
-                            GenericDBTableRow resultTable = utils.parseResultToHTable(result, rows.get(0));
-
-                            T resultObject = new Gson().fromJson(resultTable.toJsonObject(), (Type) rows.get(0).getClass());
-                            if (resultObject != null) {
-                                results.add(resultObject);
-                                count++;
-                            }
-
-                            if (maxResults > 0 && count >= maxResults) {
-                                break;
-                            }
+                        if (isFirst && maxResults > 0 && results.size() >= maxResults) {
+                            break;
                         }
                     }
+                } catch (UncheckedIOException exception) {
+                    return results;
                 }
-
             }
         } catch (IOException ex) {
-            logger.log(Level.SEVERE, null, ex);
+            logger.error(ex.getMessage(), ex);
         }
         return results;
     }
 
     @Override
     protected List<T> compute() {
-        return fetch(rowKeys);
-
+        try {
+            return fetch(rowKeys);
+        } catch (BlackBoxException e) {
+            logger.catching(e);
+        }
+        return Collections.emptyList();
     }
-
 }

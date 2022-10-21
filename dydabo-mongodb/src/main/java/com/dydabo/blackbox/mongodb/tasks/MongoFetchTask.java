@@ -17,12 +17,15 @@
 package com.dydabo.blackbox.mongodb.tasks;
 
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.common.utils.DyDaBoDBUtils;
 import com.dydabo.blackbox.common.utils.DyDaBoUtils;
 import com.dydabo.blackbox.mongodb.utils.MongoUtils;
 import com.google.gson.Gson;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bson.Document;
 
 import java.lang.reflect.Type;
@@ -30,8 +33,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.RecursiveTask;
-import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.regex;
 
@@ -39,25 +41,25 @@ import static com.mongodb.client.model.Filters.regex;
  * @param <T>
  * @author viswadas leher
  */
-public class MongoFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T>> {
+public class MongoFetchTask<T extends BlackBoxable> extends MongoBaseTask<T, List<T>> {
 
-    private static final Logger logger = Logger.getLogger(MongoFetchTask.class.getName());
-    private final MongoCollection<Document> collection;
+    private final Logger logger = LogManager.getLogger();
     private final boolean isPartialKey;
-    private final long maxResults;
+    private final int maxResults;
     private final List<T> rows;
-    private final MongoUtils<T> utils;
+    private final boolean isFirst;
 
     /**
      * @param collection
      * @param rows
      */
-    public MongoFetchTask(MongoCollection<Document> collection, List<T> rows, boolean isPartialKey, long maxResults) {
-        this.collection = collection;
+    public MongoFetchTask(MongoCollection<Document> collection, List<T> rows, boolean isPartialKey, int maxResults,
+                          boolean isFirst) {
+        super(collection);
         this.rows = rows;
-        this.utils = new MongoUtils<>();
         this.isPartialKey = isPartialKey;
         this.maxResults = maxResults;
+        this.isFirst = isFirst;
     }
 
     @Override
@@ -66,7 +68,7 @@ public class MongoFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
     }
 
     private List<T> fetch(List<T> rows) {
-        if (rows.size() < 2) {
+        if (rows.size() < DyDaBoDBUtils.MIN_PARALLEL_THRESHOLD) {
             List<T> fullResult = new ArrayList<>();
             for (T row : rows) {
                 fullResult.addAll(fetch(row));
@@ -74,19 +76,13 @@ public class MongoFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
             return fullResult;
         }
 
-        List<T> fullResult = new ArrayList<>();
-
         List<ForkJoinTask<List<T>>> taskList = new ArrayList<>();
         for (T row : rows) {
-            ForkJoinTask<List<T>> fjTask = new MongoFetchTask<T>(collection, Collections.singletonList(row), isPartialKey, maxResults).fork();
+            ForkJoinTask<List<T>> fjTask = new MongoFetchTask<>(getCollection(), Collections.singletonList(row), isPartialKey,
+                    maxResults, isFirst);
             taskList.add(fjTask);
         }
-
-        for (ForkJoinTask<List<T>> forkJoinTask : taskList) {
-            fullResult.addAll(forkJoinTask.join());
-        }
-
-        return fullResult;
+        return invokeAll(taskList).stream().map(ForkJoinTask::join).flatMap(ts -> ts.stream()).collect(Collectors.toList());
     }
 
     private List<T> fetch(T row) {
@@ -98,11 +94,11 @@ public class MongoFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
 
         FindIterable<Document> docIter;
 
-        String rowKey = (row.getClass().getTypeName()) + ":" + row;
+        String rowKey = getUtils().getRowKey(row);
         if (isPartialKey) {
-            docIter = collection.find(regex(MongoUtils.PRIMARYKEY, rowKey));
+            docIter = getCollection().find(regex(MongoUtils.PRIMARYKEY, rowKey));
         } else {
-            docIter = collection.find(Filters.eq(MongoUtils.PRIMARYKEY, rowKey));
+            docIter = getCollection().find(Filters.eq(MongoUtils.PRIMARYKEY, rowKey));
         }
 
         for (Document doc : docIter) {
@@ -118,5 +114,4 @@ public class MongoFetchTask<T extends BlackBoxable> extends RecursiveTask<List<T
 
         return results;
     }
-
 }

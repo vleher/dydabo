@@ -1,28 +1,36 @@
 ## Hospital Use Case
 
-### Requirements 
+### Requirements
 
-This is a use case that I got from [this blog post](https://sumitpal.wordpress.com/2016/07/03/com.dydabo.com.dydabo.blackbox.blackbox.hbase.hbase-schema-design-example/) and it seems to depict a real application scenario.
+This is a use case that I got
+from [this blog post](https://sumitpal.wordpress.com/2016/07/03/com.dydabo.com.dydabo.blackbox.blackbox.hbase.hbase-schema-design-example/)
+and it seems to depict a real application scenario.
 
-A Patient has their own attributes with demographic info – first name, last name, address(es), phone number(s), date of birth etc. When a patient goes to the doctor, it is called as an encounter. An encounter can result in the patient having multiple procedures, medications, diagnosis, patient notes and so on. 
+A Patient has their own attributes with demographic info – first name, last name, address(es), phone number(s), date of
+birth etc. When a patient goes to the doctor, it is called as an encounter. An encounter can result in the patient
+having multiple procedures, medications, diagnosis, patient notes and so on.
 
 * 1 Patient can have multiple encounters and each of them has an unique encounter id.
 * 1 Encounter can have multiple procedures, medication, diagnosis, patient notes (each of these have a unique id)
 * 1 Encounter can have multiple claims each with an unique id
 * 1 Claim can have multiple claim details each with an unique id
-* 1 Claim can also have multiple claim charges each with unique id 
-* each of the diagnosis, medication, procedure etc also have an unique code associated with it. 
+* 1 Claim can also have multiple claim charges each with unique id
+* each of the diagnosis, medication, procedure etc also have an unique code associated with it.
 
 ### Design and Implementation
 
-Unlike relational databases, keeping multiple copies of the same data for easy access is not a bad thing in NoSql databases. We will start by creating POJO or data beans in the application such that these information can be easily accessed and used by the application.
+Unlike relational databases, keeping multiple copies of the same data for easy access is not a bad thing in NoSql
+databases. We will start by creating POJO or data beans in the application such that these information can be easily
+accessed and used by the application.
 
-First thing to consider is the different ways we will need to access the data from the back end. These are probably the type of queries that the application will use to get data from the database.
+First thing to consider is the different ways we will need to access the data from the back end. These are probably the
+type of queries that the application will use to get data from the database.
 
 1. All the patients in the system
 1. Get a patient by patient id
 1. All the patients with a specific first name or a last name or both.
-1. All the patients with a specific medication (we will ignore diagnosis and procedures in this example, as it will be similar to medication. just to keep it simple)
+1. All the patients with a specific medication (we will ignore diagnosis and procedures in this example, as it will be
+   similar to medication. just to keep it simple)
 1. All encounters for a given patient id
 1. All encounters for a patient given the first name, or last name or both
 1. All encounters with a specific medication id or code (all patients)
@@ -32,12 +40,15 @@ First thing to consider is the different ways we will need to access the data fr
 1. All claims for a specific patient id (or by last name)
 1. All claim charges for a specific patient id
 
-There are several more queries you can come up with but most of them will be some kind of a variation of the above. We will also assume the following in this use case:
+There are several more queries you can come up with but most of them will be some kind of a variation of the above. We
+will also assume the following in this use case:
 
 * after an encounter the data will not change
 * any subsequent change will be the result of another encounter
 
-Now, we will need to design the data objects such that the data can easily be used by the application. The design below is probably just one of the many you can come up with. It is more geared towards all the different ways the library can be used to save and access data. Your own design will probably differ depending on your requirements.
+Now, we will need to design the data objects such that the data can easily be used by the application. The design below
+is probably just one of the many you can come up with. It is more geared towards all the different ways the library can
+be used to save and access data. Your own design will probably differ depending on your requirements.
 
 So, first create a class to hold the patient details
 
@@ -68,7 +79,9 @@ public class Patient implements BlackBoxable {
 > **TIP**: The complete path of the class is used to create database tables. Try to keep the package names short such as *com.domain.db* which will result in shorter table names. Just something to consider.
 
 
-The next step is to consider what you would want to use as the row key for patients. Assume that we will ***almost*** always have the patient id to look up the patients. In that case the row key should be the patient id. This will be the simplest case.
+The next step is to consider what you would want to use as the row key for patients. Assume that we will ***almost***
+always have the patient id to look up the patients. In that case the row key should be the patient id. This will be the
+simplest case.
 
 ```
 @Override
@@ -76,7 +89,10 @@ public String getBBRowKey() {
     return getpId();
 }    
 ```
-Now, let us assume that we will also need to look up the user by first name, last name in addition to the patient id. In that case it probably makes sense to keep those fields in the row key as well. The following is an example of such a key which has the id, first name and last name, delimited by a colon. 
+
+Now, let us assume that we will also need to look up the user by first name, last name in addition to the patient id. In
+that case it probably makes sense to keep those fields in the row key as well. The following is an example of such a key
+which has the id, first name and last name, delimited by a colon.
 
 ```
 @Override
@@ -85,7 +101,8 @@ public String getBBRowKey() {
 }
 ```
 
-Before we go ahead with other classes, let quickly take a look at the class that is referenced from the **Patient** class, such as **Address**. We have a Map of Addresses for each patient. 
+Before we go ahead with other classes, let quickly take a look at the class that is referenced from the **Patient**
+class, such as **Address**. We have a Map of Addresses for each patient.
 
 ````
 class Address {
@@ -104,13 +121,17 @@ class Address {
 }
 ````
 
-The class should be self explanatory. Notice that we do not have to implement the **BlackBoxable** interface as this class will not have its own table. The data will be stored as part of the Patient table. 
+The class should be self explanatory. Notice that we do not have to implement the **BlackBoxable** interface as this
+class will not have its own table. The data will be stored as part of the Patient table.
 
 > **TIP**: A **Map** inside an object will be saved as a separate column family in the table. So, the Address above will be a column family which will have columns named as the keys of the Map. So, it could be Home, Work, Other etc in this case. Use Map objects wisely if you do not want a lot of column families.
 
-You must have noticed that the emphasis is on the application here and much less the database design. Although you could argue that it closely relates to a relational model at this time. Start with how best to use the data in your application first, we can fine tune the database later.
+You must have noticed that the emphasis is on the application here and much less the database design. Although you could
+argue that it closely relates to a relational model at this time. Start with how best to use the data in your
+application first, we can fine tune the database later.
 
-Let's go ahead and build our other classes that relates to Medication, Claim, ClaimDetails and ClaimCharges etc. The Procedure and Diagnosis classes will closely resemble the Medication, so we will omit it for simplicity.
+Let's go ahead and build our other classes that relates to Medication, Claim, ClaimDetails and ClaimCharges etc. The
+Procedure and Diagnosis classes will closely resemble the Medication, so we will omit it for simplicity.
 
 ```
 public class Medication implements BlackBoxable {
@@ -143,7 +164,8 @@ public class Medication implements BlackBoxable {
 }
 ```
 
-The **Claim** class keeps a reference to the patient id, which will allow us to quickly look up based on patient ids rather than having to scan all encounters. More on that later....
+The **Claim** class keeps a reference to the patient id, which will allow us to quickly look up based on patient ids
+rather than having to scan all encounters. More on that later....
 
 ```
 public class Claim implements BlackBoxable {
@@ -167,7 +189,9 @@ public class Claim implements BlackBoxable {
 }
 ```
 
-You now have the choice of keeping the ClaimDetails and ClaimCharges as separate tables or just as part of the claim. Either will work and what you want to do will depend on the access requirements. For example,  if you want to very quickly lookup claim charges with out parsing through all the claims, then keeping it as a separate table might help.
+You now have the choice of keeping the ClaimDetails and ClaimCharges as separate tables or just as part of the claim.
+Either will work and what you want to do will depend on the access requirements. For example, if you want to very
+quickly lookup claim charges with out parsing through all the claims, then keeping it as a separate table might help.
 
 ```
 public class ClaimDetails implements BlackBoxable {
@@ -196,8 +220,8 @@ public class ClaimCharges implements BlackBoxable {
 }
 ```
 
-
-A sample implementation of **Encounter** object, which is probably the crux of the entire application as it will hold the most of the data and the relationships between all the data. 
+A sample implementation of **Encounter** object, which is probably the crux of the entire application as it will hold
+the most of the data and the relationships between all the data.
 
 ```
 public class Encounter implements BlackBoxable {
@@ -250,7 +274,8 @@ public class Encounter implements BlackBoxable {
 }
 ```
 
-Now that we have all the data mapped out, let's see how we can store and access these data quickly using the library. It is as simple as creating all the objects with the appropriate data in each of them.
+Now that we have all the data mapped out, let's see how we can store and access these data quickly using the library. It
+is as simple as creating all the objects with the appropriate data in each of them.
 
 Let's create a new **Patient** and new **Encounter** for the patient in the simplest way possible.
 
@@ -282,7 +307,8 @@ blackBox.insert(claim);
 
 > **TIP**: Remember that there is no support atomic transaction in the NoSql database. That means you will have to factor in the possibility of an update failing (or inconsistent duplicate data)...either at the time of saving or when fetching the data.
 
-Once the data has been saved to the tables, you will need to access them in various different ways. We will go through the scenarios that we detailed earlier and see how each of them could be implemented. 
+Once the data has been saved to the tables, you will need to access them in various different ways. We will go through
+the scenarios that we detailed earlier and see how each of them could be implemented.
 
 #### all patients in the system
 
@@ -295,7 +321,7 @@ List<Patient> allPatients = blackBox.search(new Patient());
 
 #### patient by patient id
 
-Assume that the key on the patient table is of the format *patient Id:first name:last name*. 
+Assume that the key on the patient table is of the format *patient Id:first name:last name*.
 
 ```
 // we will generate a regular expression based on the patient id 
@@ -303,7 +329,7 @@ String pIdKey = "12345P:.*";
 List<Patient> pList2 = blackBox.fetchByPartialKey(pIDKey, new Patient());
 ```
 
-If you used just your patient id as the row key on the table, then it is much faster to look up. 
+If you used just your patient id as the row key on the table, then it is much faster to look up.
 
 ```
 String pId = "12345P";
@@ -316,7 +342,8 @@ List<Patient> pList = blackBox.fetch(pIds, new Patient());
 
 #### patients by name
 
-So, you have to look up a patient with either the first or the last name. You can do it in either of the two ways depending on if you have used the name as part of the row key. You can mix and match to search for any fields.
+So, you have to look up a patient with either the first or the last name. You can do it in either of the two ways
+depending on if you have used the name as part of the row key. You can mix and match to search for any fields.
 
 ```
 // All Patients with a specific first name (column value search)
@@ -349,7 +376,8 @@ List<Patient> pList4 = blackBox.fetchByPartialKey(fNameKey, p);
 
 #### patients with specific medication
 
-In the data model, we kept the medication names as a first level comma separated list for easier search. So, just as in the earlier example we can do a regular expression search on that field.
+In the data model, we kept the medication names as a first level comma separated list for easier search. So, just as in
+the earlier example we can do a regular expression search on that field.
 
 ```
 String diagId = "34532M"; 
@@ -372,9 +400,12 @@ for (Encounter enc: peList1) {
 	System.out.println(" Patient :" + enc.getPatient()); // this might have duplicates
 }
 ```
+
 > **TIP**: The general rule is to fill in as much as variables either with exact values or regular expressions that you already know into the POJO and then use it to query the database.
 
-There are several different ways we could have done this, depending on how often this data is needed. You could keep the medication information on the **Patient** table, updating it after every encounter which probably is the fastest to access.
+There are several different ways we could have done this, depending on how often this data is needed. You could keep the
+medication information on the **Patient** table, updating it after every encounter which probably is the fastest to
+access.
 
 #### all encounters for patient id
 
@@ -412,6 +443,7 @@ pe1.setDiags(diags); // set that to the encounter
 // we now have an object with just the medication we want to search for.
 List<Encounter> peList1 = blackBox.search(pe1);
 ````
+
 #### encounters with a medication for a specific patient by name
 
 ````
@@ -424,7 +456,9 @@ List<Encounter> results = blackBox.search(pe);
 
 #### all claims for a patient
 
-Again, this data could have been saved in the patient table in order for it to be accessed easily. You could just search the **Claims** table for the particular patient id, if there is a separate table for claims.  The *dirty* way using the current model is to search through all encounters and look for the claim and the patient.
+Again, this data could have been saved in the patient table in order for it to be accessed easily. You could just search
+the **Claims** table for the particular patient id, if there is a separate table for claims. The *dirty* way using the
+current model is to search through all encounters and look for the claim and the patient.
 
 ````
 Encounter encounter = new Encounter(null, new Patient(null, "Tina", "Warner"));
@@ -436,7 +470,8 @@ for (Encounter enc : encList) {
 
 #### all claim charges for a patient
 
-Again, we could iterate over the encounters and get the claim charges. In this example, we will just look through the **Claims** table and add up the amount.
+Again, we could iterate over the encounters and get the claim charges. In this example, we will just look through the **
+Claims** table and add up the amount.
 
 ````
 Claim cl = new Claim(null, null);
@@ -451,7 +486,10 @@ for (Claim thisClaim : allClaims) {
 }
 ````
 
-Depending on the type of queries that you would be executing most often, you can modify the design of POJO further to get faster results. Obviously it won't be just as efficient if you were to do it yourself, as you know the semantics of the variables better. A well thought out row key design for each POJO would be your best bet in making the lookups faster. 
+Depending on the type of queries that you would be executing most often, you can modify the design of POJO further to
+get faster results. Obviously it won't be just as efficient if you were to do it yourself, as you know the semantics of
+the variables better. A well thought out row key design for each POJO would be your best bet in making the lookups
+faster.
 
 > **TIP**: Do as many fetch(...) calls as you can rather than search(...) calls.
 

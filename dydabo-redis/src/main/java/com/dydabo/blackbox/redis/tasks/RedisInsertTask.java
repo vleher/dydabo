@@ -18,64 +18,96 @@
 package com.dydabo.blackbox.redis.tasks;
 
 import com.dydabo.blackbox.BlackBoxable;
+import com.dydabo.blackbox.common.utils.DyDaBoDBUtils;
+import com.dydabo.blackbox.common.utils.DyDaBoUtils;
 import com.dydabo.blackbox.redis.db.RedisConnectionManager;
-import redis.clients.jedis.Jedis;
+import io.lettuce.core.RedisFuture;
+import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.api.async.RedisAsyncCommands;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.RecursiveTask;
-import java.util.logging.Logger;
 
-/**
- * @author viswadas leher
- */
-public class RedisInsertTask<T extends BlackBoxable> extends RecursiveTask<Boolean> {
+/** @author viswadas leher */
+public class RedisInsertTask<T extends BlackBoxable> extends RedisBaseTask<Boolean, T> {
 
-    private static final Logger logger = Logger.getLogger(RedisInsertTask.class.getName());
-    private final boolean checkExisting;
+  private final Logger logger = LogManager.getLogger();
+  private final boolean checkExisting;
 
-    private List<T> rows = null;
+  private final List<T> rows;
 
-    public RedisInsertTask(List<T> rows, boolean checkExisting) {
-        this.rows = rows;
-        this.checkExisting = checkExisting;
+  public RedisInsertTask(
+      RedisConnectionManager connectionManager, List<T> rows, boolean checkExisting) {
+    setConnectionManager(connectionManager);
+    this.rows = rows;
+    this.checkExisting = checkExisting;
+  }
+
+  @Override
+  protected Boolean compute() {
+    return insert(rows);
+  }
+
+  private Boolean insert(List<T> rows) {
+    logger.debug("Inserting {} rows into database. checkExisting:{}", rows.size(), checkExisting);
+    Boolean successFlag = Boolean.TRUE;
+    if (rows.size() < DyDaBoDBUtils.MIN_PARALLEL_THRESHOLD) {
+      try (StatefulRedisConnection<String, String> connection =
+          getConnectionManager().getConnection()) {
+        for (T t : rows) {
+          successFlag = successFlag && insertRow(t, connection);
+        }
+      }
+      return successFlag;
     }
 
-    @Override
-    protected Boolean compute() {
-        return insert(rows);
+    List<ForkJoinTask<Boolean>> taskList = new ArrayList<>();
+    ForkJoinTask<Boolean> fjTaskOne =
+        new RedisInsertTask<>(
+            getConnectionManager(), rows.subList(0, rows.size() / 2), checkExisting);
+    taskList.add(fjTaskOne);
+    ForkJoinTask<Boolean> fjTaskTwo =
+        new RedisInsertTask<>(
+            getConnectionManager(), rows.subList(rows.size() / 2, rows.size()), checkExisting);
+    taskList.add(fjTaskTwo);
+
+    return invokeAll(taskList).stream()
+        .map(ForkJoinTask::join)
+        .reduce(Boolean::logicalAnd)
+        .orElse(false);
+  }
+
+  private Boolean insertRow(T row, StatefulRedisConnection<String, String> connection) {
+    final String key = getRedisUtils().getRowKey(row);
+    logger.debug("Inserting a single row: {}", key);
+
+    RedisAsyncCommands<String, String> redisCommands = connection.async();
+    if (checkExisting) {
+      RedisFuture<String> future = redisCommands.get(key);
+      String currentRow = null;
+      try {
+        currentRow = future.get();
+      } catch (InterruptedException | ExecutionException e) {
+        logger.error("Cannot get an existing value for {}", key);
+      }
+      if (DyDaBoUtils.isNotBlankOrNull(currentRow)) {
+        logger.debug("Not updating/inserting as it exist: {}", key);
+        return false;
+      }
     }
-
-    private Boolean insert(List<T> rows) {
-        Boolean successFlag = Boolean.TRUE;
-        if (rows.size() < 2) {
-            for (T t : rows) {
-                successFlag = successFlag && insert(t, checkExisting);
-            }
-            return successFlag;
-        }
-
-        // create a task for each element or row in the list
-        List<ForkJoinTask<Boolean>> taskList = new ArrayList<>();
-        for (T row : rows) {
-            ForkJoinTask<Boolean> fjTask = new RedisInsertTask<>(Collections.singletonList(row), checkExisting).fork();
-            taskList.add(fjTask);
-        }
-        // wait for all to join
-        for (ForkJoinTask<Boolean> forkJoinTask : taskList) {
-            successFlag = successFlag && forkJoinTask.join();
-        }
-
-        return successFlag;
+    String bbJson = row.getBBJson();
+    logger.debug("Inserting {} => {}", key, bbJson);
+    RedisFuture<String> future = redisCommands.set(key, bbJson);
+    String result = null;
+    try {
+      result = future.get();
+    } catch (InterruptedException | ExecutionException e) {
+      logger.error("Cannot insert {} to the database", key);
     }
-
-    private Boolean insert(T row, boolean checkExisting) {
-        try (Jedis connection = RedisConnectionManager.getConnection("localhost")) {
-            String result = connection.set(row.getClass().getTypeName() + ":" + row.getBBRowKey(), row.getBBJson());
-            // TODO : check the result
-        }
-        return true;
-    }
+    return result != null;
+  }
 }

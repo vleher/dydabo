@@ -18,22 +18,35 @@ package com.dydabo.blackbox.hbase.utils;
 
 import com.dydabo.blackbox.BlackBoxException;
 import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.common.utils.DBUtils;
+import com.dydabo.blackbox.common.utils.DyDaBoDBUtils;
 import com.dydabo.blackbox.common.utils.DyDaBoUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.google.gson.Gson;
-import org.apache.hadoop.hbase.HColumnDescriptor;
-import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.ColumnFamilyDescriptor;
+import org.apache.hadoop.hbase.client.ColumnFamilyDescriptorBuilder;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.client.TableDescriptorBuilder;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * Hbase specific utility methods
@@ -41,11 +54,10 @@ import java.util.logging.Logger;
  * @param <T>
  * @author viswadas leher
  */
-public class HBaseUtils<T extends BlackBoxable> implements DBUtils<T> {
-
-    private static final Logger logger = Logger.getLogger(HBaseUtils.class.getName());
+public class HBaseUtils<T extends BlackBoxable> implements DyDaBoDBUtils<T> {
 
     private static final SortedSet<TableName> tableCache = new TreeSet<>();
+    private final Logger logger = LogManager.getLogger();
 
     /**
      * Alter Hbase tables based on the new row class
@@ -59,17 +71,23 @@ public class HBaseUtils<T extends BlackBoxable> implements DBUtils<T> {
     public synchronized boolean alterTable(T row, Connection connection) throws IOException {
         try (Admin admin = connection.getAdmin()) {
             TableName tableName = getTableName(row);
-
-            HTableDescriptor tableDescriptor = new HTableDescriptor(tableName);
-            GenericDBTableRow hTable = convertRowToTableRow(row);
-            for (GenericDBTableRow.ColumnFamily value : hTable.getColumnFamilies().values()) {
-                HColumnDescriptor dFamily = new HColumnDescriptor(value.getFamilyName());
-                tableDescriptor.addFamily(dFamily);
-            }
-            logger.fine("Altering table " + tableDescriptor);
-            admin.modifyTable(tableName, tableDescriptor);
+            TableDescriptorBuilder tableDescriptor = getTableDescriptorBuilder(row, tableName);
+            logger.info("Altering table : {}", tableDescriptor);
+            admin.modifyTable(tableDescriptor.build());
         }
         return true;
+    }
+
+    private TableDescriptorBuilder getTableDescriptorBuilder(T row, TableName tableName) {
+        TableDescriptorBuilder tableDescriptor = TableDescriptorBuilder.newBuilder(tableName);
+        GenericDBTableRow hTable = convertRowToTableRow(row);
+        Collection<ColumnFamilyDescriptor> colFamilies = new ArrayList<>();
+        for (GenericDBTableRow.ColumnFamily value : hTable.getColumnFamilies().values()) {
+            ColumnFamilyDescriptor dFamily = ColumnFamilyDescriptorBuilder.of(value.getFamilyName());
+            colFamilies.add(dFamily);
+        }
+        tableDescriptor.setColumnFamilies(colFamilies);
+        return tableDescriptor;
     }
 
     /**
@@ -100,26 +118,20 @@ public class HBaseUtils<T extends BlackBoxable> implements DBUtils<T> {
      * @throws com.dydabo.blackbox.BlackBoxException
      */
     public synchronized boolean createTable(T row, Connection connection) throws IOException {
+        TableName tableName = getTableName(row);
+
+        if (tableCache.contains(tableName)) {
+            return true;
+        }
+
         try (Admin admin = connection.getAdmin()) {
-            TableName tableName = getTableName(row);
-
-            if (tableCache.contains(tableName)) {
-                return true;
-            }
-
             if (admin.tableExists(tableName)) {
                 tableCache.add(tableName);
                 return true;
             }
 
-            HTableDescriptor tableDescriptor = new HTableDescriptor(tableName);
-
-            GenericDBTableRow hTable = convertRowToTableRow(row);
-            for (GenericDBTableRow.ColumnFamily value : hTable.getColumnFamilies().values()) {
-                HColumnDescriptor dFamily = new HColumnDescriptor(value.getFamilyName());
-                tableDescriptor.addFamily(dFamily);
-            }
-            admin.createTable(tableDescriptor);
+            TableDescriptorBuilder tableDescriptor = getTableDescriptorBuilder(row, tableName);
+            admin.createTable(tableDescriptor.build());
             tableCache.add(tableName);
 
             return true;
@@ -134,8 +146,6 @@ public class HBaseUtils<T extends BlackBoxable> implements DBUtils<T> {
         byte[] byteArray = null;
         if (thisValue instanceof Double) {
             byteArray = Bytes.toBytes((Double) thisValue);
-            logger.info(" Bytes to string :" + Bytes.toString(byteArray));
-            logger.info("Bytes to double :" + Bytes.toDouble(byteArray));
         } else if (thisValue instanceof Integer) {
             byteArray = Bytes.toBytes((Integer) thisValue);
         } else if (thisValue instanceof Float) {
@@ -158,8 +168,10 @@ public class HBaseUtils<T extends BlackBoxable> implements DBUtils<T> {
             byteArray = Bytes.toBytes(jsonString);
         } else if (thisValue instanceof Date) {
             byteArray = Bytes.toBytes(((Date) thisValue).getTime());
+        } else if (thisValue instanceof Instant) {
+            byteArray = Bytes.toBytes(((Instant) thisValue).toEpochMilli());
         } else {
-            logger.severe("Unknown Value :" + thisValue);
+            logger.debug("Unknown Value : {}", thisValue);
         }
         return byteArray;
     }
@@ -186,7 +198,7 @@ public class HBaseUtils<T extends BlackBoxable> implements DBUtils<T> {
      * @param row
      * @return
      */
-    public GenericDBTableRow parseResultToHTable(Result result, T row) {
+    public GenericDBTableRow parseResultToHTable(Result result, T row) throws BlackBoxException {
         GenericDBTableRow resultTable = new GenericDBTableRow(Bytes.toString(result.getRow()));
         NavigableMap<byte[], NavigableMap<byte[], byte[]>> map = result.getNoVersionMap();
         for (Map.Entry<byte[], NavigableMap<byte[], byte[]>> entry : map.entrySet()) {
@@ -194,10 +206,13 @@ public class HBaseUtils<T extends BlackBoxable> implements DBUtils<T> {
             NavigableMap<byte[], byte[]> famColMap = entry.getValue();
             for (Map.Entry<byte[], byte[]> cols : famColMap.entrySet()) {
                 String colName = Bytes.toString(cols.getKey());
-                logger.info("Parsing Result :" + colName + " :" + Bytes.toString(cols.getValue()));
                 if (cols.getValue() != null) {
                     try {
                         Field f = DyDaBoUtils.getFieldFromType(row.getClass(), colName);
+                        if (f == null) {
+                            logger.fatal("Mismatched column name {}", colName);
+                            throw new BlackBoxException("Error parsing database column: " + colName);
+                        }
                         if (f.getGenericType().equals(Integer.class)) {
                             int colValue = Bytes.toInt(cols.getValue());
                             resultTable.getColumnFamily(familyName).addColumn(colName, colValue);
@@ -223,12 +238,16 @@ public class HBaseUtils<T extends BlackBoxable> implements DBUtils<T> {
                             long colValue = Bytes.toLong(cols.getValue());
                             Date thisDate = new Date(colValue);
                             resultTable.getColumnFamily(familyName).addColumn(colName, thisDate);
+                        } else if (f.getGenericType().equals(Instant.class)) {
+                            long colValue = Bytes.toLong(cols.getValue());
+                            Instant thisInstant = Instant.ofEpochMilli(colValue);
+                            resultTable.getColumnFamily(familyName).addColumn(colName, thisInstant);
                         } else {
                             String colValue = Bytes.toString(cols.getValue());
                             resultTable.getColumnFamily(familyName).addColumn(colName, colValue);
                         }
                     } catch (SecurityException ex) {
-                        logger.log(Level.SEVERE, null, ex);
+                        logger.error(ex);
                     }
                 }
             }
@@ -247,5 +266,4 @@ public class HBaseUtils<T extends BlackBoxable> implements DBUtils<T> {
         }
         return regexValue;
     }
-
 }
