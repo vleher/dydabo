@@ -70,7 +70,7 @@ the limitations section below.
   better off using the driver directly.
 * If you want ultimate control over how your data is stored and managed then this is **NOT** the library for you. The
   idea here is to completely isolate the user/developer from *low level* database design and management.
-* Dependency on Google Gson library and HBase java client libraries.
+* Dependency on Google Gson library and HBase java client libraries. And of course there is dependency on an underlying driver for each of the database. I have tried to stick with the most "official" version of the driver wherever possible.
 
 ### Supported Databases
 
@@ -83,22 +83,15 @@ Support for the following databases:
 
 ### Status of the Project
 
-The project is still a work in progress and is in early alpha...so don't expect too much.
+The project is still a work in progress with functionality build as needed. I have been using it many and all of my projects for many years now.
 
-There are still several features that needs to be implemented, and the interfaces are bound to change. So, all in all it
-is probably not good for prime time. I have used it in a couple of very simple projects and it has so far worked quite
-well.
+There are still several features that needs to be implemented, and the interfaces are bound to change. As I am the only one using it, I have not paid much attention to keeping the API stable.
 
 ### Documentation and Use Cases
 
-* dydabo API: Coming soon....(when it is finalized)
+* dydabo API: Coming soon.
 * dydabo [User Guide](https://github.com/vleher/dydabo/blob/master/USERGUIDE.md): This guide contains examples and some
   use cases on how to use dydabo in your project and code.
-
-### Current Dependencies
-
-* Google Gson
-* Hbase java driver
 
 ### Build Status
 
@@ -124,10 +117,3 @@ dydabo is released under the [Apache 2.0 License](https://www.apache.org/license
  limitations under the License.
 
 ````
-
-
-
-
-
-
-
