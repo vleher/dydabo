@@ -2,9 +2,7 @@
 
 ### Requirements
 
-This is a use case that I got
-from [this blog post](https://sumitpal.wordpress.com/2016/07/03/com.dydabo.com.dydabo.blackbox.blackbox.hbase.hbase-schema-design-example/)
-and it seems to depict a real application scenario.
+This is a use case that I got from a blog somewhere and it seems to depict a real application scenario.
 
 A Patient has their own attributes with demographic info – first name, last name, address(es), phone number(s), date of
 birth etc. When a patient goes to the doctor, it is called as an encounter. An encounter can result in the patient
@@ -60,12 +58,12 @@ public class Patient implements BlackBoxable {
     private String lN = null; // last name
     private Date dob = null; // date of birth
     // a map of addresses such as Home, Work etc
-    private Map<String, Address> address = new HashMap<>(); 
+    private Map<String, Address> address = new HashMap<>();
     private List<String> em = new ArrayList<>(); // a list of email addresses
 
     public Patient() {
     }
-    
+
     public Patient(String id, String firstName, String lastName) {
         this.pId = id;
         this.fN = firstName;
@@ -77,29 +75,6 @@ public class Patient implements BlackBoxable {
 > **TIP**: You should probably use short variable names as these will be used as column names. A long variable name, while useful for legibility in Java classes can create large disk footprints for the table. You can choose something that works for both and keep your variable length to 3 to 5 characters.
 
 > **TIP**: The complete path of the class is used to create database tables. Try to keep the package names short such as *com.domain.db* which will result in shorter table names. Just something to consider.
-
-
-The next step is to consider what you would want to use as the row key for patients. Assume that we will ***almost***
-always have the patient id to look up the patients. In that case the row key should be the patient id. This will be the
-simplest case.
-
-```
-@Override
-public String getBBRowKey() {
-    return getpId();
-}    
-```
-
-Now, let us assume that we will also need to look up the user by first name, last name in addition to the patient id. In
-that case it probably makes sense to keep those fields in the row key as well. The following is an example of such a key
-which has the id, first name and last name, delimited by a colon.
-
-```
-@Override
-public String getBBRowKey() {
-    return getpId() + ":" + getfN() + ":" + getlN();
-}
-```
 
 Before we go ahead with other classes, let quickly take a look at the class that is referenced from the **Patient**
 class, such as **Address**. We have a Map of Addresses for each patient.
@@ -140,7 +115,7 @@ public class Medication implements BlackBoxable {
     private String mCode = null; // medication code
     private String mName = null; // med name
     private Integer mDose = null; // a typical med dosage (not patient data)
-    private String mVendor = null; // med vendor 
+    private String mVendor = null; // med vendor
 
     public Medication() {
     }
@@ -150,7 +125,7 @@ public class Medication implements BlackBoxable {
         this.mName = mId;
     }
     ....
-    
+
     @Override
     public String getBBRowKey() {
     	//assumption: we will probably look up the medication by its name rather than by its id.
@@ -185,7 +160,7 @@ public class Claim implements BlackBoxable {
     @Override
     public String getBBRowKey() {
         return getcId();
-    }    
+    }
 }
 ```
 
@@ -212,11 +187,11 @@ public class ClaimCharges implements BlackBoxable {
     private Date ccDate = null; // claim date
     private TranType type = null; // transaction type
     private Double amount = 0.0;` // transaction amount
-    ....... 
+    .......
     @Override
     public String getBBRowKey() {
         return getCcId();
-    }    
+    }
 }
 ```
 
@@ -227,7 +202,7 @@ the most of the data and the relationships between all the data.
 public class Encounter implements BlackBoxable {
 
     private String pId = null; // patient id
-    private String eId = null; //encounter id 
+    private String eId = null; //encounter id
     private String pNotes = null; // patient notes from this encounter
     private List<Procedure> procs = new LinkedList<>(); // list of procedures
     private List<Medication> meds = new LinkedList<>(); // list of medications
@@ -238,12 +213,12 @@ public class Encounter implements BlackBoxable {
     private String pFN = null; // patient first name
     private String pLN = null; // patient last name
 	// a comma separated list of all medications and diagnosis for quick search
-    private String medIds = ""; 
+    private String medIds = "";
     private String diagIds = "";
 
     // Complete Duplicate Data of the patient so that we don't have to query the patient table
     private Patient patient = null; // a complete patient information object
-    
+
     public Encounter() {
     }
 
@@ -264,13 +239,13 @@ public class Encounter implements BlackBoxable {
     }
 
 	......
-	
+
 	@Override
     public String getBBRowKey() {
     	// assumption: we will probably look up encounter based on patient id more often than encounter id.
     	// keeping the row keys sorted by patient id is probably more efficient.
         return getpId() + ":" + geteId();
-    }    
+    }
 }
 ```
 
@@ -324,7 +299,7 @@ List<Patient> allPatients = blackBox.search(new Patient());
 Assume that the key on the patient table is of the format *patient Id:first name:last name*.
 
 ```
-// we will generate a regular expression based on the patient id 
+// we will generate a regular expression based on the patient id
 String pIdKey = "12345P:.*";
 List<Patient> pList2 = blackBox.fetchByPartialKey(pIDKey, new Patient());
 ```
@@ -368,7 +343,7 @@ List<String> queryKeys = Arrays.asList(".*:Diana:.*", ".*:.*:Turner");
 List<Patient> pList5 = blackBox.fetchByPartialKey(queryKeys, p);
 
 // All Patients with specific first name (row key search)
-String fNameKey = ".*:Cyndi:.*";  // regular expression match against the row key 
+String fNameKey = ".*:Cyndi:.*";  // regular expression match against the row key
 List<Patient> pList4 = blackBox.fetchByPartialKey(fNameKey, p);
 ```
 
@@ -380,17 +355,17 @@ In the data model, we kept the medication names as a first level comma separated
 the earlier example we can do a regular expression search on that field.
 
 ```
-String diagId = "34532M"; 
+String diagId = "34532M";
 
 Encounter pe = new Encounter();
 pe.setMedIds(".*" + diagId + ".*"); // create a regex to match against the string
 List<Encounter> peList = blackBox.search(pe); // list of all encounters that have the patient info in them.
 
-// if there is no string of medications at the top level, we can also do a deeper search inside 
+// if there is no string of medications at the top level, we can also do a deeper search inside
 // the List of medication to find a match, albeit slower
 Encounter pe1 = new Encounter(); // an encounter object
 Medication d = new Medication(diagId); // the medication object to search for
-List<Medication> diags = new ArrayList<>(); 
+List<Medication> diags = new ArrayList<>();
 diags.add(d); // add the medication object to the list of meds
 pe1.setDiags(diags); // set that to the encounter
 
@@ -426,17 +401,17 @@ List<Encounter> peL4 = blackBox.search(pe2);
 #### all encounters with specific medication id
 
 ````
-String diagId = "34532M"; 
+String diagId = "34532M";
 
 Encounter pe = new Encounter();
 pe.setMedIds(".*" + diagId + ".*"); // create a regex to match against the string
 List<Encounter> peList = blackBox.search(pe);
 
-// if there is no string of medications at the top level, we can also do a deeper search inside 
+// if there is no string of medications at the top level, we can also do a deeper search inside
 // the List of medication to find a match, albeit slower
 Encounter pe1 = new Encounter(); // an encounter object
 Medication d = new Medication(diagId); // the medication object to search for
-List<Medication> diags = new ArrayList<>(); 
+List<Medication> diags = new ArrayList<>();
 diags.add(d); // add the medication object to the list of meds
 pe1.setDiags(diags); // set that to the encounter
 
@@ -470,8 +445,7 @@ for (Encounter enc : encList) {
 
 #### all claim charges for a patient
 
-Again, we could iterate over the encounters and get the claim charges. In this example, we will just look through the **
-Claims** table and add up the amount.
+Again, we could iterate over the encounters and get the claim charges. In this example, we will just look through the **Claims** table and add up the amount.
 
 ````
 Claim cl = new Claim(null, null);
@@ -494,4 +468,3 @@ faster.
 > **TIP**: Do as many fetch(...) calls as you can rather than search(...) calls.
 
 > **TIP**: Another way to look at it is to design your row keys such that you are much more likely to have the complete row keys in most scenarios rather than not.
-

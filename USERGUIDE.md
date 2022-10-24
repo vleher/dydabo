@@ -65,8 +65,7 @@ public class User implements BlackBoxable {
 }
 ```
 
-Every POJO that you want to store in the back end will have to implement the interface **BlackBoxable**. The **
-BlackBoxable** interface contains two methods *getBBJson* and *getBBRowKey*.
+Every POJO that you want to store in the back end will have to implement the interface **BlackBoxable**. The **BlackBoxable** interface contains two methods *getBBJson* and *getBBRowKey*.
 
 The ***getBBJson*** method should return a string in valid JSON format, which is a representation of the current
 instance of the POJO.
@@ -74,27 +73,13 @@ instance of the POJO.
 The ***getBBRowKey*** method should return a string that can be used as the key to this object instance. This will be
 the row key to the underlying database row, and can be used to fetch the row back from the database.
 
-Let's see how the above **User** class could implement these methods.
-
-```
-@Override
-public String getBBJson() {
-    // in most cases, such an implementation should work.
-	return new Gson().toJson(this);
-}
-
-@Override
-public String getBBRowKey() {
-	// a delimiter separated key for easy access using id and/or name
-	return getUserId() + ":" + getUserName();
-}
-```
+A default implementation is provided by the BlackBoxable interface, but you can override it if needed.
 
 Now you can insert, update, delete, fetch and search the data using the POJO. Some of the ways such common usages could
 be implemented:
 
 ```
-// Get the database instance 
+// Get the database instance
 BlackBox instanceOne = BlackBoxFactory.getDatabase(BlackBoxFactory.HBASE);
 
 // Create a POJO instance
@@ -106,7 +91,7 @@ instanceOne.insert(user);
 List<User> userList = new ArrayList<>();
 userList.add(new User(123, "David Jones");
 userList.add(new User(234, "Tom Hardy");
-// insert to database
+// insert to database, each as an entry
 boolean success = instanceOne.insert(userList);
 
 // update the existing row
@@ -115,7 +100,7 @@ success = instanceOne.update(user);
 // delete the row
 success = instanceOne.delete(user);
 
-// search/get for the rowsToDelete where user name starts with "David" 
+// search/get for the rowsToDelete where user name starts with "David"
 User u = new User(null, "^David.*");
 // this will return all users with the name starting with David
 List<User> searchResults = instanceOne.search(u);
@@ -124,7 +109,7 @@ List<User> searchResults = instanceOne.search(u);
 // by querying the row key, which will be a bit faster than searching.
 List<User> allDavids = instanceOne.fetchByPartialKey(".*:David", new User());
 
-// If we know the userId and the username of the user, then you can use the row key 
+// If we know the userId and the username of the user, then you can use the row key
 // to fetch the row.
 List<User> currentUser = instanceOne.fetch("1234:David", new User());
 
@@ -150,7 +135,4 @@ up with some use cases that you might find in a real world application and how b
 1. [Hospital Use Case](https://github.com/vleher/dydabo/blob/master/HOSPITALUSECASE.md): A simple example of how
    patients, doctor visits, medications and claims can be designed.
 
-I will try to add more use cases over time. 
-
-
-
+I will try to add more use cases over time.
