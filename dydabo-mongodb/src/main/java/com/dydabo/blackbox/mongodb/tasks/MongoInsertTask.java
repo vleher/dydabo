@@ -17,7 +17,7 @@
 package com.dydabo.blackbox.mongodb.tasks;
 
 import com.dydabo.blackbox.BlackBoxable;
-import com.dydabo.blackbox.common.utils.DyDaBoDBUtils;
+import com.dydabo.blackbox.common.utils.DyDaBoConstants;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOptions;
@@ -67,7 +67,7 @@ public class MongoInsertTask<T extends BlackBoxable> extends MongoBaseTask<T, Bo
             // this inserts the document if there are none with a matching id
             getCollection().insertMany(documents);
         } else {
-            if (rows.size() < DyDaBoDBUtils.MIN_PARALLEL_THRESHOLD) {
+            if (rows.size() < DyDaBoConstants.MIN_PARALLEL_THRESHOLD) {
                 boolean successFlag = true;
                 for (T row : rows) {
                     successFlag = successFlag && upsertDocument(getUtils().parseRowToDocument(row));

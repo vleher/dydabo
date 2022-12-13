@@ -18,7 +18,7 @@ package com.dydabo.blackbox.mongodb.tasks;
 
 import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.common.MaxResultList;
-import com.dydabo.blackbox.common.utils.DyDaBoDBUtils;
+import com.dydabo.blackbox.common.utils.DyDaBoConstants;
 import com.dydabo.blackbox.common.utils.DyDaBoUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.dydabo.blackbox.mongodb.utils.MongoUtils;
@@ -92,7 +92,7 @@ public class MongoSearchTask<T extends BlackBoxable> extends MongoBaseTask<T, Li
     }
 
     private List<T> search(List<T> rows) {
-        if (rows.size() < DyDaBoDBUtils.MIN_PARALLEL_THRESHOLD) {
+        if (rows.size() < DyDaBoConstants.MIN_PARALLEL_THRESHOLD) {
             List<T> fullResult = new ArrayList<>();
             for (T row : rows) {
                 fullResult.addAll(search(row));

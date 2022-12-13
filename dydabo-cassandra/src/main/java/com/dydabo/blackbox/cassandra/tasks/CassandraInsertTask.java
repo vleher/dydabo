@@ -26,7 +26,7 @@ import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.cassandra.db.CassandraConnectionManager;
 import com.dydabo.blackbox.cassandra.utils.CassandraConstants;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
-import com.dydabo.blackbox.common.utils.DyDaBoDBUtils;
+import com.dydabo.blackbox.common.utils.DyDaBoConstants;
 import com.dydabo.blackbox.common.utils.DyDaBoUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import org.apache.logging.log4j.LogManager;
@@ -101,7 +101,7 @@ public class CassandraInsertTask<T extends BlackBoxable> extends RecursiveTask<B
      * @throws BlackBoxException
      */
     private Boolean insert(List<T> rows, boolean checkExisting) throws BlackBoxException {
-        if (rows.size() < DyDaBoDBUtils.MIN_PARALLEL_THRESHOLD) {
+        if (rows.size() < DyDaBoConstants.MIN_PARALLEL_THRESHOLD) {
             Boolean successFlag = Boolean.TRUE;
             for (T t : rows) {
                 successFlag = successFlag && insert(t, checkExisting);

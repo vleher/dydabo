@@ -1,17 +1,15 @@
 /*
- *  Copyright 2020 viswadas leher <vleher@gmail.com>.
+ * Copyright 2020 viswadas leher <vleher@gmail.com>.
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *       http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  *
  */
 package com.dydabo.blackbox.common.utils;
@@ -30,27 +28,25 @@ import java.util.logging.Logger;
  */
 public interface DyDaBoDBUtils<T extends BlackBoxable> {
 
-    public static int MIN_PARALLEL_THRESHOLD = 25;
+	/**
+	 * @param row
+	 * @return
+	 */
+	default GenericDBTableRow convertRowToTableRow(T row) {
+		GenericDBTableRow cTable = new GenericDBTableRow(row.getBBRowKey());
+		Map<String, Field> fields = DyDaBoUtils.getFieldFromType(row.getClass());
 
-    /**
-     * @param row
-     * @return
-     */
-    default GenericDBTableRow convertRowToTableRow(T row) {
-        GenericDBTableRow cTable = new GenericDBTableRow(row.getBBRowKey());
-        Map<String, Field> fields = DyDaBoUtils.getFieldFromType(row.getClass());
+		fields.forEach((key, field) -> {
+			try {
+				if (!field.isSynthetic()) {
+					field.setAccessible(true);
+					cTable.getDefaultFamily().addColumn(key, field.get(row));
+				}
+			} catch (IllegalArgumentException | IllegalAccessException ex) {
+				Logger.getLogger(DyDaBoDBUtils.class.getName()).log(Level.SEVERE, null, ex);
+			}
+		});
 
-        fields.forEach((key, field) -> {
-            try {
-                if (!field.isSynthetic()) {
-                    field.setAccessible(true);
-                    cTable.getDefaultFamily().addColumn(key, field.get(row));
-                }
-            } catch (IllegalArgumentException | IllegalAccessException ex) {
-                Logger.getLogger(DyDaBoDBUtils.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        });
-
-        return cTable;
-    }
+		return cTable;
+	}
 }

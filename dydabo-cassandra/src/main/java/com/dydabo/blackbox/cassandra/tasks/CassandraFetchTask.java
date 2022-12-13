@@ -26,7 +26,7 @@ import com.dydabo.blackbox.cassandra.db.CassandraConnectionManager;
 import com.dydabo.blackbox.cassandra.utils.CassandraConstants;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
 import com.dydabo.blackbox.common.MaxResultList;
-import com.dydabo.blackbox.common.utils.DyDaBoDBUtils;
+import com.dydabo.blackbox.common.utils.DyDaBoConstants;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.google.gson.Gson;
 import org.apache.logging.log4j.LogManager;
@@ -89,7 +89,7 @@ public class CassandraFetchTask<T extends BlackBoxable> extends RecursiveTask<Li
      * @throws BlackBoxException if results cannot be fetched
      */
     private List<T> fetch(List<T> rows) throws BlackBoxException {
-        if (rows.size() < DyDaBoDBUtils.MIN_PARALLEL_THRESHOLD) {
+        if (rows.size() < DyDaBoConstants.MIN_PARALLEL_THRESHOLD) {
             List<T> fullResult = new ArrayList<>();
             for (T row : rows) {
                 fullResult.addAll(fetch(row));

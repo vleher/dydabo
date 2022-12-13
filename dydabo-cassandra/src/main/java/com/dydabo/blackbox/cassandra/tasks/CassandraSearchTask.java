@@ -27,7 +27,7 @@ import com.dydabo.blackbox.cassandra.db.CassandraConnectionManager;
 import com.dydabo.blackbox.cassandra.utils.CassandraConstants;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
 import com.dydabo.blackbox.common.MaxResultList;
-import com.dydabo.blackbox.common.utils.DyDaBoDBUtils;
+import com.dydabo.blackbox.common.utils.DyDaBoConstants;
 import com.dydabo.blackbox.common.utils.DyDaBoUtils;
 import com.dydabo.blackbox.db.obj.GenericDBTableRow;
 import com.google.gson.Gson;
@@ -96,7 +96,7 @@ public class CassandraSearchTask<T extends BlackBoxable> extends RecursiveTask<L
      */
     private List<T> search(List<T> rows) throws BlackBoxException {
         List<T> fullResult = new ArrayList<>();
-        if (rows.size() < DyDaBoDBUtils.MIN_PARALLEL_THRESHOLD) {
+        if (rows.size() < DyDaBoConstants.MIN_PARALLEL_THRESHOLD) {
             for (T row : rows) {
                 fullResult.addAll(search(row));
             }

@@ -22,7 +22,7 @@ import com.dydabo.blackbox.BlackBoxable;
 import com.dydabo.blackbox.cassandra.db.CassandraConnectionManager;
 import com.dydabo.blackbox.cassandra.utils.CassandraConstants;
 import com.dydabo.blackbox.cassandra.utils.CassandraUtils;
-import com.dydabo.blackbox.common.utils.DyDaBoDBUtils;
+import com.dydabo.blackbox.common.utils.DyDaBoConstants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -74,7 +74,7 @@ public class CassandraDeleteTask<T extends BlackBoxable> extends RecursiveTask<B
      */
     private Boolean delete(List<T> rows) {
         // one row is the recursion base line
-        if (rows.size() < DyDaBoDBUtils.MIN_PARALLEL_THRESHOLD) {
+        if (rows.size() < DyDaBoConstants.MIN_PARALLEL_THRESHOLD) {
             boolean successFlag = true;
             for (T t : rows) {
                 successFlag = successFlag && delete(t);
